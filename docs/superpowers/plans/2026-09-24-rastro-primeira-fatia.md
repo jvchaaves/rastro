@@ -45,7 +45,7 @@
 
 **Interfaces:**
 - Produces: `Emenda` dataclass with `codigo`, `ano`, `tipo`, `autor`, `uf_aplicacao`, `funcao`, `empenhado_centavos`, `liquidado_centavos`, `pago_centavos`.
-- Produces: `parse_brl_amount(value: str) -> int` and `iter_emendas_2025(zip_path: Path) -> Iterator[Emenda]`.
+- Produces: `parse_brl_amount(value: str) -> int`, `ParseStats`, and `iter_emendas_2025(zip_path: Path, stats: ParseStats | None = None) -> Iterator[Emenda]`.
 - Raises: `ValueError` for malformed money or a missing required CSV column; skips rows whose amendment code is not 12 digits or does not begin with `2025`.
 
 - [x] **Step 1: Add package metadata and a synthetic ZIP fixture.** `pyproject.toml` uses setuptools `src` discovery, requires Python 3.12+, and declares `fastapi==0.135.1`, `uvicorn==0.42.0` and dev dependencies `pytest==9.0.2`, `httpx==0.28.1`. `.gitignore` includes `.venv/`, `__pycache__/`, `.pytest_cache/`, `*.sqlite`, `*.zip`, `work/` and `data/`. The fixture creates `EmendasParlamentares.csv` in a ZIP with Latin-1, `;` and the headers below; it includes a 2025 row, `Sem informação` and a 2024 row.
@@ -93,9 +93,9 @@ def parse_brl_amount(value: str) -> int:
 - Consumes: `iter_emendas_2025(zip_path: Path) -> Iterator[Emenda]` from Task 1.
 - Produces: `import_zip(db_path: Path, zip_path: Path) -> ImportResult`, where `ImportResult` records the ZIP hash, number imported, whether the batch was reused, and import time.
 - Produces: `get_active_emenda(db_path: Path, codigo: str) -> tuple[Emenda, BatchInfo] | None` and `has_active_batch(db_path: Path) -> bool`.
-- SQLite schema: `batches(sha256 PRIMARY KEY, source_url, imported_at, accepted_rows)`, `emendas(batch_sha256, codigo, ano, tipo, autor, uf_aplicacao, funcao, empenhado_centavos, liquidado_centavos, pago_centavos, PRIMARY KEY(batch_sha256,codigo))`, `state(key PRIMARY KEY, value)`.
+- SQLite schema: `batches(sha256 PRIMARY KEY, source_url, imported_at, accepted_rows, skipped_missing_code, skipped_other_year)`, `emendas(batch_sha256, codigo, ano, tipo, autor, uf_aplicacao, funcao, empenhado_centavos, liquidado_centavos, pago_centavos, PRIMARY KEY(batch_sha256,codigo))`, `state(key PRIMARY KEY, value)`.
 
-- [ ] **Step 1: Write failing storage tests.** Import the synthetic ZIP twice and assert one batch, one active amendment and `reused=True` on the second call. Start from a valid active batch, attempt a second ZIP whose 2025 row has malformed money, and assert the original remains active. A ZIP with two different 2025 rows sharing a code must fail rather than sum or silently overwrite them.
+- [x] **Step 1: Write failing storage tests.** Import the synthetic ZIP twice and assert one batch, one active amendment and `reused=True` on the second call. Start from a valid active batch, attempt a second ZIP whose 2025 row has malformed money, and assert the original remains active. A ZIP with two different 2025 rows sharing a code must fail rather than sum or silently overwrite them. Pause a second import and verify a reader still sees the old batch until commit.
 
 ```python
 first = import_zip(db_path, cgu_zip)
@@ -105,15 +105,17 @@ assert second.reused is True
 assert get_active_emenda(db_path, "202500010001")[0].codigo == "202500010001"
 ```
 
-- [ ] **Step 2: Run `.venv/bin/python -m pytest tests/test_store.py -q`.** Expected result: tests fail because storage interfaces do not exist.
-- [ ] **Step 3: Implement schema and import.** Stream SHA-256 calculation; open a connection with `PRAGMA journal_mode=WAL`; create schema; execute `BEGIN IMMEDIATE`; insert all selected rows under the new batch hash; reject zero selected rows and duplicate 2025 codes; add batch metadata; update `state('active_batch')`; commit. Roll back on any error. For an existing hash, return its batch without inserting rows; keep or select that complete batch as active in one transaction.
+- [x] **Step 2: Run `.venv/bin/python -m pytest tests/test_store.py -q`.** Expected result: tests fail because storage interfaces do not exist.
+- [x] **Step 3: Implement schema and import.** Stream SHA-256 calculation; open a connection with `PRAGMA journal_mode=WAL`; create schema; execute `BEGIN IMMEDIATE`; insert all selected rows under the new batch hash; reject zero selected rows and duplicate 2025 codes; add batch metadata; update `state('active_batch')`; commit. Roll back on any error. For an existing hash, return its batch without inserting rows; keep or select that complete batch as active in one transaction.
 
 ```sql
 CREATE TABLE IF NOT EXISTS batches (
   sha256 TEXT PRIMARY KEY,
   source_url TEXT NOT NULL,
   imported_at TEXT NOT NULL,
-  accepted_rows INTEGER NOT NULL
+  accepted_rows INTEGER NOT NULL,
+  skipped_missing_code INTEGER NOT NULL,
+  skipped_other_year INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS emendas (
   batch_sha256 TEXT NOT NULL REFERENCES batches(sha256),
@@ -131,9 +133,9 @@ CREATE TABLE IF NOT EXISTS emendas (
 CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 ```
 
-- [ ] **Step 4: Add `.venv/bin/python -m rastro import --db data/rastro.sqlite --zip work/EmendasParlamentares.zip`.** Print only hash, counts and import time; never print raw rows or personal identifiers.
-- [ ] **Step 5: Run `.venv/bin/python -m pytest tests/test_store.py -q`.** Expected result: all Task 2 tests pass.
-- [ ] **Step 6: Commit.** `git add src/rastro/store.py src/rastro/__main__.py tests/test_store.py` then `git commit -m 'Publica lotes da CGU de forma atômica'`.
+- [x] **Step 4: Add `.venv/bin/python -m rastro import --db data/rastro.sqlite --zip work/EmendasParlamentares.zip`.** Print only hash, counts and import time; never print raw rows or personal identifiers.
+- [x] **Step 5: Run `.venv/bin/python -m pytest tests/test_store.py -q`.** Expected result: all Task 2 tests pass.
+- [x] **Step 6: Commit.** `git add src/rastro/store.py src/rastro/__main__.py tests/test_store.py` then `git commit -m 'Publica lotes da CGU de forma atômica'`.
 
 ### Task 3: Read one amendment through a documented API
 
