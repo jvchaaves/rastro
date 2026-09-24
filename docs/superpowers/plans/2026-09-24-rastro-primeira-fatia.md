@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 - Success response: `codigo`, `ano`, `tipo`, `autor`, `uf_aplicacao`, `funcao`, `valores_centavos` with `empenhado`, `liquidado`, `pago`, and `proveniencia` with `fonte`, `url`, `sha256_lote`, `importado_em`.
 - Error responses: 503 when no batch is published; 404 for a code absent from the active batch; 422 for a path code that is not exactly 12 digits.
 
-- [ ] **Step 1: Write failing API tests with FastAPI `TestClient`.** Assert the 200 response shape and cents for an imported synthetic row; assert 503 before import, 404 for another valid code and 422 for malformed code. Assert the response never contains raw CSV fields or identifiers of favored persons.
+- [x] **Step 1: Write failing API tests with FastAPI `TestClient`.** Assert the 200 response shape and cents for an imported synthetic row; assert 503 before import, 404 for another valid code and 422 for malformed code. Assert the response never contains raw CSV fields or identifiers of favored persons.
 
 ```python
 client = TestClient(create_app(db_path))
@@ -160,8 +160,8 @@ assert response.json()["valores_centavos"]["pago"] == 1_572_120_000
 assert response.json()["proveniencia"]["sha256_lote"]
 ```
 
-- [ ] **Step 2: Run `.venv/bin/python -m pytest tests/test_api.py -q`.** Expected result: tests fail because `create_app` does not exist.
-- [ ] **Step 3: Implement the response model and endpoint.** Use Pydantic response models for the documented fields, `HTTPException` for 404 and 503, and an exact `^[0-9]{12}$` validation constraint for the path parameter. Query only the active batch. Set `fonte` to `Portal da Transparência / CGU` and `url` to the official download page.
+- [x] **Step 2: Run `.venv/bin/python -m pytest tests/test_api.py -q`.** Expected result: tests fail because `create_app` does not exist.
+- [x] **Step 3: Implement the response model and endpoint.** Use Pydantic response models for the documented fields, `HTTPException` for 404 and 503, and an exact `^[0-9]{12}$` validation constraint for the path parameter. Query only the active batch. Set `fonte` to `Portal da Transparência / CGU` and `url` to the official download page.
 
 ```python
 from pydantic import BaseModel
@@ -187,9 +187,9 @@ class EmendaResponse(BaseModel):
     valores_centavos: ValoresCentavos
     proveniencia: Proveniencia
 ```
-- [ ] **Step 4: Document local commands in README.** Include environment setup, dependency install, the import command, starting `uvicorn rastro.api:app`, and a sample `curl` query. If using `create_app(db_path)`, expose `app = create_app(Path(os.environ.get("RASTRO_DB", "data/rastro.sqlite")))` for Uvicorn.
-- [ ] **Step 5: Run `.venv/bin/python -m pytest -q` and request one imported code through a locally running API.** Expected result: tests pass; HTTP 200 includes the exact code and batch provenance.
-- [ ] **Step 6: Commit.** `git add src/rastro/api.py tests/test_api.py README.md` then `git commit -m 'Expõe consulta de emenda com proveniência'`.
+- [x] **Step 4: Document local commands in README.** Include environment setup, dependency install, the import command, starting `uvicorn rastro.api:app`, and a sample `curl` query. If using `create_app(db_path)`, expose `app = create_app(Path(os.environ.get("RASTRO_DB", "data/rastro.sqlite")))` for Uvicorn.
+- [x] **Step 5: Run `.venv/bin/python -m pytest -q` and request one imported code through a locally running API.** Expected result: tests pass; HTTP 200 includes the exact code and batch provenance.
+- [x] **Step 6: Commit.** `git add src/rastro/api.py tests/test_api.py README.md` then `git commit -m 'Expõe consulta de emenda com proveniência'`.
 
 ## Review and completion checks
 
