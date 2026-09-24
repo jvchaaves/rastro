@@ -25,7 +25,7 @@ curl http://127.0.0.1:8000/api/emendas/202538970001
 
 O código acima foi encontrado no lote da CGU examinado em 24/09/2026; se o conjunto mudar, escolha um código de 2025 presente no ZIP atual. Os valores da API são inteiros em centavos. A documentação OpenAPI fica em `http://127.0.0.1:8000/docs`.
 
-O importador ignora linhas sem código de emenda de 12 dígitos e linhas de outros anos, informando ambas as contagens. Uma falha de leitura ou validação não troca o lote ativo. Reimportar o mesmo ZIP reutiliza o lote existente.
+O importador ignora linhas sem código de emenda de 12 dígitos e linhas de outros anos, informando ambas as contagens. Uma falha de leitura ou validação não troca o lote ativo. Reimportar um ZIP já conhecido reutiliza seu registro sem substituir um lote mais recente que esteja ativo.
 
 O ZIP, os bancos SQLite e os nomes de favorecidos do conjunto original não são versionados neste repositório. Pagamento registrado a um favorecido não comprova a aplicação final do recurso.
 

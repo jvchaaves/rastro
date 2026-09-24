@@ -106,7 +106,7 @@ assert get_active_emenda(db_path, "202500010001")[0].codigo == "202500010001"
 ```
 
 - [x] **Step 2: Run `.venv/bin/python -m pytest tests/test_store.py -q`.** Expected result: tests fail because storage interfaces do not exist.
-- [x] **Step 3: Implement schema and import.** Stream SHA-256 calculation; open a connection with `PRAGMA journal_mode=WAL`; create schema; execute `BEGIN IMMEDIATE`; insert all selected rows under the new batch hash; reject zero selected rows and duplicate 2025 codes; add batch metadata; update `state('active_batch')`; commit. Roll back on any error. For an existing hash, return its batch without inserting rows; keep or select that complete batch as active in one transaction.
+- [x] **Step 3: Implement schema and import.** Stream SHA-256 calculation; open a connection with `PRAGMA journal_mode=WAL`; create schema; execute `BEGIN IMMEDIATE`; insert all selected rows under the new batch hash; reject zero selected rows and duplicate 2025 codes; add batch metadata; update `state('active_batch')`; commit. Roll back on any error. For an existing hash, return its batch without inserting rows or changing the active batch.
 
 ```sql
 CREATE TABLE IF NOT EXISTS batches (

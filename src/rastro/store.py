@@ -91,7 +91,6 @@ def import_zip(db_path: Path, zip_path: Path) -> ImportResult:
         try:
             existing = conn.execute("SELECT * FROM batches WHERE sha256=?", (sha256,)).fetchone()
             if existing is not None:
-                _set_active_batch(conn, sha256)
                 conn.commit()
                 return ImportResult(
                     sha256=sha256,

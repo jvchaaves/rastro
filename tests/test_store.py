@@ -101,3 +101,22 @@ def test_readers_keep_old_batch_during_new_import(tmp_path: Path, cgu_zip: Path,
     assert after is not None
     assert after[1].sha256 == new_batch.sha256
     assert after[0].pago_centavos == 100
+
+
+def test_reimporting_older_known_batch_does_not_roll_back_active_data(
+    tmp_path: Path, cgu_zip: Path
+):
+    db_path = tmp_path / "rastro.sqlite"
+    import_zip(db_path, cgu_zip)
+    updated_row = [*VALID_ROW]
+    updated_row[-1] = "1,00"
+    updated_zip = make_cgu_zip(tmp_path / "updated.zip", [updated_row])
+    latest = import_zip(db_path, updated_zip)
+
+    reused = import_zip(db_path, cgu_zip)
+
+    assert reused.reused is True
+    current = get_active_emenda(db_path, "202500010001")
+    assert current is not None
+    assert current[1].sha256 == latest.sha256
+    assert current[0].pago_centavos == 100
