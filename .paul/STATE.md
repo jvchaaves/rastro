@@ -6,13 +6,13 @@
 
 - Contexto inicial registrado em `PROJECT.md` a partir do FI-01 e do brief.
 - Pesquisa de uma amostra oficial da CGU concluída e documentada.
-- **PLAN da primeira fatia:** escrito em `../docs/superpowers/plans/2026-09-24-rastro-primeira-fatia.md`, com stack provisória e domínio do estudante ainda não confirmado.
-- **APPLY:** não iniciado.
-- **UNIFY:** não iniciado.
+- **PLAN da primeira fatia:** concluído em `../docs/superpowers/plans/2026-09-24-rastro-primeira-fatia.md`.
+- **APPLY:** primeira fatia implementada e verificada na branch `feat/rastro-ideacao`.
+- **UNIFY:** registrado em `phases/01-foundation/01-01-SUMMARY.md`.
 
 ## Próxima ação
 
-Executar as tarefas da primeira fatia em ordem, verificar critérios de aceitação e registrar no UNIFY qualquer ajuste provocado pela resposta do estudante sobre a stack.
+Confirmar o domínio do estudante na stack proposta e o canal dos alertas; depois abrir um novo PLAN para relacionar favorecidos e criar agregações, preservando a distinção entre local de aplicação e local do favorecido.
 
 ## Riscos ativos
 
@@ -26,3 +26,5 @@ Executar as tarefas da primeira fatia em ordem, verificar critérios de aceitaç
 - `../docs/references/brief.md`
 - `../docs/research/fontes-2026-09-24.md`
 - `../docs/superpowers/plans/2026-09-24-rastro-primeira-fatia.md`
+- `ROADMAP.md`
+- `phases/01-foundation/01-01-SUMMARY.md`
