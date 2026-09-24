@@ -48,14 +48,14 @@
 - Produces: `parse_brl_amount(value: str) -> int` and `iter_emendas_2025(zip_path: Path) -> Iterator[Emenda]`.
 - Raises: `ValueError` for malformed money or a missing required CSV column; skips rows whose amendment code is not 12 digits or does not begin with `2025`.
 
-- [ ] **Step 1: Add package metadata and a synthetic ZIP fixture.** `pyproject.toml` uses setuptools `src` discovery, requires Python 3.12+, and declares `fastapi==0.135.1`, `uvicorn==0.42.0` and dev dependencies `pytest==9.0.2`, `httpx==0.28.1`. `.gitignore` includes `.venv/`, `__pycache__/`, `.pytest_cache/`, `*.sqlite`, `*.zip`, `work/` and `data/`. The fixture creates `EmendasParlamentares.csv` in a ZIP with Latin-1, `;` and the headers below; it includes a 2025 row, `Sem informação` and a 2024 row.
+- [x] **Step 1: Add package metadata and a synthetic ZIP fixture.** `pyproject.toml` uses setuptools `src` discovery, requires Python 3.12+, and declares `fastapi==0.135.1`, `uvicorn==0.42.0` and dev dependencies `pytest==9.0.2`, `httpx==0.28.1`. `.gitignore` includes `.venv/`, `__pycache__/`, `.pytest_cache/`, `*.sqlite`, `*.zip`, `work/` and `data/`. The fixture creates `EmendasParlamentares.csv` in a ZIP with Latin-1, `;` and the headers below; it includes a 2025 row, `Sem informação` and a 2024 row.
 
 ```python
 HEADERS = ["Código da Emenda", "Ano da Emenda", "Tipo de Emenda", "Nome do Autor da Emenda", "UF", "Nome Função", "Valor Empenhado", "Valor Liquidado", "Valor Pago"]
 VALID = ["202500010001", "2025", "Individual", "Autora Exemplo", "CE", "Saúde", "15880000,00", "15721200,00", "15721200,00"]
 ```
 
-- [ ] **Step 2: Write failing parser tests.** Use the fixture to assert the valid row is the only result and malformed money raises `ValueError`.
+- [x] **Step 2: Write failing parser tests.** Use the fixture to assert the valid row is the only result and malformed money raises `ValueError`.
 
 ```python
 def test_parse_brl_amount():
@@ -67,8 +67,8 @@ def test_iter_emendas_filters_invalid_and_other_year(cgu_zip):
     assert rows[0].pago_centavos == 1_572_120_000
 ```
 
-- [ ] **Step 3: Run `.venv/bin/python -m pytest tests/test_cgu.py -q` after creating `.venv` and installing `.[dev]`.** Expected result: tests fail because the parser functions do not exist.
-- [ ] **Step 4: Implement the parser.** The core amount conversion is exact; `iter_emendas_2025` uses `zipfile.ZipFile.open`, `io.TextIOWrapper(encoding="latin-1", newline="")` and `csv.DictReader(delimiter=";")`, validates the required header set, and yields one `Emenda` per valid 2025 row.
+- [x] **Step 3: Run `.venv/bin/python -m pytest tests/test_cgu.py -q` after creating `.venv` and installing `.[dev]`.** Expected result: tests fail because the parser functions do not exist.
+- [x] **Step 4: Implement the parser.** The core amount conversion is exact; `iter_emendas_2025` uses `zipfile.ZipFile.open`, `io.TextIOWrapper(encoding="latin-1", newline="")` and `csv.DictReader(delimiter=";")`, validates the required header set, and yields one `Emenda` per valid 2025 row.
 
 ```python
 def parse_brl_amount(value: str) -> int:
@@ -80,7 +80,7 @@ def parse_brl_amount(value: str) -> int:
     return int(cents)
 ```
 
-- [ ] **Step 5: Run `.venv/bin/python -m pytest tests/test_cgu.py -q`.** Expected result: all Task 1 tests pass.
+- [x] **Step 5: Run `.venv/bin/python -m pytest tests/test_cgu.py -q`.** Expected result: all Task 1 tests pass.
 - [ ] **Step 6: Commit.** `git add pyproject.toml .gitignore src/rastro tests/conftest.py tests/test_cgu.py` then `git commit -m 'Parseia emendas de 2025 do pacote da CGU'`.
 
 ### Task 2: Publish an SQLite batch atomically
