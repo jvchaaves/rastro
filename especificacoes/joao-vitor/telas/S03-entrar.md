@@ -38,4 +38,4 @@
 - **Acessibilidade:**
   - Campo com `autocomplete="off"`, `spellcheck="false"` e `type="password"`, com o botão "Mostrar chave" (`aria-pressed`).
   - Erro associado ao campo por `aria-describedby`, e foco devolvido ao campo.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S03`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/S03.png](anexos/S03.png), exportado do canvas "Rastro — telas" (Claude Design).

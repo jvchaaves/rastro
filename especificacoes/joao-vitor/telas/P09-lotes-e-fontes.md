@@ -54,4 +54,4 @@
   - Estado do lote em texto, não só por cor ou ícone.
   - O detalhe expansível usa `<details>` ou um botão com `aria-expanded`.
   - Percentuais com casas decimais por extenso no rótulo acessível ("0,95 por cento").
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P09`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P09.png](anexos/P09.png), exportado do canvas "Rastro — telas" (Claude Design).

@@ -51,4 +51,4 @@
   - A diferença é escrita em texto ("aumentou"), além de qualquer seta ou cor.
   - Lista de mudanças em `<table>` no desktop e em `<ul>` de cartões no celular, sempre com o mesmo conteúdo.
   - A contagem por tipo funciona como filtro rápido (botões com `aria-pressed`).
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P08`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P08.png](anexos/P08.png), exportado do canvas "Rastro — telas" (Claude Design).

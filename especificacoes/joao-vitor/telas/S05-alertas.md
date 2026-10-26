@@ -52,4 +52,4 @@
   - Abas com `role="tablist"` e navegação por setas.
   - Estado lido / não lido em texto ("Não lido"), não só por um ponto colorido.
   - O contador do cabeçalho tem nome acessível "Alertas, 3 não lidos".
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S05`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/S05.png](anexos/S05.png), exportado do canvas "Rastro — telas" (Claude Design).

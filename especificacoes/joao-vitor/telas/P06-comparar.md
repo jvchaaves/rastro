@@ -49,4 +49,4 @@
 - **Acessibilidade:**
   - A tabela é a representação principal para leitores de tela; o gráfico tem `aria-hidden` e o resumo textual dos três maiores grupos.
   - O seletor de dimensão é um grupo de botões de opção (`radiogroup`) com setas do teclado.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P06`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P06.png](anexos/P06.png), exportado do canvas "Rastro — telas" (Claude Design).

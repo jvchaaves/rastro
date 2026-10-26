@@ -47,4 +47,4 @@
   - O aviso é um `<p>` comum no fluxo (não um `role="alert"`), lido antes da tabela.
   - A tabela tem `<caption>` "Recebimentos registrados por favorecido, emenda 2025…".
   - O CPF mascarado tem rótulo acessível "CPF parcialmente oculto pela fonte".
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P05`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P05.png](anexos/P05.png), exportado do canvas "Rastro — telas" (Claude Design).

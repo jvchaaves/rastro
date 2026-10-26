@@ -57,4 +57,4 @@
   - `<fieldset>`/`<legend>` para "O que acompanhar" e "Quando avisar"; os campos condicionais aparecem logo após a opção escolhida, na ordem de foco.
   - Campo de moeda com `inputmode="decimal"` e exemplo de formato.
   - Resumo de erros com links para os campos; o foco vai para o resumo ao enviar com erro.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S01`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/S01.png](anexos/S01.png), exportado do canvas "Rastro — telas" (Claude Design).

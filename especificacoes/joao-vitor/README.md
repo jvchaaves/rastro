@@ -8,7 +8,7 @@ Especificação individual do sistema completo **Rastro**, feita a partir do FI-
 | (b) Arquitetura | [arquitetura/README.md](arquitetura/README.md) | arc42 enxuto: C4 1 e 2, 7 ADRs, 65 REQ em EARS, OpenAPI 3.1 + AsyncAPI 3.0 + CLI + modelo de dados, 5 cenários de qualidade, glossário |
 | Rastreabilidade | [arquitetura/rastreabilidade.md](arquitetura/rastreabilidade.md) | Tela ↔ requisito ↔ contrato, gerada por [`verificar.py`](verificar.py) |
 
-Mockups de referência (anexo opcional) das telas: canvas "Rastro — telas" no Claude Design, com um artboard por id de tela.
+Mockups de referência (anexo opcional): [`telas/anexos/`](telas/anexos/), exportados do canvas "Rastro — telas" no Claude Design, com um arquivo por id de tela.
 
 ## Checklist do enunciado
 

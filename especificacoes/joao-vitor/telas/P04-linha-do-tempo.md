@@ -44,4 +44,4 @@
   - O gráfico é uma imagem com resumo textual ("Pago passou de R$ 0 em 13/10 para R$ 450 mil em 20/10/2026"); a tabela é a fonte acessível.
   - As caixas de etapa são `<input type=checkbox>` com rótulo.
   - Não há informação disponível só ao passar o mouse.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P04`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P04.png](anexos/P04.png), exportado do canvas "Rastro — telas" (Claude Design).

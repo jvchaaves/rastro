@@ -58,4 +58,4 @@
   - O painel "Origem" é um `<details>` ou um diálogo com foco gerenciado e retorno do foco ao botão.
   - O hash abreviado tem o valor completo no rótulo acessível.
   - O link externo anuncia "abre em nova aba".
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P03`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P03.png](anexos/P03.png) e [anexos/P03m.png](anexos/P03m.png) (celular), exportado do canvas "Rastro — telas" (Claude Design).

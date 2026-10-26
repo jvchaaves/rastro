@@ -42,4 +42,4 @@
   - Resumo final em linhas curtas com rótulo antes do número.
   - `--json` com o mesmo conteúdo.
   - Nenhuma confirmação interativa obrigatória (`--simular` substitui o "tem certeza?"), para funcionar com leitores de tela e no agendador.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `O02`, não versionado no repositório; exemplo de saída em `../arquitetura/contratos/cli.md`.
+- **Anexo:** mockup de referência [anexos/O02.png](anexos/O02.png), exportado do canvas "Rastro — telas" (Claude Design); exemplo de saída em `../arquitetura/contratos/cli.md`.

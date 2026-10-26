@@ -48,4 +48,4 @@
   - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
   - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").
   - Foco inicial no conteúdo, não no campo, para não abrir o teclado no celular.
-- **Anexo:** artboard `P01` no canvas de mockups (ver README).
+- **Anexo:** mockup de referência [anexos/P01.png](anexos/P01.png), exportado do canvas "Rastro — telas" (Claude Design).

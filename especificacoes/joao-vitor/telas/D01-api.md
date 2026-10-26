@@ -46,4 +46,4 @@
   - Blocos de código com `<pre><code>` e rótulo da linguagem; o botão "Copiar" tem nome acessível com a operação ("Copiar exemplo curl de obter_emenda").
   - O resultado do "Experimente" é anunciado (`aria-live`) com o status HTTP.
   - Contraste do realce de sintaxe ≥ 4,5:1.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `D01`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/D01.png](anexos/D01.png), exportado do canvas "Rastro — telas" (Claude Design).

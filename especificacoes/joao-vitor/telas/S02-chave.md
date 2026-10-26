@@ -37,4 +37,4 @@
   - A chave tem rótulo acessível lido caractere a caractere em grupos ("a 3 f 9, …") por `aria-label`.
   - O botão "Continuar" desabilitado explica o motivo (`aria-describedby` → "Confirme que guardou a chave").
   - O foco inicial vai para o título.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S02`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/S02.png](anexos/S02.png), exportado do canvas "Rastro — telas" (Claude Design).

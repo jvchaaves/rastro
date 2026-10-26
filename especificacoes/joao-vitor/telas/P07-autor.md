@@ -40,4 +40,4 @@
 - **Acessibilidade:**
   - O título `<h1>` é o nome do autor; o tipo vem logo abaixo em texto, não só num selo colorido.
   - A lista de emendas reutiliza a tabela de P02, com `<caption>` própria.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P07`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P07.png](anexos/P07.png), exportado do canvas "Rastro — telas" (Claude Design).

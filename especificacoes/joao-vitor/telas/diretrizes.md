@@ -37,18 +37,19 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
 
 ## Referência visual
 
-- **Inspira:**
-  - o próprio brief da disciplina (`docs/references/rastro-conceito.png`): fundo claro, tinta azul-ardósia escura, cartões cinza-claros, títulos em serifa, acento terracota em rótulos e verde-petróleo em links;
-  - tabelas e gráficos de jornalismo de dados: números alinhados à direita em algarismos tabulares, eixos sóbrios, anotação direta no gráfico;
-  - o padrão de componentes do GOV.UK Design System pela clareza de formulários e mensagens de erro.
+- **Ideia central: a trilha.** O mesmo elemento visual aparece em todas as telas com valores: uma barra única em que o empenhado é a trilha inteira e o liquidado e o pago a preenchem por dentro. Ela mostra quanto do dinheiro reservado já avançou, sem somar etapas. A cor segue uma escala sequencial de um só tom (claro → escuro = empenhado → liquidado → pago), e cada etapa sempre tem também o rótulo escrito.
+- **Tipografia:** Geist (interface, títulos e números, com algarismos tabulares) e Geist Mono só para identificadores (código da emenda, hash, CLI). Títulos com tracking levemente negativo; corpo de 16 px; escala 13/15/16/20/24/40/56.
+- **Paleta:** fundo cinza-esverdeado frio `#F2F4F3`, superfícies brancas, tinta `#0F1C22`, texto secundário `#4B5A60` (contraste ≥ 7:1), verde-pinho `#0E5E52` para ações e links, escala da trilha `#A7CFC4` / `#4A9E8B` / `#0E5E52`, âmbar `#FFF6E6`/`#8A4B00` só para avisos e diferenças entre lotes.
+- **Inspira:** a clareza de produtos de dados com interface sóbria (painéis densos e legíveis, tabelas com números alinhados à direita) e o padrão de formulários do GOV.UK Design System (rótulo visível, erro junto ao campo).
 - **Evitar:**
-  - visual de "dashboard de BI" (velocímetros, gráficos de pizza, cartões com ícones grandes, gradientes);
+  - visual de "dashboard de BI" (velocímetros, pizza, gradientes);
   - vermelho de alarme associado a pessoas;
+  - rankings de "piores";
   - mapas de calor que sugiram culpa;
-  - rankings de "mais suspeitos";
-  - emoji.
-- Gráficos têm sempre uma tabela equivalente acessível.
-- O layout fino é do design system (shadcn/ui); as fichas especificam intenção, não pixel.
+  - emoji;
+  - etiquetas em caixa-alta em cima de cada bloco.
+- **Gráficos:** sempre têm uma tabela equivalente acessível.
+- **Layout fino:** é do design system (shadcn/ui). As fichas especificam intenção, não pixel. Os mockups em `anexos/` são referência, não especificação.
 
 ## Idioma e formatos
 

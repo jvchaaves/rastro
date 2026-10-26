@@ -57,4 +57,4 @@
   - A mudança de resultados é anunciada em `aria-live` ("128 emendas encontradas").
   - Ordenação indicada por `aria-sort`.
   - No celular, a folha de filtros prende o foco e fecha com Esc.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P02`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/P02.png](anexos/P02.png), exportado do canvas "Rastro — telas" (Claude Design).

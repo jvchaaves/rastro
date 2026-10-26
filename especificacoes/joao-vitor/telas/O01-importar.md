@@ -52,4 +52,4 @@
   - Sem animações de spinner sem TTY.
   - `--json` permite consumo por leitor de tela ou outro programa.
   - Códigos de saída documentados.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `O01`, não versionado no repositório; exemplo de saída em `../arquitetura/contratos/cli.md`.
+- **Anexo:** mockup de referência [anexos/O01.png](anexos/O01.png), exportado do canvas "Rastro — telas" (Claude Design); exemplo de saída em `../arquitetura/contratos/cli.md`.

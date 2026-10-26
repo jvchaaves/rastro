@@ -41,4 +41,4 @@
   - Botões com nome que inclui a assinatura ("Pausar Saúde PB > R$ 1 mi").
   - A confirmação de exclusão fica em linha, sem diálogo modal, com foco no botão "Manter".
   - O estado é anunciado após a ação.
-- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S04`, não versionado no repositório.
+- **Anexo:** mockup de referência [anexos/S04.png](anexos/S04.png), exportado do canvas "Rastro — telas" (Claude Design).
