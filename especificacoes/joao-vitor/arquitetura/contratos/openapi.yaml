@@ -1236,6 +1236,9 @@ components:
             - $ref: '#/components/schemas/Etapa'
             - type: 'null'
         assinatura_limiar_centavos: { type: [integer, 'null'] }
+        valor_etapa_lote_novo_centavos:
+          type: [integer, 'null']
+          description: Em alertas de limiar, o valor da etapa da assinatura no lote novo (lido em `RegistroExecucao`), inclusive quando a mudança é `nova_emenda` (REQ-63); null nos demais
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }
         criado_em: { type: string, format: date-time }
         lido_em: { type: [string, 'null'], format: date-time }

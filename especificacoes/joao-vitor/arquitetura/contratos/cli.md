@@ -7,7 +7,7 @@ Regras comuns:
 - Saída para humanos em `stdout`. Com `--json`, uma linha JSON por evento, útil para teste e para o agendador.
 - Sem dependência de cor: todo estado tem um rótulo em texto (`OK`, `AVISO`, `ERRO`). `--sem-cor` desliga ANSI e `NO_COLOR` é respeitado.
 - Um processo escritor por vez: a CLI toma `fcntl.flock(LOCK_EX | LOCK_NB)` sobre `data/rastro.lock`. Se a trava estiver tomada, sai na hora com código 5, sem esperar (REQ-56). O sistema operacional solta a trava quando o processo morre, inclusive por `SIGKILL`, então um arquivo de trava deixado para trás não bloqueia a execução seguinte.
-- Progresso em terminal: linhas lidas a cada 10 000, etapa atual e tempo decorrido; sem terminal ou com `--json`, um evento por marco (REQ-90).
+- Progresso em terminal: linhas lidas a cada 10 000, etapa atual e tempo decorrido; sem terminal ou com `--json`, um evento por marco (REQ-90); sem terminal ou com `--json`, um evento JSON por marco (REQ-100).
 
 ## Códigos de saída
 

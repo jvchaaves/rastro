@@ -51,8 +51,8 @@ erros: list[str] = []
 # --- requisitos
 req_path = ARQ / "requisitos.md"
 req_txt = req_path.read_text()
-LINHA_REQ = re.compile(r"^\| (REQ-\d{2}) \|(.*)\| ([^|]*) \|$", re.M)
-reqs = set(re.findall(r"^\| (REQ-\d{2}) \|", req_txt, re.M))
+LINHA_REQ = re.compile(r"^\| (REQ-\d{2,3}) \|(.*)\| ([^|]*) \|$", re.M)
+reqs = set(re.findall(r"^\| (REQ-\d{2,3}) \|", req_txt, re.M))
 req_modulo = {}
 for m in LINHA_REQ.finditer(req_txt):
     celulas = [c.strip() for c in m.group(2).split(" | ")]
@@ -148,7 +148,7 @@ for p in fichas:
         if f"**{e}" not in bloco_estados:
             erros.append(f"{p.name}: estado '{e}' não especificado")
     for estado in re.split(r"\n(?=  - \*\*)", bloco_estados.strip()):
-        if estado.lstrip().startswith("- **") and not re.search(r"REQ-\d{2}|ADR-\d{4}", estado):
+        if estado.lstrip().startswith("- **") and not re.search(r"REQ-\d{2,3}|ADR-\d{4}", estado):
             erros.append(f"{p.name}: estado sem requisito → {estado.strip()[:60]}")
 
     # diretiva 5: toda ação aponta contrato
@@ -170,7 +170,7 @@ for p in fichas:
             elif not esperado & citadas:
                 erros.append(f"{p.name}: navegação para {destino} sem a operação de destino {sorted(esperado)}")
 
-    citados = set(re.findall(r"REQ-\d{2}", txt))
+    citados = set(re.findall(r"REQ-\d{2,3}", txt))
     for r in citados - reqs:
         erros.append(f"{p.name}: {r} não existe em requisitos.md")
     bloco_contrato = txt.split("**Requisitos · contrato:**")[1].split("- **Acessibilidade:**")[0]
@@ -221,7 +221,7 @@ for a in vai:
 
 # --- diretiva 1: coluna "Telas" de requisitos.md
 # REQs dos elementos comuns (cabeçalho, estados comuns) valem para todas as telas do painel, sem repetir em cada ficha (diretiva 6)
-comuns = set(re.findall(r"REQ-\d{2}", diretrizes.split("## Elementos comuns a todas as telas do painel")[1]))
+comuns = set(re.findall(r"REQ-\d{2,3}", diretrizes.split("## Elementos comuns a todas as telas do painel")[1]))
 painel = {t for t in ids_fichas if t[0] in "PDS"}
 def telas_de(r):
     return ", ".join(ordenar(req_telas.get(r, set()) | (painel if r in comuns else set()))) or "—"
@@ -263,7 +263,7 @@ for ator, telas in inv_atores.items():
 # --- cobertura
 outros = "".join(f.read_text() for f in [*(ARQ / "adr").glob("*.md"), ARQ / "qualidade.md"])
 for r in sorted(reqs):
-    if r not in req_telas and r not in outros:
+    if r not in req_telas and not re.search(rf"{r}\b", outros):
         erros.append(f"{r} não é citado por nenhuma tela, ADR ou cenário")
 for o in ops:
     if o not in op_telas:
@@ -280,8 +280,8 @@ for tid in ids_fichas:
     linhas.append(f"| {tid} | {', '.join(sorted(tela_reqs[tid]))} | {o} |")
 linhas += ["", "## Requisito → telas", "", "| Requisito | Módulo | Telas | Também em |", "| :-- | :-- | :-- | :-- |"]
 for r in sorted(reqs):
-    tambem = sorted({f"ADR-{f.stem[:4]}" for f in (ARQ / "adr").glob("*.md") if r in f.read_text()}
-                    | ({"qualidade"} if r in (ARQ / "qualidade.md").read_text() else set()))
+    tambem = sorted({f"ADR-{f.stem[:4]}" for f in (ARQ / "adr").glob("*.md") if re.search(rf"{r}\b", f.read_text())}
+                    | ({"qualidade"} if re.search(rf"{r}\b", (ARQ / "qualidade.md").read_text()) else set()))
     linhas.append(f"| {r} | {req_modulo.get(r, '?')} | {telas_de(r)} | {', '.join(tambem) or '—'} |")
 linhas += ["", "## Operação → telas", "", "| Operação | Módulo | Método e caminho | Telas |", "| :-- | :-- | :-- | :-- |"]
 for o, mc in ops.items():

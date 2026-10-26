@@ -22,7 +22,7 @@ Requisitos: REQ-07, REQ-10, REQ-76. Teste: `tests/test_store.py::test_lote_inter
 | Parte | Conteúdo |
 | :-- | :-- |
 | Fonte | Cliente da API (painel ou jornalista) |
-| Estímulo | Requisições a `GET /api/emendas/{codigo}` com código malformado, inexistente, e sem lote publicado; `GET /api/emendas?municipio=…` sem `uf_gasto`; requisições acima de 60/min vindas de um mesmo navegador, pelo painel |
+| Estímulo | Requisições a `GET /api/emendas/{codigo}` com código malformado, inexistente, e sem lote publicado; `GET /api/emendas?municipio_gasto=…` sem `uf_gasto`; requisições acima de 60/min vindas de um mesmo navegador, pelo painel |
 | Ambiente | API em execução, banco com e sem lote publicado |
 | Artefato | `src/rastro/consulta/rotas.py`, `src/rastro/saida/rotas.py` + `contratos/openapi.yaml` |
 | Resposta | 422 `codigo_malformado`, 422 `parametro_invalido`, 404 `emenda_nao_encontrada`, 503 `sem_lote_publicado`, 429 com `Retry-After` (o IP do navegador chega pelo `X-Forwarded-For` do painel), todos em `application/problem+json`, e 200 com proveniência, `estado_texto` e `traducao_versao` no caso válido |
@@ -52,9 +52,9 @@ Requisitos: REQ-08, REQ-09, REQ-11, REQ-35, REQ-36, REQ-56, REQ-92, REQ-93, REQ-
 | Ambiente | Base 2025 completa publicada, máquina de referência, sem outra carga |
 | Artefato | API + índices de `Emenda` e `RegistroExecucao` |
 | Resposta | (a) Todas as requisições respondem 200. (b) O lote termina `validado` |
-| Medida | `obter_emenda` p95 < 100 ms; `obter_agregacoes` p95 < 300 ms; 0% de erro. ETL do ZIP completo ≤ 10 min, com tempo por etapa em `duracao_etl_ms`. Os alvos são os do REQ-49 e do REQ-50; se o primeiro relatório (baseline) mostrar que estão errados, eles só mudam por uma ADR nova que altere esses requisitos |
+| Medida | `obter_emenda` p95 < 100 ms; `obter_agregacoes` p95 < 300 ms; 0% de erro. ETL do ZIP completo ≤ 10 min, com tempo por etapa em `duracao_etl_ms`. Os alvos são os do REQ-49, do REQ-101 e do REQ-50; se o primeiro relatório (baseline) mostrar que estão errados, eles só mudam por uma ADR nova que altere esses requisitos |
 
-Requisitos: REQ-49, REQ-50, REQ-82, REQ-85. Ferramentas: `scripts/carga.py` (`httpx` + `time.perf_counter`, relatório p50/p95/p99 em `docs/medicoes/`), `scripts/medir_etl.py`. Módulos: `consulta` (p95 das consultas), `ingestao` (tempo do ETL).
+Requisitos: REQ-49, REQ-50, REQ-82, REQ-85, REQ-101. Ferramentas: `scripts/carga.py` (`httpx` + `time.perf_counter`, relatório p50/p95/p99 em `docs/medicoes/`), `scripts/medir_etl.py`. Módulos: `consulta` (p95 das consultas), `ingestao` (tempo do ETL).
 
 ## QA-05 · Testes — cada requisito com um teste automático no CI
 
@@ -65,6 +65,6 @@ Requisitos: REQ-49, REQ-50, REQ-82, REQ-85. Ferramentas: `scripts/carga.py` (`ht
 | Ambiente | GitHub Actions, Ubuntu, Python 3.12, Node 20 |
 | Artefato | Repositório inteiro: `tests/`, `web/`, `e2e/` |
 | Resposta | O pipeline roda `pytest` (banco temporário por teste), `ruff`, `tsc --noEmit`, `next lint` e os testes e2e com axe. O merge fica bloqueado se algo falhar |
-| Medida | 100% dos REQ com teste automático ligado em `requisitos.md`, com três grupos de exceção declarados: REQ-13 (fase 6, Siga); REQ-49 e REQ-50 (medidos por script, QA-04); REQ-51 e REQ-83 (são o próprio pipeline e a proteção da `main`, verificados por inspeção do `ci.yml` e da regra do GitHub, e comprovados quando um PR com teste quebrado fica bloqueado). Cobertura de linhas ≥ 80% em cada `src/rastro/<modulo>`. Pipeline < 10 min. 0 violações axe `serious`/`critical` |
+| Medida | 100% dos REQ com teste automático ligado em `requisitos.md`, com três grupos de exceção declarados: REQ-13 (fase 6, Siga); REQ-49, REQ-50, REQ-93 e REQ-101 (medidos por script, QA-03 e QA-04); REQ-51 e REQ-83 (são o próprio pipeline e a proteção da `main`, verificados por inspeção do `ci.yml` e da regra do GitHub, e comprovados quando um PR com teste quebrado fica bloqueado). Cobertura de linhas ≥ 80% em cada `src/rastro/<modulo>`. Pipeline < 10 min. 0 violações axe `serious`/`critical` |
 
 Requisitos: REQ-43, REQ-51, REQ-83 e a coluna "Verificação" de `requisitos.md`. Módulos: todos; cada módulo mede a própria cobertura e roda os próprios testes sozinho, com o duplo do lote publicado (`tests/fixtures/lote_minimo.sql`, ADR-0009).

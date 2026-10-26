@@ -25,7 +25,7 @@
   - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
   - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
     - Cada cartão traz `ValorComProveniencia.valor_centavos` e uma definição de uma linha.
-    - Cada cartão tem o botão "Origem" com `Proveniencia.fonte_nome`, `lote_id`, `data_referencia`, `hash_sha256` (abreviado) e o link `url_download`.
+    - Cada cartão tem o botão "Origem" com `Proveniencia.fonte_nome`, `lote_id`, `data_referencia`, `importado_em` (data de extração), `hash_sha256` (abreviado) e o link `url_download`.
   - Bloco separado "Recebido por favorecidos": `EmendaDetalhe.soma_valor_recebido_centavos`, com o rótulo "Soma dos pagamentos registrados por favorecido" e o link para P05.
   - Quando a fonte Siga estiver habilitada: bloco "Siga Brasil (Senado)" com os valores da fonte `siga` em cartões próprios, sem somar com a CGU.
 - **Coleta:** nenhum campo; o `codigo` vem da rota.

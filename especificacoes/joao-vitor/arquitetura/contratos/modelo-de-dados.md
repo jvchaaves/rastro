@@ -341,7 +341,7 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 | `mudanca_id` | INTEGER | FK → MudancaLote |
 | `criado_em` | DATETIME | NOT NULL |
 | `lido_em` | DATETIME | NULL = não lido |
-| `assinatura_condicao` / `assinatura_etapa` / `assinatura_limiar_centavos` | — | derivados na API (junção com `Assinatura`), não armazenados |
+| `assinatura_condicao` / `assinatura_etapa` / `assinatura_limiar_centavos` / `valor_etapa_lote_novo_centavos` | — | derivados na API (junção com `Assinatura` e `RegistroExecucao` do lote novo), não armazenados |
 
 O FI-01 §9 previa `Alerta.estado`. Ele foi substituído por `lido_em`: o único estado do alerta no MVP é lido ou não lido, e a data atende à idempotência do REQ-39.
 

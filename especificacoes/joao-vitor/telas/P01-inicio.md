@@ -35,7 +35,7 @@
   - "Comparar UFs, funções e autores" → P06 (`obter_agregacoes`).
   - "Ver o que mudou" → P08 (`listar_mudancas`).
   - Faixa "Dados de … · Lote #n" → P09 (`listar_lotes`).
-  - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa o grupo da UF em (`obter_agregacoes`) com `dimensao=uf`; função usa o grupo em (`obter_agregacoes`) com `dimensao=funcao`.
+  - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa (`obter_agregacoes`) com `dimensao=uf` e `uf_gasto=PB`; função usa (`obter_agregacoes`) com `dimensao=funcao` e `funcao_codigo` da função, cada um devolvendo um único grupo.
   - Faixa "371 mudanças no lote 14" → P08 (`listar_mudancas`); cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03 (`obter_emenda`). A faixa pausa com o mouse ou com o foco do teclado.
   - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → o painel mostra a definição do glossário e o valor da etapa já carregado de `obter_status` → ação local · sem chamada à API (REQ-74).
 - **Estados:**

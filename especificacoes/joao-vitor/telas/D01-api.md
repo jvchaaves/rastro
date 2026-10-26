@@ -6,7 +6,7 @@
   - Chega de: cabeçalho "API" (todas as telas do painel).
   - Vai para: `/openapi.json` (contrato), chamadas `GET /api/...`, P09 ("Como o Rastro publica"), P11 ("Tabela de tradução").
 - **Mostra:**
-  - Introdução em três frases: o que a API devolve, que valores são inteiros em centavos (`valor_centavos`) e que toda resposta com valores traz `proveniencia` (`fonte_nome`, `lote_id`, `data_referencia`, `hash_sha256`, `url_download`).
+  - Introdução em três frases: o que a API devolve, que valores são inteiros em centavos (`valor_centavos`) e que toda resposta com valores traz `proveniencia` (`fonte_nome`, `lote_id`, `data_referencia`, `importado_em`, `hash_sha256`, `url_download`).
   - Limite de uso: 60 requisições/min por IP de cliente, com resposta 429 e `Retry-After` (REQ-28, REQ-84).
   - Tabela de operações gerada do contrato (`obter_contrato`), uma linha por operação pública:
     - método e caminho;
@@ -14,7 +14,7 @@
     - parâmetros;
     - códigos de resposta.
 
-    Por exemplo: `GET /api/emendas/{codigo}` → 200 / 404 / 422 / 503.
+    Por exemplo: `GET /api/emendas/{codigo}` → 200 / 404 / 422 / 429 / 500 / 503.
   - Exemplos prontos, para copiar, que reproduzem as telas P02, P03, P06, P08 e P10 (`curl` e Python `httpx`), inclusive "o que chegou a João Pessoa" (`obter_municipio`) e "empenhado e ainda não pago" (`listar_emendas?pendentes=true`).
   - Formato de erro (`Problema`: `status`, `codigo`, `detail`, `request_id`) e lista de `codigo` possíveis.
   - Glossário curto das etapas (`Etapa`) e de `estado_execucao`, com a explicação de `estado_texto` e `traducao_versao` e o link para a tabela de tradução (`listar_traducoes`).

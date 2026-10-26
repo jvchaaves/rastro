@@ -48,7 +48,7 @@
   - Na dimensão "Autor" não há ordenação por valor, posição, "maiores" nem destaque do primeiro grupo (REQ-71).
   - O título da tela diz "Comparar", nunca "Ranking"; não há cores de alarme.
 - **Requisitos · contrato:**
-  - REQ-22, REQ-21, REQ-15, REQ-14, REQ-49, REQ-71, REQ-72, REQ-79 · `GET /api/agregacoes` (`obter_agregacoes`), servida do `CacheConsulta` a partir da segunda consulta igual no mesmo lote (REQ-91).
+  - REQ-22, REQ-21, REQ-15, REQ-14, REQ-101, REQ-71, REQ-72, REQ-79 · `GET /api/agregacoes` (`obter_agregacoes`), gravada no `CacheConsulta` (REQ-91) e servida de lá nas consultas iguais seguintes do mesmo lote (REQ-99).
   - REQ-74 · ações locais (copiar link, CSV).
   - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
 - **Acessibilidade:**

@@ -11,7 +11,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | P03 | REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-66, REQ-69, REQ-74, REQ-77 | `listar_emendas`, `listar_favorecidos`, `listar_opcoes_filtro`, `listar_traducoes`, `obter_autor`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote`, `obter_municipio`, `obter_status` |
 | P04 | REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-23, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-69, REQ-74, REQ-76 | `listar_opcoes_filtro`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote` |
 | P05 | REQ-14, REQ-15, REQ-17, REQ-18, REQ-19, REQ-25, REQ-26, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-65, REQ-74 | `listar_favorecidos`, `listar_lotes`, `obter_emenda` |
-| P06 | REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-22, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-49, REQ-60, REQ-71, REQ-72, REQ-74, REQ-79, REQ-91 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_autor` |
+| P06 | REQ-101, REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-22, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-71, REQ-72, REQ-74, REQ-79, REQ-91, REQ-99 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_autor` |
 | P07 | REQ-14, REQ-15, REQ-19, REQ-22, REQ-28, REQ-29, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-60, REQ-69, REQ-71, REQ-72, REQ-79 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_autor`, `obter_emenda` |
 | P08 | REQ-08, REQ-14, REQ-19, REQ-20, REQ-24, REQ-27, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-60, REQ-61, REQ-66, REQ-69, REQ-72, REQ-75 | `listar_lotes`, `listar_mudancas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote` |
 | P09 | REQ-06, REQ-10, REQ-12, REQ-13, REQ-14, REQ-19, REQ-27, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-50, REQ-55, REQ-60, REQ-73, REQ-74, REQ-82 | `listar_lotes`, `listar_mudancas`, `listar_traducoes`, `obter_lote`, `obter_status` |
@@ -23,8 +23,8 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | S03 | REQ-28, REQ-32, REQ-44, REQ-46, REQ-47, REQ-74, REQ-84, REQ-89 | `listar_alertas`, `listar_assinaturas`, `listar_opcoes_filtro` |
 | S04 | REQ-32, REQ-38, REQ-40, REQ-42, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-74 | `atualizar_assinatura`, `excluir_assinatura`, `listar_alertas`, `listar_assinaturas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_municipio` |
 | S05 | REQ-14, REQ-32, REQ-35, REQ-36, REQ-37, REQ-39, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-63, REQ-64, REQ-69, REQ-74, REQ-81 | `atualizar_alerta`, `listar_alertas`, `listar_assinaturas`, `listar_mudancas`, `obter_emenda`, `obter_linha_do_tempo` |
-| O01 | REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-11, REQ-12, REQ-21, REQ-25, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88, REQ-90, REQ-97, REQ-98 | `cli:importar`, `cli:sincronizar` |
-| O02 | REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82, REQ-90, REQ-93, REQ-94, REQ-95 | `cli:publicar`, `listar_lotes`, `listar_mudancas` |
+| O01 | REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-100, REQ-11, REQ-12, REQ-21, REQ-25, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88, REQ-90, REQ-97, REQ-98 | `cli:importar`, `cli:sincronizar` |
+| O02 | REQ-07, REQ-08, REQ-09, REQ-100, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82, REQ-90, REQ-93, REQ-94, REQ-95 | `cli:publicar`, `listar_lotes`, `listar_mudancas` |
 
 ## Requisito → telas
 
@@ -40,6 +40,8 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-08 | nucleo | P08, O02 | ADR-0004, ADR-0009, qualidade |
 | REQ-09 | consulta | O02 | ADR-0001, ADR-0002, qualidade |
 | REQ-10 | ingestao | P09, O01 | ADR-0001, qualidade |
+| REQ-100 | ingestao | O01, O02 | — |
+| REQ-101 | consulta | P06 | qualidade |
 | REQ-11 | ingestao | O01 | ADR-0002, qualidade |
 | REQ-12 | ingestao | P09, O01, O02 | — |
 | REQ-13 | ingestao | P03, P09 | qualidade |
@@ -78,7 +80,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-46 | todos | P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, D01, S01, S02, S03, S04, S05 | — |
 | REQ-47 | todos | P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, D01, S01, S02, S03, S04, S05 | — |
 | REQ-48 | todos | P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, D01, S01, S02, S03, S04, S05 | — |
-| REQ-49 | consulta | P06 | ADR-0002, ADR-0008, qualidade |
+| REQ-49 | consulta | — | ADR-0002, ADR-0008, qualidade |
 | REQ-50 | ingestao | P09, O01, O02 | qualidade |
 | REQ-51 | todos | — | ADR-0003, qualidade |
 | REQ-52 | ingestao | O01 | — |
@@ -120,7 +122,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-88 | ingestao | P10, O01 | — |
 | REQ-89 | todos | D01, S01, S03 | — |
 | REQ-90 | ingestao | O01, O02 | — |
-| REQ-91 | consulta | P06 | — |
+| REQ-91 | consulta | P06 | ADR-0002 |
 | REQ-92 | consulta | — | qualidade |
 | REQ-93 | nucleo | O02 | ADR-0004, qualidade |
 | REQ-94 | saida | O02 | qualidade |
@@ -128,6 +130,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-96 | saida | — | ADR-0002 |
 | REQ-97 | ingestao | O01 | — |
 | REQ-98 | ingestao | O01 | — |
+| REQ-99 | consulta | P06 | — |
 
 ## Operação → telas
 

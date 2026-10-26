@@ -17,7 +17,7 @@
     - `assinatura_nome`;
     - `criado_em`;
     - lote de origem: `lote_novo.id` e `lote_novo.data_referencia`;
-    - a mudança (`MudancaLote`): `codigo_emenda`, `autor_nome`, `uf_gasto` e o texto conforme `tipo`. Para limiar (`Alerta.assinatura_condicao = limiar_valor`): "O valor **pago** passou de R$ 900.000,00 para R$ 1.150.000,00 (limiar R$ 1.000.000,00)", com o limiar vindo de `Alerta.assinatura_limiar_centavos`. Para estado: o texto simples do estado novo (`MudancaLote.estado_depois_texto`, "Agora: **A entrega foi conferida; falta pagar**") e o termo técnico ("passou de empenhada para liquidada");
+    - a mudança (`MudancaLote`): `codigo_emenda`, `autor_nome`, `uf_gasto` e o texto conforme `tipo`. Para limiar (`Alerta.assinatura_condicao = limiar_valor`): "O valor **pago** passou de R$ 900.000,00 para R$ 1.150.000,00 (limiar R$ 1.000.000,00)", com o limiar de `Alerta.assinatura_limiar_centavos` e o valor novo de `Alerta.valor_etapa_lote_novo_centavos`; se a mudança for `nova_emenda`: "Emenda nova, já com R$ 1.150.000,00 de **pago** (limiar R$ 1.000.000,00)". Para estado: o texto simples do estado novo (`MudancaLote.estado_depois_texto`, "Agora: **A entrega foi conferida; falta pagar**") e o termo técnico ("passou de empenhada para liquidada");
     - marcação de lido (`lido_em`).
 - **Coleta:**
   - `lido` · abas (não lidos / todos) · padrão "não lidos".

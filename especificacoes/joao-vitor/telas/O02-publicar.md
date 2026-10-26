@@ -22,7 +22,7 @@
   - `--reprocessar-alertas` → refaz o fan-out a partir de `lote.publicado`; idempotente (`cli:publicar`).
   - Ver o resultado no painel → P09 (`listar_lotes`) e P08 (`listar_mudancas`).
 - **Estados:**
-  - **carregando:** "Calculando mudanças…" e depois "Avaliando N assinaturas…", com o tempo decorrido (REQ-90).
+  - **carregando:** "Calculando mudanças…" e depois "Avaliando N assinaturas…", com o tempo decorrido (REQ-90); com `--json`, um evento JSON por marco (REQ-100).
   - **vazio:**
     - 0 mudanças em relação ao ativo → `AVISO` "Nenhuma mudança; o lote será publicado só para atualizar a data de referência" (REQ-08);
     - primeiro lote da fonte → `AVISO` "Primeiro lote publicado; as mudanças começam no próximo" (REQ-75).
@@ -37,7 +37,7 @@
 - **Regras:**
   - O lote ativo só muda dentro de uma transação, e leitores nunca veem mistura (REQ-07, REQ-09).
   - As mudanças são calculadas na mesma transação (REQ-08).
-  - Os alertas consideram só assinaturas `ativa` com `lote_base_id` anterior ao lote (REQ-37, REQ-38).
+  - Os alertas consideram só assinaturas `ativa` criadas antes da publicação do lote (`Assinatura.criada_em` < `LoteImportacao.publicado_em`) (REQ-37, REQ-38).
   - Há no máximo um alerta por (assinatura, mudança) (REQ-36).
 - **Requisitos · contrato:**
   - REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82, REQ-90, REQ-93, REQ-94, REQ-95 · `rastro publicar` (`cli:publicar`, ver `../arquitetura/contratos/cli.md`).

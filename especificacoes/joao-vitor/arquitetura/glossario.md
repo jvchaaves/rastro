@@ -20,7 +20,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Valor pago | `etapa = pago` | Valor efetivamente pago no exercício. |
 | Restos a pagar | `etapa = rap_inscrito`, `rap_cancelado`, `rap_pago` | Despesas empenhadas num ano e transferidas para os anos seguintes, com valores inscritos, cancelados e pagos. |
 | Valor recebido por favorecido | `RegistroFavorecido.valor_recebido_centavos` | Quanto um favorecido recebeu num mês, segundo o arquivo por favorecido da CGU. É uma grandeza distinta de "pago" e não comprova a aplicação final. |
-| Favorecido | `Favorecido` | Pessoa física, pessoa jurídica ou ente público que recebeu pagamento ligado à emenda. |
+| Favorecido | `Favorecido` | Pessoa jurídica, ente público ou outro recebedor identificado de pagamento ligado à emenda. Pessoas físicas não são identificadas: ver "Pessoas físicas (favorecidos)". |
 | Pessoas físicas (favorecidos) | `RegistroFavorecido` com `favorecido_id` nulo | Recebimentos de pessoas físicas somados por emenda e mês, com a quantidade de pessoas e sem nome nem CPF (REQ-25, ADR-0007). |
 | Aplicação final | — | Uso concreto do recurso (obra, compra, serviço). **O Rastro não tem esse dado e não afirma nada sobre ele.** |
 | Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada ou paga (ADR-0006). |
@@ -39,7 +39,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Data de extração | `LoteImportacao.importado_em` | Momento em que o Rastro baixou ou recebeu o arquivo da fonte e começou a importá-lo. Aparece na proveniência ao lado da data de referência ("extraídos em 21/10") (REQ-14). |
 | Lote ativo | `PublicacaoAtiva` | O lote que as consultas leem para uma fonte. Só muda numa publicação. |
 | Publicação atômica | — | Troca do lote ativo numa única transação: quem consulta vê o lote antigo inteiro ou o novo inteiro, nunca uma mistura. |
-| Proveniência | `Proveniencia` (contrato) | Fonte, lote, data de referência, hash e link do download oficial que acompanham cada valor. |
+| Proveniência | `Proveniencia` (contrato) | Fonte, lote, data de referência, data de extração, hash e link do download oficial que acompanham cada valor (REQ-14). |
 | Rejeição | `RejeicaoLote` | Linha descartada na validação, contada por motivo: `codigo_invalido`, `ano_fora_do_recorte`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro`. |
 | Mudança | `MudancaLote` | Diferença de uma emenda entre o lote anterior e o novo: `nova_emenda`, `valor_alterado` ou `estado_alterado`. |
 | Linha do tempo | — | Sequência dos valores de cada etapa de uma emenda ao longo dos lotes publicados. |

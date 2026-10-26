@@ -28,7 +28,7 @@
   - Ctrl-C → interrompe o processo; na próxima execução de (`cli:importar`), o lote é marcado como `falhou` / `interrompido` (REQ-10).
   - `rastro publicar --lote n` (sugerido na última linha) → O02 (`cli:publicar`).
 - **Estados:**
-  - **carregando:** progresso de linhas lidas, etapa atual e tempo decorrido (REQ-90).
+  - **carregando:** progresso de linhas lidas, etapa atual e tempo decorrido (REQ-90); sem terminal ou com `--json`, um evento JSON por marco (REQ-100).
   - **vazio:** ZIP sem nenhuma linha de 2025 → `ERRO` "Nenhuma emenda de 2025 no arquivo; lote RECUSADO (sem_linhas_no_recorte)" (código 2) (REQ-73).
   - **erro:**
     - colunas ausentes → `ERRO formato_alterado`, com a lista das colunas faltantes (código 3) (REQ-04);

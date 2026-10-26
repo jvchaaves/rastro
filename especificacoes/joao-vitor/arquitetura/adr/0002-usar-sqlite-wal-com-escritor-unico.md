@@ -28,7 +28,7 @@ Opção 3, porque atende ao gancho de concorrência do brief (leitura durante pu
 - Nas consultas, a API usa conexões só de leitura (`mode=ro`) e executa cada requisição dentro de uma transação de leitura. Com isso, o lote ativo lido no início vale para a requisição inteira (REQ-09).
 - Dados de fonte (lotes, emendas, execução, favorecidos, mudanças) e alertas novos: só a CLI escreve. Uma trava de arquivo (`data/rastro.lock`) impede duas CLIs ao mesmo tempo, e a publicação usa `BEGIN IMMEDIATE`.
 - A API tem uma conexão de escrita separada, restrita a transações curtas sobre `Assinante`, `Assinatura` (criar, pausar, excluir), `Alerta` (marcar `lido_em` e apagar em cascata ao excluir a assinatura) e `CacheConsulta`. A CLI só insere em `Alerta`, e o faz com `INSERT … SELECT … WHERE EXISTS` na assinatura, então uma exclusão concorrente não quebra a chave estrangeira.
-- Se uma escrita da API esperar mais que o `busy_timeout` de 5 s (uma publicação longa), a API responde 503 `banco_ocupado` com `Retry-After`, nunca 500 (REQ-96).
+- Se uma escrita da API pedida pelo assinante esperar mais que o `busy_timeout` de 5 s (uma publicação longa), a API responde 503 `banco_ocupado` com `Retry-After`, nunca 500 (REQ-96). A gravação de `CacheConsulta` é a exceção: ela não espera a trava e, se estiver ocupada, a consulta responde sem gravar (REQ-91).
 - A concorrência fica onde não há disputa por escrita:
   - downloads paralelos das fontes;
   - avaliação paralela das assinaturas;

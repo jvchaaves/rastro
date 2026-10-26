@@ -68,7 +68,7 @@ Os componentes ficam na pasta do módulo do grupo que é dono deles (ADR-0009). 
 | CLI + API | `saida` | `src/rastro/saida/alertas.py` | Despachante: avaliação paralela e inserção idempotente |
 | API | `saida` | `src/rastro/saida/rotas.py` | Assinaturas e alertas |
 | API | — | `src/rastro/app.py` | Monta as rotas dos módulos num único FastAPI |
-| Painel | por tela | `web/src/app/**` | Uma rota por tela (P01 = `/`, P10 = `/municipios/[uf]/[municipio]`, …; ver inventário) |
+| Painel | por tela | `web/src/app/**` | Uma rota por tela (P01 = `/`, P10 = `/municipios/[uf_gasto]/[municipio_gasto]`, …; ver inventário) |
 | Painel | — | `web/src/api/tipos.ts` | Tipos gerados do contrato |
 
 ## Implantação
