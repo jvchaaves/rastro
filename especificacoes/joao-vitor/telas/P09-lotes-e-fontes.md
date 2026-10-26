@@ -1,0 +1,57 @@
+## P09 · Lotes e fontes
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista (conferir a origem); operador de dados (conferir a publicação).
+- **Objetivo:** Mostrar de onde vêm os dados: quais lotes foram importados, qual está ativo, quantas linhas foram aceitas ou rejeitadas e onde baixar o original.
+- **Chega de / vai para:**
+  - Chega de: faixa "Dados de … · Lote #n" (todas as telas), botão "Origem" de P03, P04, P08, rodapé, saída de O02.
+  - Vai para: download oficial (`Fonte.url_download`), P08 (mudanças de um lote publicado).
+- **Mostra:**
+  - Por fonte (`Status.fontes[]`):
+    - `Fonte.nome`;
+    - `Fonte.habilitada` ("Siga Brasil: integração em validação" quando desabilitada);
+    - `Fonte.url_download`;
+    - lote ativo.
+  - Tabela de lotes (`listar_lotes.itens[]`, mais recentes primeiro):
+    - `LoteImportacao.id`;
+    - `estado` em texto, com destaque "ativo" quando `ativo = true`;
+    - `data_referencia`;
+    - `importado_em` e `publicado_em`;
+    - `arquivo_nome`;
+    - `hash_sha256` (abreviado, botão "copiar");
+    - `linhas_lidas`, `linhas_aceitas`, `linhas_rejeitadas` (com %);
+    - `motivo_falha` quando `falhou`/`recusado`.
+  - Detalhe de um lote (expansível ou `?lote_id=`, via `obter_lote`):
+    - `rejeicoes[]` (`RejeicaoLote.motivo`, `quantidade`), com explicação de cada motivo;
+    - `duracao_etl_ms` (leitura, validação, gravação, publicação).
+  - Texto fixo "Como o Rastro publica": em três frases, lote imutável, troca atômica e mais de 5% de rejeição bloqueia a publicação.
+- **Coleta:**
+  - `fonte_id` · seleção (todas, `cgu`, `siga`) · opcional.
+  - `lote_id` · da URL, para abrir o detalhe · opcional.
+- **Ações:**
+  - Filtrar por fonte → `listar_lotes` com `fonte_id`.
+  - Abrir detalhe → `obter_lote`.
+  - "Copiar hash" → área de transferência.
+  - "Baixar o original na CGU" → `Fonte.url_download`.
+  - "Ver o que mudou neste lote" (só lotes publicados) → P08 com `?lote_novo_id=`.
+- **Estados:**
+  - **carregando:** esqueleto da tabela (REQ-44).
+  - **vazio:** nenhum lote importado → "Nenhum lote importado ainda", com uma explicação do processo (REQ-45).
+  - **erro:** `lote_id` inexistente → aviso e tabela sem detalhe (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** fontes, tabela e detalhe (REQ-27).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** a tela funciona e mostra lotes `validado`/`falhou`/`recusado`, com "Nenhum lote publicado ainda" no topo (REQ-19, REQ-60).
+  - **fonte indisponível:** último lote `falhou` com `fonte_indisponivel` → "A última tentativa de atualização falhou em dd/mm; os dados exibidos continuam sendo os de dd/mm" (REQ-12).
+- **Regras:**
+  - Lotes `recusado` e `falhou` aparecem, por transparência, mas nunca como ativos (REQ-06, REQ-10).
+  - A data mostrada ao público é sempre `data_referencia` (dado da fonte); `importado_em` é secundária.
+  - O hash completo é recuperável (copiar) para quem quiser conferir o arquivo baixado.
+- **Requisitos · contrato:**
+  - REQ-27, REQ-12, REQ-06, REQ-10 · `GET /api/lotes` (`listar_lotes`).
+  - REQ-27, REQ-50, REQ-55 · `GET /api/lotes/{lote_id}` (`obter_lote`).
+  - REQ-13, REQ-14, REQ-48 · `GET /api/status` (`obter_status`).
+- **Acessibilidade:**
+  - Estado do lote em texto, não só por cor ou ícone.
+  - O detalhe expansível usa `<details>` ou um botão com `aria-expanded`.
+  - Percentuais com casas decimais por extenso no rótulo acessível ("0,95 por cento").
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P09`, não versionado no repositório.

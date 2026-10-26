@@ -1,0 +1,51 @@
+## P01 · Início
+
+- **Superfície · ator:** Painel web (celular e desktop) · Cidadão; também jornalista e controle social.
+- **Objetivo:** Levar o visitante, em uma ação, a uma emenda, a um recorte (UF, autor, função) ou ao que mudou, deixando claro de quando são os dados.
+- **Chega de / vai para:**
+  - Chega de: link externo, marca "Rastro" em qualquer tela.
+  - Vai para:
+    - P02 (busca ou atalho de filtro);
+    - P03 (código completo digitado);
+    - P06 ("Comparar");
+    - P08 ("O que mudou");
+    - P09 (faixa de data do lote).
+- **Mostra:**
+  - Pergunta-título: "Para onde vão as emendas parlamentares?"
+  - Faixa de proveniência: `LoteImportacao.data_referencia`, `LoteImportacao.id` e `Fonte.nome` do lote ativo (`Status.fontes[].lote_ativo`).
+  - Resumo do lote ativo, uma linha por etapa e sem somar etapas (`Status.fontes[].resumo`):
+    - quantidade de emendas;
+    - `valor_centavos` de `empenhado`, `liquidado` e `pago`, cada um com o seu rótulo e um link "o que é?" para a definição do glossário.
+  - "Mudanças no último lote": `resumo.quantidade_mudancas` → P08.
+  - Atalhos de recorte: seletor de UF do gasto (`Emenda.uf_gasto`, de `listar_opcoes_filtro.ufs_gasto`) e "Ver por função" / "Ver por autor" (→ P06).
+  - Bloco "Como ler estes números": três frases sobre empenhado, liquidado e pago, mais o aviso de que pagamento não comprova aplicação final.
+- **Coleta:**
+  - `q` · texto (2–80 caracteres) · opcional. Busca por código da emenda, nome do autor ou função.
+  - `uf_gasto` · seleção de UF · opcional.
+- **Ações:**
+  - "Buscar" → se `q` tem exatamente 12 dígitos: `obter_emenda` → P03; senão → P02 com `?q=`.
+  - Escolher UF → P02 com `?uf_gasto=XX`.
+  - "Comparar autores, UFs e funções" → P06.
+  - "Ver o que mudou" → P08 (`listar_mudancas` sem parâmetros).
+  - Faixa "Dados de … · Lote #n" → P09.
+- **Estados:**
+  - **carregando:** esqueleto do resumo e da faixa; campo de busca já utilizável (REQ-44).
+  - **vazio:** não se aplica ao resumo. Lote com 0 mudanças → "Nenhuma mudança no último lote" (REQ-45).
+  - **erro:** resumo indisponível, com `X-Request-Id` e "Tentar de novo"; a busca continua ativa (REQ-46).
+  - **sucesso:** resumo e faixa preenchidos (REQ-48).
+  - **offline:** aviso "Sem conexão"; resumo oculto, sem valores anteriores (REQ-47).
+  - **sem permissão:** tela pública. Ao estourar o limite de taxa: "Muitas consultas seguidas. Tente de novo em N s." (REQ-28).
+  - **sem lote publicado:** `lote_ativo = null` → "Dados ainda não publicados. A primeira carga da CGU ainda não foi concluída." e nenhum valor (REQ-19, REQ-60).
+- **Regras:**
+  - O resumo nunca mostra um "total" de etapas somadas (REQ-15).
+  - Código de 12 dígitos inexistente → P03 no estado "não encontrada", não P02.
+  - Texto com dígitos mas sem 12 caracteres vai para P02 como busca textual (sem 422 na tela inicial).
+- **Requisitos · contrato:**
+  - REQ-14, REQ-15, REQ-19, REQ-48 · `GET /api/status` (`obter_status`).
+  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) quando o texto é um código.
+- **Acessibilidade:**
+  - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
+  - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").
+  - Foco inicial no conteúdo, não no campo, para não abrir o teclado no celular.
+- **Anexo:** artboard `P01` no canvas de mockups (ver README).

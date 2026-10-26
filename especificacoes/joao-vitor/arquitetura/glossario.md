@@ -1,0 +1,66 @@
+# Glossário
+
+Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado na interface. Entre crases está o nome no modelo de dados e no contrato. A interface usa só estes termos.
+
+## Domínio orçamentário
+
+| Termo | No modelo | Definição |
+| :-- | :-- | :-- |
+| Emenda parlamentar | `Emenda` | Proposta de deputados, senadores, bancadas ou comissões para destinar parte do orçamento federal. No Rastro, uma emenda federal de 2025 identificada por um código válido. |
+| Código da emenda | `Emenda.codigo` | Identificador de 12 dígitos publicado pela CGU (os 4 primeiros são o ano). Fora desse padrão, a linha é rejeitada (`codigo_invalido`). |
+| Tipo de emenda | `Emenda.tipo` | Classificação da CGU: individual (transferência especial ou com finalidade definida), de bancada, de comissão ou de relator. |
+| Autor | `Autor` | Quem apresentou a emenda. É **autor parlamentar** quando `Autor.tipo = parlamentar`. Bancada, comissão e relator são **autores coletivos** e nunca são atribuídos a uma pessoa. |
+| Função | `Emenda.funcao_codigo`, `funcao_nome` | Área de governo da despesa (Saúde, Educação…), conforme a classificação orçamentária. |
+| Localidade do gasto | `Emenda.localidade_gasto` | Onde a despesa foi programada, segundo a CGU. **Não** é o endereço do favorecido. |
+| UF do gasto | `Emenda.uf_gasto` | UF derivada da localidade do gasto. Fica vazia quando a localidade é nacional ou abrange várias UFs ("Nacional ou múltiplas UFs"). |
+| Etapa | `RegistroExecucao.etapa` | Fase da despesa com valor próprio. As etapas nunca são somadas entre si. |
+| Valor empenhado | `etapa = empenhado` | Valor reservado no orçamento para a despesa (compromisso). Não significa que o dinheiro saiu. |
+| Valor liquidado | `etapa = liquidado` | Valor reconhecido como devido depois de verificada a entrega do bem ou serviço. |
+| Valor pago | `etapa = pago` | Valor efetivamente pago no exercício. |
+| Restos a pagar | `etapa = rap_inscrito`, `rap_cancelado`, `rap_pago` | Despesas empenhadas num ano e transferidas para os anos seguintes, com valores inscritos, cancelados e pagos. |
+| Valor recebido por favorecido | `RegistroFavorecido.valor_recebido_centavos` | Quanto um favorecido recebeu num mês, segundo o arquivo por favorecido da CGU. É uma grandeza distinta de "pago" e não comprova a aplicação final. |
+| Favorecido | `Favorecido` | Pessoa física, pessoa jurídica ou ente público que recebeu pagamento ligado à emenda. |
+| Pessoa física (favorecido) | `Favorecido.tipo = pessoa_fisica` | Exibida só com o nome e o CPF mascarado publicados pela CGU, sem busca por pessoa (ADR-0007). |
+| Aplicação final | — | Uso concreto do recurso (obra, compra, serviço). **O Rastro não tem esse dado e não afirma nada sobre ele.** |
+| Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada ou paga (ADR-0006). |
+
+## Dados e proveniência
+
+| Termo | No modelo | Definição |
+| :-- | :-- | :-- |
+| Fonte | `Fonte` | Origem pública de dados: `cgu` (Portal da Transparência) ou `siga` (Siga Brasil, opcional). |
+| Lote | `LoteImportacao` | Um arquivo de uma fonte, importado uma vez e identificado pelo hash. Exibido como "Lote #n". |
+| Hash | `LoteImportacao.hash_sha256` | Impressão digital SHA-256 do arquivo. Mesmo hash significa mesmo arquivo, e a reimportação não muda nada. |
+| Data de referência | `LoteImportacao.data_referencia` | Data de atualização dos dados informada pela fonte. É a data mostrada ao usuário ("dados de 20/10/2026"). |
+| Lote ativo | `PublicacaoAtiva` | O lote que as consultas leem para uma fonte. Só muda numa publicação. |
+| Publicação atômica | — | Troca do lote ativo numa única transação: quem consulta vê o lote antigo inteiro ou o novo inteiro, nunca uma mistura. |
+| Proveniência | `Proveniencia` (contrato) | Fonte, lote, data de referência, hash e link do download oficial que acompanham cada valor. |
+| Rejeição | `RejeicaoLote` | Linha descartada na validação, contada por motivo: `codigo_invalido`, `ano_fora_do_recorte`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro`. |
+| Mudança | `MudancaLote` | Diferença de uma emenda entre o lote anterior e o novo: `nova_emenda`, `valor_alterado` ou `estado_alterado`. |
+| Linha do tempo | — | Sequência dos valores de cada etapa de uma emenda ao longo dos lotes publicados. |
+| Sincronização | `rastro sincronizar` | Download concorrente das fontes seguido de importação e publicação em série. |
+
+## Assinaturas
+
+| Termo | No modelo | Definição |
+| :-- | :-- | :-- |
+| Assinante | `Assinante` | Quem acompanha emendas no painel. Identificado só por uma chave, sem dado pessoal. |
+| Chave de assinante | `X-Chave-Assinante`; `Assinante.chave_hash` | Segredo de 32 caracteres mostrado uma única vez. Quem perde a chave perde as assinaturas. |
+| Assinatura | `Assinatura` | Um filtro (emenda, autor, UF do gasto e/ou função) mais uma condição, criados por um assinante. |
+| Condição | `Assinatura.condicao` | `limiar_valor` (o valor da etapa cruza o limiar) ou `mudanca_estado` (o estado de execução muda). |
+| Limiar | `Assinatura.limiar_centavos` | Valor em centavos que, ao ser cruzado de baixo para cima numa etapa, gera alerta. |
+| Lote base | `Assinatura.lote_base_id` | Lote ativo quando a assinatura foi criada. Só mudanças posteriores geram alertas. |
+| Alerta | `Alerta` | Aviso no painel de que uma mudança de um lote publicado satisfez uma assinatura. No máximo um por mudança e assinatura. |
+| Pausar | `Assinatura.estado = pausada` | Suspende a geração de alertas sem apagar a assinatura. |
+
+## Arquitetura e processo
+
+| Termo | Definição |
+| :-- | :-- |
+| arc42 | Modelo de documentação de arquitetura usado como índice desta especificação. |
+| C4 | Modelo de diagramas em níveis (contexto, contêineres, componentes, código). |
+| ADR | Registro de decisão de arquitetura no formato MADR. |
+| EARS | Sintaxe controlada de requisitos (ubíquo, evento, estado, indesejado, opcional). |
+| PAUL | Ferramenta da disciplina que gera `PROJECT.md` e planos a partir destas especificações (`/paul:init`, `/paul:plan`). |
+| Operador de dados | Pessoa que executa a CLI `rastro` para importar e publicar lotes. |
+| Despachante de alertas | Parte da CLI que, após cada publicação, avalia as assinaturas e grava os alertas. |

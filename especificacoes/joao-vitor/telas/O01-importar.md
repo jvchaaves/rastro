@@ -1,0 +1,55 @@
+## O01 · Importar e validar lote
+
+- **Superfície · ator:** CLI (terminal do macOS, ≥ 80 colunas) · Operador de dados; também o agendador, via `--json`.
+- **Objetivo:** Transformar um ZIP baixado da CGU em um lote validado e mostrar com clareza se ele pode ser publicado.
+- **Chega de / vai para:**
+  - Chega de: download manual do ZIP em `data/raw/`, ou `rastro sincronizar`.
+  - Vai para:
+    - O02 (`rastro publicar --lote <id>`, sugerido na última linha);
+    - P09 (o lote aparece como `validado`, `recusado` ou `falhou`).
+- **Mostra (saída):**
+  - Cabeçalho: fonte (`Fonte.nome`), `LoteImportacao.arquivo_nome`, `hash_sha256` (abreviado), `data_referencia`.
+  - Progresso: `linhas_lidas`, atualizado a cada 10 000 linhas (em TTY; sem TTY, uma linha por marco).
+  - Resultado:
+    - `linhas_aceitas`;
+    - `linhas_rejeitadas` com percentual;
+    - uma linha por `RejeicaoLote.motivo` com `quantidade`;
+    - `duracao_etl_ms` por etapa;
+    - `LoteImportacao.estado` final;
+    - o comando seguinte sugerido.
+  - Com `--json`: eventos `lote_criado`, `progresso` e `lote_validado` / `lote_recusado` / `lote_falhou`, com o objeto `Lote` do contrato.
+- **Coleta (argumentos):**
+  - `--fonte` · `cgu` | `siga` · obrigatório.
+  - `--arquivo` · caminho de ZIP existente · obrigatório.
+  - `--json` · booleano · opcional.
+  - `--sem-cor` · booleano · opcional (ou `NO_COLOR`).
+- **Ações:**
+  - `rastro importar …` → cria o `LoteImportacao`, valida e grava (`cli:importar`).
+  - Ctrl-C → interrompe, e o lote é marcado como `falhou` / `interrompido` na próxima execução (REQ-10).
+- **Estados:**
+  - **carregando:** progresso de linhas lidas, com o tempo decorrido (REQ-50).
+  - **vazio:** ZIP sem nenhuma linha de 2025 → `ERRO` "Nenhuma linha aceita; lote recusado" (código 2) (REQ-06).
+  - **erro:**
+    - colunas ausentes → `ERRO formato_alterado`, com a lista das colunas faltantes (código 3) (REQ-04);
+    - arquivo inexistente → código 1;
+    - rejeições > 5% → `ERRO` "lote RECUSADO" (código 2) (REQ-06).
+  - **sucesso:** `OK` "Lote #n VALIDADO", seguido de `rastro publicar --lote n` (REQ-01).
+  - **já importado:** mesmo hash de lote validado/publicado → `OK` "lote já importado (Lote #n)", sem alterar nada (código 0) (REQ-05); hash de lote recusado → `ERRO` "lote já recusado" (código 2) (REQ-52); hash só de lotes `falhou` → importa de novo (REQ-53).
+  - **offline:** não se aplica ao `importar`, que lê o arquivo local. No `sincronizar`, a fonte indisponível vira lote `falhou` (código 4) (REQ-12).
+  - **sem permissão:** outro processo escritor ativo → `ERRO` "outra importação/publicação em andamento" (código 5) (REQ-56); sem permissão de escrita em `data/` → código 1.
+- **Regras:**
+  - Leitura em fluxo, Latin-1, `;` (REQ-01).
+  - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido de qualquer `ano_mes` entram (REQ-54).
+  - Valor inválido → `valor_malformado` (REQ-03).
+  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21).
+  - Importar nunca publica: o lote validado fica invisível até O02 (ADR-0001).
+- **Requisitos · contrato:**
+  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59 · `rastro importar` (`cli:importar`, ver `contratos/cli.md`).
+  - REQ-11, REQ-12 · `rastro sincronizar` (`cli:sincronizar`).
+- **Acessibilidade:**
+  - Todos os estados com rótulo textual (`OK`, `AVISO`, `ERRO`), nunca só cor.
+  - Números com separador de milhar pt-BR.
+  - Sem animações de spinner sem TTY.
+  - `--json` permite consumo por leitor de tela ou outro programa.
+  - Códigos de saída documentados.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `O01`, não versionado no repositório; exemplo de saída em `../arquitetura/contratos/cli.md`.

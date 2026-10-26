@@ -1,0 +1,52 @@
+## P06 · Comparar por autor, UF ou função
+
+- **Superfície · ator:** Painel web · Jornalista ou pesquisador; também o cidadão.
+- **Objetivo:** Comparar somas por etapa entre autores, UFs do gasto ou funções num mesmo lote, sem transformar a comparação em um ranking de culpa.
+- **Chega de / vai para:**
+  - Chega de: P01, cabeçalho "Comparar".
+  - Vai para:
+    - P07 (grupo da dimensão `autor`);
+    - P02 (grupo de `uf` ou `funcao` → lista filtrada);
+    - P09 (proveniência).
+- **Mostra:**
+  - Seletor de dimensão: "Autor", "UF do gasto", "Função" (`Agregacoes.dimensao`).
+  - Para cada grupo (`Agregacoes.grupos[]`):
+    - `rotulo` e o selo "coletivo" quando `coletivo = true`;
+    - `quantidade_emendas`;
+    - os valores de `empenhado`, `liquidado` e `pago` (`valores[].valor_centavos`) em três colunas separadas.
+  - Gráfico de barras agrupadas (não empilhadas): uma barra por etapa e por grupo, ordenado pela etapa escolhida.
+  - Nota da dimensão:
+    - em "UF do gasto": "Emendas nacionais ou de várias UFs aparecem em 'Nacional ou múltiplas UFs'";
+    - em "Autor": "Bancadas, comissões e relator aparecem como autores coletivos".
+  - Proveniência (`Agregacoes.proveniencia`).
+- **Coleta:**
+  - `dimensao` · seleção (`autor`, `uf`, `funcao`) · obrigatório, padrão `uf`.
+  - `ordenar_por_etapa` · seleção (`empenhado`, `liquidado`, `pago`) · padrão `empenhado`.
+  - `ano`, `uf_gasto`, `funcao_codigo`, `tipo` · filtros de recorte · opcionais.
+  - `limite` · seleção 10/20/50 · padrão 20.
+- **Ações:**
+  - Trocar dimensão, ordenação ou filtros → `obter_agregacoes` com os parâmetros; atualiza a URL.
+  - Grupo de autor parlamentar ou coletivo → P07 (`obter_autor`).
+  - Grupo de UF ou função → P02 com `uf_gasto` (inclusive `NM`) ou `funcao_codigo` aplicado.
+  - "Copiar link desta comparação" → URL na área de transferência.
+  - "Baixar CSV" → CSV gerado da resposta, com colunas de proveniência.
+- **Estados:**
+  - **carregando:** esqueleto do gráfico e da tabela; o seletor fica utilizável (REQ-44).
+  - **vazio:** nenhum grupo com os filtros → "Nenhuma emenda neste recorte" e "Limpar filtros" (REQ-45).
+  - **erro:** 422 (combinação inválida pela URL) → volta ao padrão com aviso; 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
+  - **sucesso:** gráfico e tabela (REQ-22).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - As barras são agrupadas, nunca empilhadas (REQ-15).
+  - UF = UF do gasto (REQ-21).
+  - Autores não parlamentares nunca aparecem como pessoa (REQ-22).
+  - O título da tela diz "Comparar", nunca "Ranking"; não há cores de alarme.
+- **Requisitos · contrato:**
+  - REQ-22, REQ-21, REQ-15, REQ-14, REQ-49 · `GET /api/agregacoes` (`obter_agregacoes`).
+  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+- **Acessibilidade:**
+  - A tabela é a representação principal para leitores de tela; o gráfico tem `aria-hidden` e o resumo textual dos três maiores grupos.
+  - O seletor de dimensão é um grupo de botões de opção (`radiogroup`) com setas do teclado.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P06`, não versionado no repositório.

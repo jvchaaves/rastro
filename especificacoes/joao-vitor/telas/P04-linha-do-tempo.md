@@ -1,0 +1,47 @@
+## P04 · Linha do tempo da emenda
+
+- **Superfície · ator:** Painel web · Jornalista e pessoa de controle social.
+- **Objetivo:** Mostrar como os valores de cada etapa e o estado de execução evoluíram de lote em lote, com o lote em que cada valor apareceu.
+- **Chega de / vai para:**
+  - Chega de: P03, P08.
+  - Vai para: P03 ("Voltar à emenda"), P09 (um ponto da linha → lote), S01 ("Acompanhar esta emenda").
+- **Mostra:**
+  - Cabeçalho curto: `Emenda.codigo` e `Autor.nome`.
+  - Gráfico de degraus, uma série por etapa (`LinhaDoTempo.etapas[].etapa`):
+    - eixo X = `data_referencia` dos lotes;
+    - eixo Y = `valor_centavos`;
+    - séries distinguidas por rótulo direto no fim da linha e por padrão de traço, não só por cor.
+  - Faixa de estados abaixo do gráfico: `LinhaDoTempo.estados[].estado_execucao` por lote ("empenhada → liquidada → paga").
+  - Tabela equivalente, sempre visível no desktop e recolhível no celular:
+    - linhas = lotes (`pontos[].lote_id`, `data_referencia`);
+    - colunas = etapas;
+    - células com valor e a diferença em relação ao lote anterior ("+R$ 120.000,00").
+- **Coleta:**
+  - `etapas visíveis` · caixas de seleção (empenhado, liquidado, pago, restos a pagar) · opcional, padrão: as três primeiras.
+- **Ações:**
+  - Ligar ou desligar uma etapa → só re-renderiza, sem nova requisição.
+  - Ponto ou linha da tabela → P09 com `?lote_id=`.
+  - "Voltar à emenda" → P03.
+  - "Acompanhar esta emenda" → S01 com `filtro_codigo_emenda` e `condicao = mudanca_estado` sugerida.
+  - "Baixar CSV desta linha do tempo" → gera, no navegador, um CSV a partir da resposta de `obter_linha_do_tempo`, com as colunas de proveniência.
+- **Estados:**
+  - **carregando:** esqueleto do gráfico e da tabela (REQ-44).
+  - **vazio:** um único lote publicado → "Ainda há só um lote. A linha do tempo aparece a partir do segundo lote publicado.", com a tabela de um ponto (REQ-45).
+  - **erro:** 404 / 422 / 5xx como em P03 (REQ-17, REQ-18, REQ-46).
+  - **sucesso:** gráfico, faixa de estados e tabela (REQ-23).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Cada ponto mostra o lote em que o valor apareceu (REQ-23).
+  - As etapas são séries separadas, nunca empilhadas: um gráfico empilhado sugeriria soma (REQ-15).
+  - Lotes `recusado` ou `falhou` não aparecem; só lotes publicados (atuais ou substituídos).
+- **Requisitos · contrato:**
+  - REQ-23, REQ-15, REQ-14 · `GET /api/emendas/{codigo}/linha-do-tempo` (`obter_linha_do_tempo`).
+  - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho (`Emenda.codigo`, `Autor.nome`).
+  - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
+- **Acessibilidade:**
+  - O gráfico é uma imagem com resumo textual ("Pago passou de R$ 0 em 13/10 para R$ 450 mil em 20/10/2026"); a tabela é a fonte acessível.
+  - As caixas de etapa são `<input type=checkbox>` com rótulo.
+  - Não há informação disponível só ao passar o mouse.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P04`, não versionado no repositório.

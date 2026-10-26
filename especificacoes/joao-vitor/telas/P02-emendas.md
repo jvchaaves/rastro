@@ -1,0 +1,60 @@
+## P02 · Emendas: busca e filtros
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Objetivo:** Encontrar emendas por recorte e comparar os valores por etapa numa lista que pode ser citada pela URL.
+- **Chega de / vai para:**
+  - Chega de: P01 (busca, UF), P06 (grupo escolhido), cabeçalho "Emendas".
+  - Vai para: P03 (linha da lista), S01 ("Acompanhar este filtro"), P09 (proveniência).
+- **Mostra:**
+  - Faixa de proveniência da página (`EmendaPagina.proveniencia`: `fonte_nome`, `lote_id`, `data_referencia`).
+  - Contagem "N emendas" (`EmendaPagina.total`) e a descrição em texto dos filtros aplicados.
+  - Tabela, uma linha por emenda (`EmendaResumo`):
+    - `Emenda.codigo` (monoespaçado);
+    - `Autor.nome`, com o selo "coletivo" quando `Autor.tipo ≠ parlamentar`;
+    - `Emenda.tipo`;
+    - `Emenda.uf_gasto` ("Nacional ou múltiplas UFs" se nulo);
+    - `Emenda.funcao_nome`;
+    - três colunas separadas: `empenhado`, `liquidado` e `pago` (`RegistroExecucao.valor_centavos` por `etapa`);
+    - `estado_execucao` como rótulo de texto.
+  - No celular, cada linha vira um cartão com as três etapas empilhadas e rotuladas.
+  - Paginação (`pagina`, `por_pagina`).
+- **Coleta:**
+  - `q` · texto 2–80 · opcional.
+  - `ano` · seleção (2025) · opcional, padrão 2025.
+  - `autor_codigo` · combobox com busca sobre `listar_opcoes_filtro.autores` · opcional.
+  - `uf_gasto` · seleção (UFs + "Nacional ou múltiplas UFs" = `NM`) · opcional.
+  - `funcao_codigo` · seleção · opcional.
+  - `tipo` · seleção · opcional.
+  - `ordenar` · seleção (`-empenhado`, `-liquidado`, `-pago`, `codigo`) · padrão `-empenhado`.
+  - `pagina` · inteiro ≥ 1.
+- **Ações:**
+  - Alterar um filtro → `listar_emendas` com os novos parâmetros; a URL é atualizada; o foco vai para a contagem de resultados.
+  - "Limpar filtros" → `listar_emendas` sem filtros.
+  - Linha / "Ver emenda" → P03.
+  - "Acompanhar este filtro" → S01, com `filtro_autor_codigo`, `filtro_uf_gasto` e `filtro_funcao_codigo` pré-preenchidos.
+  - "Copiar link desta consulta" → copia a URL e anuncia "Link copiado".
+  - Faixa de proveniência → P09.
+- **Estados:**
+  - **carregando:** esqueleto de 10 linhas; filtros desabilitados só durante a primeira carga (REQ-44).
+  - **vazio:** "Nenhuma emenda com estes filtros", com a lista de filtros e "Limpar filtros" (REQ-45).
+  - **erro:** 5xx → mensagem com `X-Request-Id` e "Tentar de novo" (REQ-46). 422 (parâmetro manipulado na URL) → filtros voltam ao padrão, com aviso "Ajustamos um filtro inválido".
+  - **sucesso:** tabela e paginação (REQ-20).
+  - **offline:** "Sem conexão"; a tabela anterior é removida, não congelada (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa → mensagem com tempo de espera (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - O filtro de UF usa `Emenda.uf_gasto`, nunca a UF do favorecido; a interface diz "UF do gasto" (REQ-21).
+  - A busca textual não procura favorecidos (REQ-65).
+  - "Acompanhar este filtro" leva só autor, UF e função, os filtros que uma assinatura aceita. Se houver `q`, `tipo` ou ordenação, S01 avisa: "A busca por texto e o tipo não entram na assinatura" (REQ-34).
+  - Nenhuma coluna soma etapas (REQ-15).
+  - `por_pagina` máximo de 100 (REQ-20).
+- **Requisitos · contrato:**
+  - REQ-20, REQ-21, REQ-65, REQ-15 · `GET /api/emendas` (`listar_emendas`).
+  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-14, REQ-48 · `EmendaPagina.proveniencia`.
+- **Acessibilidade:**
+  - Tabela com `<caption>` que descreve os filtros e cabeçalhos `scope="col"`; valores alinhados à direita com algarismos tabulares.
+  - A mudança de resultados é anunciada em `aria-live` ("128 emendas encontradas").
+  - Ordenação indicada por `aria-sort`.
+  - No celular, a folha de filtros prende o foco e fecha com Esc.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P02`, não versionado no repositório.

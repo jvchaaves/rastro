@@ -1,0 +1,50 @@
+## P05 · Favorecidos da emenda
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Objetivo:** Mostrar quem registrou recebimento de recursos de uma emenda, quanto e em que mês, sem sugerir que receber é irregular ou que o dinheiro foi aplicado.
+- **Chega de / vai para:**
+  - Chega de: P03.
+  - Vai para: P03 ("Voltar à emenda"), P09 (proveniência), download oficial da CGU.
+- **Mostra:**
+  - Aviso fixo no topo, antes da tabela: "Recebimento registrado não comprova a aplicação final do recurso nem indica irregularidade." (`FavorecidosPagina.aviso`).
+  - Soma: `FavorecidosPagina.soma_valor_recebido_centavos`, com o rótulo "Soma dos recebimentos registrados", distinta do valor "pago" da emenda, que aparece ao lado só como referência e com rótulo próprio.
+  - Tabela (`FavorecidosPagina.itens[]`):
+    - `Favorecido.nome_publicavel`;
+    - `Favorecido.codigo_origem` (CNPJ, ou CPF mascarado exatamente como publicado);
+    - `Favorecido.tipo` em texto ("Pessoa física", "Pessoa jurídica", "Ente público");
+    - `Favorecido.natureza_juridica`;
+    - `Favorecido.municipio` / `Favorecido.uf`, com a coluna "Local do favorecido";
+    - `RegistroFavorecido.ano_mes` (mm/aaaa);
+    - `RegistroFavorecido.valor_recebido_centavos`.
+  - Nota abaixo do cabeçalho de "Local do favorecido": "Local de quem recebeu; o local do gasto está na página da emenda."
+  - Proveniência da página (`FavorecidosPagina.proveniencia`).
+- **Coleta:**
+  - `pagina` · inteiro ≥ 1.
+  - `por_pagina` · seleção 20/50/100.
+- **Ações:**
+  - Paginação → `listar_favorecidos` com `pagina`.
+  - "Voltar à emenda" → P03.
+  - Faixa de proveniência → P09.
+  - "Conferir na CGU" → `Proveniencia.url_download`.
+- **Estados:**
+  - **carregando:** esqueleto da tabela; o aviso aparece já no esqueleto (REQ-44).
+  - **vazio:** "Nenhum recebimento por favorecido registrado para esta emenda até dd/mm/aaaa." O aviso continua visível (REQ-45).
+  - **erro:** 404 / 422 / 5xx como em P03 (REQ-17, REQ-18, REQ-46).
+  - **sucesso:** aviso, soma e tabela (REQ-25, REQ-26).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Pessoa física: nome e CPF mascarado exatamente como na fonte. Nenhum link, filtro, ordenação ou busca por favorecido pessoa física, e nenhuma página "do favorecido" (REQ-25, REQ-65, ADR-0007).
+  - O aviso é obrigatório em todos os estados com dados ou vazios (REQ-26).
+  - A soma dos recebimentos nunca é chamada de "pago" nem somada a outras etapas (REQ-15).
+  - A ordenação é fixa por `ano_mes` decrescente e depois por valor, para não criar um ranking de pessoas.
+- **Requisitos · contrato:**
+  - REQ-25, REQ-26, REQ-65, REQ-15, REQ-14 · `GET /api/emendas/{codigo}/favorecidos` (`listar_favorecidos`).
+  - REQ-15 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho e o valor "pago" de referência (etapa `pago`).
+  - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
+- **Acessibilidade:**
+  - O aviso é um `<p>` comum no fluxo (não um `role="alert"`), lido antes da tabela.
+  - A tabela tem `<caption>` "Recebimentos registrados por favorecido, emenda 2025…".
+  - O CPF mascarado tem rótulo acessível "CPF parcialmente oculto pela fonte".
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P05`, não versionado no repositório.

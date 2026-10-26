@@ -1,0 +1,41 @@
+## S03 · Entrar com chave
+
+- **Superfície · ator:** Painel web · Pessoa de controle social (assinante em outro navegador ou dispositivo).
+- **Objetivo:** Recuperar assinaturas e alertas digitando a chave de assinante.
+- **Chega de / vai para:**
+  - Chega de: botão "Alertas" do cabeçalho sem chave no navegador; links de S01/S02 em estados de erro.
+  - Vai para:
+    - S05 (chave aceita, padrão);
+    - S04 (se veio de "Minhas assinaturas");
+    - S01 ("Ainda não tenho chave: criar uma assinatura").
+- **Mostra:**
+  - Explicação: "Use a chave que você recebeu ao criar sua primeira assinatura."
+  - Nota: "A chave fica guardada só neste navegador. Em computador compartilhado, use 'Sair' depois."
+- **Coleta:**
+  - `chave_assinante` · texto, 32 caracteres hexadecimais (espaços e hífens são ignorados) · obrigatório.
+- **Ações:**
+  - "Entrar" → `GET /api/assinaturas` (`listar_assinaturas`) com `X-Chave-Assinante`.
+    - 200 → guarda a chave no `localStorage` → S05 (ou S04).
+    - 401 → erro no campo.
+  - "Criar uma assinatura" → S01.
+  - "Sair" (quando já há chave guardada) → remove a chave do navegador e permanece em S03.
+- **Estados:**
+  - **carregando:** botão "Verificando…" desabilitado (REQ-44).
+  - **vazio:** campo vazio → botão desabilitado, com a dica do formato (REQ-45).
+  - **erro:**
+    - formato inválido (local) → "A chave tem 32 caracteres (0–9, a–f)";
+    - 401 → "Chave não reconhecida", sem dizer se ela existe ou não (REQ-32);
+    - 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** redireciona com o anúncio "Chave reconhecida" (REQ-32).
+  - **offline:** "Sem conexão"; botão desabilitado (REQ-47).
+  - **sem permissão:** é o próprio caso 401 acima (REQ-32).
+  - **limite de taxa:** muitas tentativas → 429 com `Retry-After`, reduzindo tentativas de adivinhar a chave (REQ-28).
+- **Regras:**
+  - A chave é enviada só no cabeçalho `X-Chave-Assinante`, nunca na URL nem em query string (ADR-0005).
+  - A mensagem de erro é a mesma para chave inexistente e para chave revogada (REQ-32).
+- **Requisitos · contrato:**
+  - REQ-32, REQ-28 · `GET /api/assinaturas` (`listar_assinaturas`).
+- **Acessibilidade:**
+  - Campo com `autocomplete="off"`, `spellcheck="false"` e `type="password"`, com o botão "Mostrar chave" (`aria-pressed`).
+  - Erro associado ao campo por `aria-describedby`, e foco devolvido ao campo.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S03`, não versionado no repositório.

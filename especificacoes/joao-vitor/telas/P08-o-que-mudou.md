@@ -1,0 +1,54 @@
+## P08 · O que mudou
+
+- **Superfície · ator:** Painel web · Jornalista e pessoa de controle social.
+- **Objetivo:** Mostrar o que mudou entre o lote anterior e o lote ativo, emenda por emenda, para quem acompanha a execução.
+- **Chega de / vai para:**
+  - Chega de: P01, cabeçalho "O que mudou", S05 (alerta).
+  - Vai para:
+    - P03 (emenda);
+    - P04 (linha do tempo);
+    - S01 ("Acompanhar este recorte");
+    - P09 (lotes comparados).
+- **Mostra:**
+  - Par de lotes comparados: `MudancasPagina.lote_anterior` e `MudancasPagina.lote_novo`, cada um com `id` e `data_referencia` ("Lote #13, dados de 13/10/2026 → Lote #14, dados de 20/10/2026").
+  - Contagem por tipo (`MudancasPagina.contagem_por_tipo`): novas emendas · valores alterados · mudanças de estado.
+  - Lista (`MudancasPagina.itens[]`), uma linha por `MudancaLote`:
+    - `codigo_emenda`, `autor_nome`, `uf_gasto`;
+    - `tipo` em texto;
+    - para `valor_alterado`: `etapa`, `valor_antes_centavos` → `valor_depois_centavos` e a diferença com sinal e texto ("aumentou R$ 120.000,00");
+    - para `estado_alterado`: `estado_antes` → `estado_depois`;
+    - para `nova_emenda`: "apareceu neste lote".
+- **Coleta:**
+  - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
+  - `uf_gasto` · seleção · opcional.
+  - `autor_codigo` · combobox · opcional.
+  - `lote_novo_id` · seleção de lotes publicados (`listar_lotes`) · opcional, padrão o lote ativo.
+  - `pagina` · inteiro ≥ 1.
+- **Ações:**
+  - Alterar filtros ou lote → `listar_mudancas` com os parâmetros; atualiza a URL.
+  - Linha → P03; "Linha do tempo" → P04.
+  - "Acompanhar este recorte" → S01 com `filtro_uf_gasto` / `filtro_autor_codigo` preenchidos e `condicao = mudanca_estado`.
+  - Lote do cabeçalho → P09.
+- **Estados:**
+  - **carregando:** esqueleto da lista (REQ-44).
+  - **vazio:**
+    - primeiro lote (sem anterior) → "Este é o primeiro lote publicado; as mudanças aparecem a partir do próximo" (REQ-08);
+    - sem mudanças nos filtros → "Nenhuma mudança neste recorte" e "Limpar filtros" (REQ-45).
+  - **erro:** `lote_novo_id` inexistente (404) → volta ao lote ativo com aviso (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** cabeçalho, contagem e lista (REQ-24).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Só aparecem mudanças entre lotes publicados da mesma fonte (REQ-24, REQ-08).
+  - O verbo é neutro ("aumentou", "diminuiu", "passou de … para …"). Diminuição não é marcada em vermelho.
+  - Uma redução de estado (por exemplo, `paga` → `liquidada`) é mostrada como mudança, com a nota "pode indicar cancelamento ou correção na fonte" (ADR-0006).
+- **Requisitos · contrato:**
+  - REQ-24, REQ-61, REQ-08, REQ-14, REQ-55 · `GET /api/mudancas` (`listar_mudancas`).
+  - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
+  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF e autor.
+- **Acessibilidade:**
+  - A diferença é escrita em texto ("aumentou"), além de qualquer seta ou cor.
+  - Lista de mudanças em `<table>` no desktop e em `<ul>` de cartões no celular, sempre com o mesmo conteúdo.
+  - A contagem por tipo funciona como filtro rápido (botões com `aria-pressed`).
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P08`, não versionado no repositório.

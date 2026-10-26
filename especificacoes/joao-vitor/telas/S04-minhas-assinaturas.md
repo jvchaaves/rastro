@@ -1,0 +1,44 @@
+## S04 · Minhas assinaturas
+
+- **Superfície · ator:** Painel web · Pessoa de controle social (assinante com chave).
+- **Objetivo:** Ver, pausar, retomar e excluir as assinaturas da chave.
+- **Chega de / vai para:**
+  - Chega de: S02 ("Continuar"), S01 (após criar), S03, menu "Alertas" → "Minhas assinaturas".
+  - Vai para: S01 ("Nova assinatura"), S05 ("Ver alertas" de uma assinatura), P03 (quando o filtro é uma emenda).
+- **Mostra:**
+  - Contagem "N de 20 assinaturas".
+  - Lista (`listar_assinaturas.itens[]`), um cartão por `Assinatura`:
+    - `nome`;
+    - resumo legível `Assinatura.descricao`, montado pela API a partir de `filtro_codigo_emenda`, `filtro_autor_codigo`, `filtro_uf_gasto`, `filtro_funcao_codigo`, `condicao`, `etapa` e `limiar_centavos`;
+    - `estado` em texto ("Ativa" / "Pausada");
+    - `criada_em`;
+    - "Vale a partir do lote #`lote_base_id`";
+    - `alertas_nao_lidos` e `alertas_total`.
+- **Coleta:** nenhum campo; as ações são por assinatura.
+- **Ações:**
+  - "Pausar" / "Retomar" → `PATCH /api/assinaturas/{assinatura_id}` (`atualizar_assinatura`) com `estado`; atualiza o cartão e anuncia "Assinatura pausada".
+  - "Excluir" → confirmação em linha ("Excluir 'Saúde PB > R$ 1 mi' e seus N alertas?", com N = `Assinatura.alertas_total`, com "Excluir" / "Manter") → `DELETE /api/assinaturas/{assinatura_id}` (`excluir_assinatura`) → remove o cartão.
+  - "Ver alertas" → S05 com `?assinatura_id=`.
+  - "Nova assinatura" → S01 (desabilitado com 20).
+  - "Sair deste navegador" → remove a chave do `localStorage` → S03.
+- **Estados:**
+  - **carregando:** esqueleto de três cartões (REQ-44).
+  - **vazio:** "Você ainda não tem assinaturas", com o botão "Nova assinatura" e a explicação de como assinar a partir de uma emenda ou filtro (REQ-45).
+  - **erro:** falha em pausar ou excluir → o cartão volta ao estado anterior, com mensagem e `X-Request-Id` (REQ-46); 404 (já excluída em outro dispositivo) → o cartão some, com o aviso "Esta assinatura já tinha sido excluída".
+  - **sucesso:** lista atualizada (REQ-38, REQ-40).
+  - **offline:** "Sem conexão"; botões de ação desabilitados (REQ-47).
+  - **sem permissão:** sem chave ou 401 → S03 com a mensagem "Entre com sua chave" (REQ-32).
+- **Regras:**
+  - Assinatura pausada não gera alertas, e o cartão diz isso: "Pausada: novos lotes não geram alertas" (REQ-38).
+  - Excluir remove os alertas da assinatura, e a confirmação informa a quantidade (REQ-40).
+  - Não há edição: para mudar o filtro, cria-se outra assinatura (mantém `lote_base_id` coerente).
+- **Requisitos · contrato:**
+  - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`).
+  - REQ-38 · `PATCH /api/assinaturas/{assinatura_id}` (`atualizar_assinatura`).
+  - REQ-40 · `DELETE /api/assinaturas/{assinatura_id}` (`excluir_assinatura`).
+  - REQ-42 · limite exibido na contagem.
+- **Acessibilidade:**
+  - Botões com nome que inclui a assinatura ("Pausar Saúde PB > R$ 1 mi").
+  - A confirmação de exclusão fica em linha, sem diálogo modal, com foco no botão "Manter".
+  - O estado é anunciado após a ação.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `S04`, não versionado no repositório.

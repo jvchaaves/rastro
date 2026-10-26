@@ -1,0 +1,49 @@
+## D01 · API para jornalistas e pesquisadores
+
+- **Superfície · ator:** Painel web (documentação) + API pública (JSON) · Jornalista ou pesquisador.
+- **Objetivo:** Permitir que quem apura uma pauta reproduza no próprio código as mesmas consultas do painel, com a proveniência e os limites de uso explícitos.
+- **Chega de / vai para:**
+  - Chega de: cabeçalho "API" (todas as telas do painel).
+  - Vai para: `/openapi.json` (contrato), chamadas `GET /api/...`, P09 ("Como o Rastro publica").
+- **Mostra:**
+  - Introdução em três frases: o que a API devolve, que valores são inteiros em centavos (`valor_centavos`) e que toda resposta com valores traz `proveniencia` (`fonte_nome`, `lote_id`, `data_referencia`, `hash_sha256`, `url_download`).
+  - Limite de uso: 60 requisições/min por IP, com resposta 429 e `Retry-After`.
+  - Tabela de operações gerada do contrato (`obter_contrato`), uma linha por operação pública:
+    - método e caminho;
+    - `summary`;
+    - parâmetros;
+    - códigos de resposta.
+
+    Por exemplo: `GET /api/emendas/{codigo}` → 200 / 404 / 422 / 503.
+  - Exemplos prontos, para copiar, que reproduzem as telas P02, P03, P06 e P08 (`curl` e Python `httpx`).
+  - Formato de erro (`Problema`: `status`, `codigo`, `detail`, `request_id`) e lista de `codigo` possíveis.
+  - Glossário curto das etapas (`Etapa`) e de `estado_execucao`.
+  - Nota "O que a API não oferece": busca por favorecido pessoa física (REQ-65, ADR-0007), com indicação do download oficial da CGU.
+- **Coleta:**
+  - `codigo` (campo "Experimente") · texto de 12 dígitos · opcional. Executa `obter_emenda` e mostra o JSON.
+- **Ações:**
+  - "Baixar contrato (openapi.json)" → `GET /openapi.json` (`obter_contrato`).
+  - "Copiar exemplo" → área de transferência, com o anúncio "Exemplo copiado".
+  - "Experimentar" → `GET /api/emendas/{codigo}` (`obter_emenda`) e exibe o status HTTP e o corpo formatado.
+  - Link de cada operação → âncora da operação na própria página.
+- **Estados:**
+  - **carregando:** esqueleto da tabela de operações enquanto `/openapi.json` carrega (REQ-44).
+  - **vazio:** "Experimente" sem código → botão desabilitado, com a dica do formato (REQ-45).
+  - **erro:**
+    - contrato indisponível (5xx) → exemplos estáticos continuam visíveis, mensagem com `X-Request-Id` (REQ-46);
+    - no "Experimente": 422 / 404 / 503 mostrados como resposta da API, não como erro da página (REQ-17, REQ-18, REQ-19).
+  - **sucesso:** documentação e resposta do "Experimente" (REQ-30).
+  - **offline:** "Sem conexão"; documentação estática visível, "Experimente" desabilitado (REQ-47).
+  - **sem permissão:** tela pública; 429 no "Experimente" mostra `Retry-After` (REQ-28).
+- **Regras:**
+  - A tabela de operações vem de `/openapi.json`, nunca escrita à mão, para não divergir do contrato (REQ-30).
+  - Operações de assinatura aparecem documentadas, mas sem "Experimente", para não expor chaves.
+- **Requisitos · contrato:**
+  - REQ-30 · `GET /openapi.json` (`obter_contrato`).
+  - REQ-16, REQ-17, REQ-18, REQ-19 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-28, REQ-14 · todas as operações públicas.
+- **Acessibilidade:**
+  - Blocos de código com `<pre><code>` e rótulo da linguagem; o botão "Copiar" tem nome acessível com a operação ("Copiar exemplo curl de obter_emenda").
+  - O resultado do "Experimente" é anunciado (`aria-live`) com o status HTTP.
+  - Contraste do realce de sintaxe ≥ 4,5:1.
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `D01`, não versionado no repositório.

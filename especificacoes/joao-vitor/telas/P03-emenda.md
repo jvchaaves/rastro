@@ -1,0 +1,61 @@
+## P03 · Emenda
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Objetivo:** Mostrar uma emenda com o valor de cada etapa e a origem de cada valor, sem confundir destinação, pagamento e aplicação final.
+- **Chega de / vai para:**
+  - Chega de: P01 (código), P02, P05, P07, P08, S05, link externo.
+  - Vai para:
+    - P04 ("Linha do tempo");
+    - P05 ("Favorecidos");
+    - P07 (nome do autor);
+    - P09 (origem de um valor);
+    - S01 ("Acompanhar esta emenda");
+    - download oficial da CGU (`Fonte.url_download`).
+- **Mostra:**
+  - Cabeçalho:
+    - `Emenda.codigo` (monoespaçado, botão "copiar");
+    - `Emenda.ano` e `Emenda.numero`;
+    - `Emenda.tipo`;
+    - `Autor.nome` (link para P07, selo "coletivo" se `Autor.tipo ≠ parlamentar`);
+    - `estado_execucao` em texto ("Liquidada").
+  - Onde: `Emenda.localidade_gasto` (texto original) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
+  - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
+  - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
+    - Cada cartão traz `ValorComProveniencia.valor_centavos` e uma definição de uma linha.
+    - Cada cartão tem o botão "Origem" com `Proveniencia.fonte_nome`, `lote_id`, `data_referencia`, `hash_sha256` (abreviado) e o link `url_download`.
+  - Bloco separado "Recebido por favorecidos": `EmendaDetalhe.soma_valor_recebido_centavos`, com o rótulo "Soma dos pagamentos registrados por favorecido" e o link para P05.
+  - Quando a fonte Siga estiver habilitada: bloco "Siga Brasil (Senado)" com os valores da fonte `siga` em cartões próprios, sem somar com a CGU.
+- **Coleta:** nenhum campo; o `codigo` vem da rota.
+- **Ações:**
+  - "Copiar código" → área de transferência; anuncia "Código copiado".
+  - "Origem" (em cada valor) → abre um painel com a proveniência; "Ver lote" → P09 com `?lote_id=`.
+  - "Ver linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Ver favorecidos" → P05 (`listar_favorecidos`).
+  - Nome do autor → P07 (`obter_autor`).
+  - "Acompanhar esta emenda" → S01 com `filtro_codigo_emenda` preenchido.
+  - "Abrir na CGU" → `Fonte.url_download` em nova aba (com aviso de link externo).
+- **Estados:**
+  - **carregando:** esqueleto do cabeçalho e dos cartões (REQ-44).
+  - **vazio:** a emenda existe mas tem todas as etapas = 0 → "Nenhum valor executado registrado até dd/mm/aaaa" (`estado_execucao = sem_execucao`) (REQ-45).
+  - **erro:**
+    - 404 → "Não encontramos a emenda 2025… no lote de dd/mm/aaaa", com o link "Buscar emendas" (REQ-18);
+    - 422 → "O código precisa ter 12 dígitos" (REQ-17);
+    - 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
+  - **sucesso:** todos os blocos (REQ-16).
+  - **offline:** "Sem conexão"; nada de valores anteriores (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** 503 → "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - As etapas aparecem em cartões separados e na ordem do ciclo, sem "total" (REQ-15).
+  - Todo valor tem um botão "Origem" (REQ-14).
+  - A página não usa "aplicado em" nem "investido em"; o texto fixo é "Pagamento registrado não comprova a aplicação final" (FI-01 §5).
+  - Valores de fontes diferentes nunca são somados (REQ-13).
+- **Requisitos · contrato:**
+  - REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-13 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-48 · `GET /api/status` (`obter_status`).
+- **Acessibilidade:**
+  - Cartões de etapa numa lista ordenada (`<ol>`), porque a ordem do ciclo é informação.
+  - O painel "Origem" é um `<details>` ou um diálogo com foco gerenciado e retorno do foco ao botão.
+  - O hash abreviado tem o valor completo no rótulo acessível.
+  - O link externo anuncia "abre em nova aba".
+- **Anexo:** mockup de referência no canvas "Rastro — telas" (Claude Design), artboard `P03`, não versionado no repositório.
