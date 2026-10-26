@@ -28,6 +28,7 @@
   - "Comparar autores, UFs e funções" → P06.
   - "Ver o que mudou" → P08 (`listar_mudancas` sem parâmetros).
   - Faixa "Dados de … · Lote #n" → P09.
+  - Clicar no papel do topo (ou Enter no botão "Colar um adesivo no papel") → cola um adesivo com uma frase do glossário ("Empenhado ≠ pago", "Toda cifra tem origem") no ponto clicado. A interação é só visual, acontece no navegador, não chama a API e não guarda nada; "Limpar adesivos" remove todos.
 - **Estados:**
   - **carregando:** esqueleto do resumo e da faixa; campo de busca já utilizável (REQ-44).
   - **vazio:** não se aplica ao resumo. Lote com 0 mudanças → "Nenhuma mudança no último lote" (REQ-45).
@@ -48,4 +49,5 @@
   - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
   - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").
   - Foco inicial no conteúdo, não no campo, para não abrir o teclado no celular.
+  - Os adesivos são decorativos (`aria-hidden`), ficam atrás do texto e nunca cobrem a busca. O botão que cola adesivos tem nome acessível, a contagem é texto visível, e a animação some com `prefers-reduced-motion`.
 - **Anexo:** mockup de referência [anexos/P01.png](anexos/P01.png), exportado do canvas "Rastro — telas" (Claude Design).
