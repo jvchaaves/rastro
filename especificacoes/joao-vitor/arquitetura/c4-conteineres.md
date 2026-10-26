@@ -6,16 +6,16 @@ Unidades executáveis e de armazenamento do Rastro (seção 5 do arc42). Tudo ro
 C4Container
     title Rastro — contêineres
 
-    Person(publico, "Cidadão / jornalista / controle social", "Navegador")
+    Person(publico, "Morador / jornalista / controle social / gestor municipal", "Navegador")
     Person(operador, "Operador de dados", "Terminal")
     System_Ext(cgu, "Portal da Transparência (CGU)", "ZIP de dados abertos")
     System_Ext(siga, "Siga Brasil", "Relatórios de execução")
     System_Ext(agendador, "launchd/cron", "Agendador local")
 
     System_Boundary(rastro, "Rastro") {
-        Container(painel, "Painel web", "Next.js, TypeScript, shadcn/ui", "Telas P, D e S; consome só a API; tipos gerados do OpenAPI")
-        Container(api, "API pública", "Python, FastAPI, Uvicorn", "Leitura em snapshot do lote ativo; assinaturas e alertas; limite de taxa; serve /openapi.json")
-        Container(cli, "CLI de dados", "Python, concurrent.futures", "importar, publicar, sincronizar; calcula MudancaLote; despachante de alertas")
+        Container(painel, "Painel web", "Next.js, TypeScript, shadcn/ui", "Telas P, D e S; consome só a API; repassa o IP do navegador em X-Forwarded-For")
+        Container(api, "API pública", "Python, FastAPI, Uvicorn", "Rotas dos módulos consulta, nucleo, saida e ingestao (lotes); leitura em snapshot; limite de taxa; /openapi.json")
+        Container(cli, "CLI de dados", "Python, concurrent.futures", "ingestao: importar, publicar, sincronizar; nucleo: MudancaLote e tradução; saida: despachante de alertas")
         ContainerDb(db, "Banco Rastro", "SQLite em WAL", "Lotes, emendas, execução, favorecidos, mudanças, assinaturas, alertas")
         ContainerDb(raw, "Arquivos brutos", "Diretório data/raw (fora do Git)", "ZIPs baixados, nomeados por data e hash")
     }
@@ -36,13 +36,13 @@ C4Container
 
 ## Contêineres
 
-| Contêiner | Tecnologia | Responsabilidade | Contratos | Escreve no banco? |
-| :-- | :-- | :-- | :-- | :-- |
-| Painel web | Next.js + TypeScript + shadcn/ui | Telas P01–P09, D01, S01–S05; guarda a chave de assinante no `localStorage` | Consome `contratos/openapi.yaml` | Não |
-| API pública | FastAPI + Uvicorn | Consultas públicas, assinaturas e alertas; `X-Request-Id`; 429 por IP | Expõe `contratos/openapi.yaml` | Só `Assinante`, `Assinatura` e `Alerta.lido_em` |
-| CLI de dados | Python 3.12 (biblioteca padrão `csv`, `zipfile`, `hashlib`, `concurrent.futures`) | ETL, validação, publicação atômica, `MudancaLote`, despachante de alertas | `contratos/cli.md`, `contratos/eventos.asyncapi.yaml` | Sim: dados de fonte, mudanças e alertas |
-| Banco Rastro | SQLite (WAL) | Persistência única | `contratos/modelo-de-dados.md` | — |
-| Arquivos brutos | Diretório local `data/raw/` | Arquivos originais para reprocessamento e auditoria por hash | — | — |
+| Contêiner | Tecnologia | Responsabilidade | Módulo | Contratos | Escreve no banco? |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| Painel web | Next.js + TypeScript + shadcn/ui | Telas P01–P10, D01, S01–S05; guarda a chave de assinante no `localStorage`; repassa o IP do navegador (`X-Forwarded-For`, REQ-84) | telas P/D = `consulta` (P08 = `nucleo`, P09 = `ingestao` e `nucleo`); telas S = `saida` | Consome `contratos/openapi.yaml` | Não |
+| API pública | FastAPI + Uvicorn | Consultas públicas, município, tradução, assinaturas e alertas; `X-Request-Id`; 429 por IP de cliente | `consulta`, `nucleo`, `saida`, `ingestao` (rotas de lotes), conforme `x-modulo` | Expõe `contratos/openapi.yaml` | Só `Assinante`, `Assinatura` e `Alerta.lido_em` (`saida`) |
+| CLI de dados | Python 3.12 (biblioteca padrão `csv`, `zipfile`, `hashlib`, `concurrent.futures`) | ETL, validação, publicação atômica, `MudancaLote`, tabela de tradução, despachante de alertas | `ingestao` (comandos), `nucleo` (`calcular_mudancas`, `traducao publicar`), `saida` (despachante) | `contratos/cli.md`, `contratos/eventos.asyncapi.yaml` | Sim: dados de fonte, mudanças, tradução e alertas |
+| Banco Rastro | SQLite (WAL) | Persistência única, com dono por tabela (ADR-0009) | todos | `contratos/modelo-de-dados.md` | — |
+| Arquivos brutos | Diretório local `data/raw/` | Arquivos originais para reprocessamento e auditoria por hash | `ingestao` | — | — |
 
 ### Escrita compartilhada entre API e CLI
 
@@ -55,16 +55,21 @@ As duas operações são transações curtas sob `busy_timeout`, e não há conf
 
 ## Componentes principais (nível 3, só para orientar o plano)
 
-| Contêiner | Módulo previsto | Papel |
-| :-- | :-- | :-- |
-| CLI | `src/rastro/cgu.py` | Leitura em fluxo do ZIP da CGU e validação de linhas |
-| CLI | `src/rastro/store.py` | Lotes, publicação atômica e leitura em snapshot (compartilhado com a API) |
-| CLI | `src/rastro/mudancas.py` | Cálculo de `MudancaLote` e de `estado_execucao` |
-| CLI | `src/rastro/alertas.py` | Despachante: avaliação paralela e inserção idempotente |
-| CLI | `src/rastro/sincronizar.py` | Downloads concorrentes e publicação serial |
-| API | `src/rastro/api.py` | Rotas FastAPI ↔ operações do `openapi.yaml` |
-| Painel | `web/src/app/**` | Uma rota por tela (P01 = `/`, P03 = `/emendas/[codigo]`, …; ver inventário) |
-| Painel | `web/src/api/tipos.ts` | Tipos gerados do contrato |
+Os componentes ficam na pasta do módulo do grupo que é dono deles (ADR-0009). Nenhum módulo além de `ingestao` importa `ingestao/cgu.py`; `tests/test_fronteiras.py` (`import-linter`) confere.
+
+| Contêiner | Módulo do grupo | Arquivo previsto | Papel |
+| :-- | :-- | :-- | :-- |
+| CLI | `ingestao` | `src/rastro/ingestao/cgu.py` | Leitura em fluxo do ZIP da CGU, validação de linhas, derivação de `uf_gasto` e `municipio_gasto` |
+| CLI | `ingestao` | `src/rastro/ingestao/store.py` | Lotes, publicação atômica e leitura em snapshot (compartilhado com a API) |
+| CLI | `ingestao` | `src/rastro/ingestao/sincronizar.py` | Downloads concorrentes e publicação serial |
+| CLI | `nucleo` | `src/rastro/nucleo/mudancas.py` | `calcular_mudancas` e view `v_emenda_estado` |
+| CLI + API | `nucleo` | `src/rastro/nucleo/traducao.py` | `TabelaTraducao`: publicar versão, ler a vigente, rota `listar_traducoes` |
+| API | `consulta` | `src/rastro/consulta/rotas.py` | Rotas de leitura, município e agregações; limite de taxa |
+| CLI + API | `saida` | `src/rastro/saida/alertas.py` | Despachante: avaliação paralela e inserção idempotente |
+| API | `saida` | `src/rastro/saida/rotas.py` | Assinaturas e alertas |
+| API | — | `src/rastro/app.py` | Monta as rotas dos módulos num único FastAPI |
+| Painel | por tela | `web/src/app/**` | Uma rota por tela (P01 = `/`, P10 = `/municipios/[uf]/[municipio]`, …; ver inventário) |
+| Painel | — | `web/src/api/tipos.ts` | Tipos gerados do contrato |
 
 ## Implantação
 

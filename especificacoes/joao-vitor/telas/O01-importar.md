@@ -7,7 +7,7 @@
   - Vai para:
     - O02 (`rastro publicar --lote <id>`, sugerido na última linha);
     - P09 (o lote aparece como `validado`, `recusado` ou `falhou`).
-- **Mostra (saída):**
+- **Mostra:** saída no terminal.
   - Cabeçalho: fonte (`Fonte.nome`), `LoteImportacao.arquivo_nome`, `hash_sha256` (abreviado), `data_referencia`.
   - Progresso: `linhas_lidas`, atualizado a cada 10 000 linhas (em TTY; sem TTY, uma linha por marco).
   - Resultado:
@@ -18,17 +18,18 @@
     - `LoteImportacao.estado` final;
     - o comando seguinte sugerido.
   - Com `--json`: eventos `lote_criado`, `progresso` e `lote_validado` / `lote_recusado` / `lote_falhou`, com o objeto `Lote` do contrato.
-- **Coleta (argumentos):**
+- **Coleta:** argumentos da linha de comando.
   - `--fonte` · `cgu` | `siga` · obrigatório.
   - `--arquivo` · caminho de ZIP existente · obrigatório.
   - `--json` · booleano · opcional.
   - `--sem-cor` · booleano · opcional (ou `NO_COLOR`).
 - **Ações:**
   - `rastro importar …` → cria o `LoteImportacao`, valida e grava (`cli:importar`).
-  - Ctrl-C → interrompe, e o lote é marcado como `falhou` / `interrompido` na próxima execução (REQ-10).
+  - Ctrl-C → interrompe o processo; na próxima execução de (`cli:importar`), o lote é marcado como `falhou` / `interrompido` (REQ-10).
+  - `rastro publicar --lote n` (sugerido na última linha) → O02 (`cli:publicar`).
 - **Estados:**
   - **carregando:** progresso de linhas lidas, com o tempo decorrido (REQ-50).
-  - **vazio:** ZIP sem nenhuma linha de 2025 → `ERRO` "Nenhuma linha aceita; lote recusado" (código 2) (REQ-06).
+  - **vazio:** ZIP sem nenhuma linha de 2025 → `ERRO` "Nenhuma emenda de 2025 no arquivo; lote RECUSADO (sem_linhas_no_recorte)" (código 2) (REQ-73).
   - **erro:**
     - colunas ausentes → `ERRO formato_alterado`, com a lista das colunas faltantes (código 3) (REQ-04);
     - arquivo inexistente → código 1;
@@ -41,10 +42,10 @@
   - Leitura em fluxo, Latin-1, `;` (REQ-01).
   - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido de qualquer `ano_mes` entram (REQ-54).
   - Valor inválido → `valor_malformado` (REQ-03).
-  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21).
+  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21), com `NM` para nacional ou várias UFs (REQ-78); `municipio_gasto` derivado da mesma coluna quando ela nomeia um município (REQ-66).
   - Importar nunca publica: o lote validado fica invisível até O02 (ADR-0001).
 - **Requisitos · contrato:**
-  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59 · `rastro importar` (`cli:importar`, ver `contratos/cli.md`).
+  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
   - REQ-11, REQ-12 · `rastro sincronizar` (`cli:sincronizar`).
 - **Acessibilidade:**
   - Todos os estados com rótulo textual (`OK`, `AVISO`, `ERRO`), nunca só cor.

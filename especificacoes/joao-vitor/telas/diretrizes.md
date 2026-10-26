@@ -6,9 +6,10 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
 
 | Quem | Situação de uso | O que espera da interface |
 | :-- | :-- | :-- |
-| Cidadão | Chega por um link compartilhado ou por busca, muitas vezes no celular, querendo saber "quanto foi para minha cidade" ou "o que fez o meu deputado" | Resposta direta, sem jargão sem explicação, sem precisar entender o ciclo orçamentário antes |
+| Cidadão (morador) | Chega por um link compartilhado ou por busca, muitas vezes no celular, querendo saber "o que foi destinado à minha cidade e em que pé está" | Resposta direta em linguagem simples ("O dinheiro foi reservado"), com o termo técnico ao lado, sem precisar entender o ciclo orçamentário antes |
 | Jornalista ou pesquisador | Apura uma pauta no computador, compara autores e UFs, precisa citar a fonte e reproduzir a consulta | Filtros precisos, números exatos, link para a origem e uma URL que reproduz a consulta |
 | Pessoa de controle social | Acompanha um conjunto de emendas por semanas e volta ao painel para ver o que mudou | Assinar sem cadastro, ver alertas novos de forma clara e entender cada mudança |
+| Gestor municipal | Acompanha, no computador da prefeitura, o que foi empenhado para o município e ainda não foi pago | Um recorte "empenhado e ainda não pago" pronto, com a lista exportável e alerta quando algo andar |
 | Operador de dados | Roda a CLI no terminal do macOS e decide se um lote pode ser publicado | Números de validação claros, decisão explícita e nada publicado por engano |
 
 ## Plataforma e orientação
@@ -29,11 +30,11 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
 
 ## Princípios verificáveis
 
-1. **Todo valor tem origem a um toque.** Cada valor monetário exibido leva, em no máximo uma interação, à fonte, ao lote, à data de referência e ao link do download oficial. *Verificação:* `e2e/proveniencia.spec.ts` percorre todos os valores das telas P (REQ-14, REQ-48).
-2. **Etapas nunca se somam.** Empenhado, liquidado, pago, restos a pagar e recebido por favorecido aparecem sempre com o rótulo próprio, nunca num "total" único. *Verificação:* nenhuma tela tem um rótulo "Total" que agregue etapas (REQ-15).
-3. **Dizer de quando é o dado.** Toda tela com dados mostra "Dados de dd/mm/aaaa · Lote #n" no cabeçalho, com link para P09 (REQ-48).
+1. **Todo valor tem origem a um toque e data à vista.** Cada valor monetário leva, em no máximo uma interação, à fonte, ao lote, à data de referência, à data de extração e ao link do download oficial; toda tela com dados mostra "Dados de dd/mm/aaaa · Lote #n" no cabeçalho, com link para P09. *Verificação:* `e2e/proveniencia.spec.ts` percorre todos os valores das telas P (REQ-14, REQ-48).
+2. **Etapas nunca se somam.** Empenhado, liquidado, pago, restos a pagar e recebido por favorecido aparecem sempre com o rótulo próprio, nunca num "total" único. *Verificação:* nenhuma tela tem um rótulo "Total" que agregue etapas (REQ-15, REQ-77).
+3. **Linguagem simples com o termo técnico ao lado.** Todo estado de execução aparece primeiro como o texto da tabela de tradução vigente ("A entrega foi conferida; falta pagar") e logo depois como o termo técnico ("liquidada"), com a versão da tradução a um toque (P09). O texto nunca é escrito no código do painel. *Verificação:* `e2e/traducao.spec.ts` confere que todo estado exibido é igual ao `estado_texto` da API (REQ-69, ADR-0008).
 4. **Estado honesto.** Sem lote publicado, sem rede ou com erro, a tela diz isso por escrito. Nunca mostra R$ 0,00, tabela vazia ou valor guardado como se fosse atual (REQ-19, REQ-46, REQ-47).
-5. **Nenhuma conclusão que o dado não sustenta.** Onde houver favorecidos, aparece o aviso do REQ-26. Nenhuma tela usa "aplicado em", "investido em" ou "resultado" (FI-01 §5).
+5. **Nenhuma conclusão que o dado não sustenta.** Onde houver favorecidos, aparece o aviso do REQ-26. Nenhuma tela usa "aplicado em", "investido em", "atrasada" ou "resultado" (FI-01 §5), e nenhuma tela ranqueia pessoas: autores aparecem em ordem alfabética, sem posição nem "maiores" (REQ-71). *Verificação:* `e2e/linguagem.spec.ts` procura os termos proibidos e confere a ordem alfabética em P06.
 
 ## Referência visual
 
@@ -75,9 +76,24 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
 - Respeitar `prefers-reduced-motion` e `prefers-color-scheme`.
 - Na CLI: nenhum estado só por cor (rótulos `OK`/`AVISO`/`ERRO`), suporte a `NO_COLOR` e `--sem-cor`, e saída `--json` para leitores de tela e automação.
 
+## Convenção para o campo "Ações" (diretiva 5)
+
+Toda ação de toda ficha termina apontando o contrato que ela aciona, numa destas quatro formas:
+
+| Forma | Quando | Exemplo |
+| :-- | :-- | :-- |
+| (`operação`) | A ação chama a API na própria tela | "Alterar um filtro → (`listar_emendas`)" |
+| → Pxx (`operação`) | A ação navega para outra tela; a operação é a que a tela de destino chama ao abrir | "Linha → P03 (`obter_emenda`)" |
+| `cli:comando` ou evento | Superfície do terminal ou evento interno | "Ctrl-C → (`cli:importar`)", "`lote.publicado`" |
+| **ação local** · sem chamada à API (REQ-74) | Copiar, ligar ou desligar uma série, gerar CSV/.txt de dados já carregados, sair, voltar, abrir link externo, ir para uma tela que não chama a API ao abrir (S02, S03) | "Copiar código → ação local · sem chamada à API (REQ-74)" |
+
+O `verificar.py` confere que cada ação de cada ficha tem uma dessas quatro marcas e que a operação existe no contrato.
+
+Telas de destino e a operação que cada uma chama ao abrir: P01 `obter_status` · P02 `listar_emendas` · P03 `obter_emenda` · P04 `obter_linha_do_tempo` · P05 `listar_favorecidos` · P06 `obter_agregacoes` · P07 `obter_autor` · P08 `listar_mudancas` · P09 `listar_lotes` (ou `obter_lote` / `listar_traducoes` quando abre num lote ou na tradução) · P10 `obter_municipio` · D01 `obter_contrato` · S01 `listar_opcoes_filtro` · S02 e S03 nenhuma (ação local) · S04 `listar_assinaturas` · S05 `listar_alertas` · O02 `cli:publicar`.
+
 ## Elementos comuns a todas as telas do painel
 
-- **Cabeçalho (barra flutuante):** cartão branco destacado do topo, com borda de tinta e sombra verde. Contém a marca (→ P01), o menu Emendas (P02), Comparar (P06), O que mudou (P08), Dados (P09) e API (D01), com a seção atual em realce verde-claro. Tem também a busca global ("Buscar emenda", atalho `/`: 12 dígitos → P03 via `obter_emenda`, outro texto → P02 com `?q=`), o sino de alertas com o número de não lidos (S05, ou S03 sem chave) e o botão "Acompanhar" (S01). Logo abaixo da barra fica a linha "Dados de dd/mm/aaaa, lote n do Portal da Transparência. Ver origem" (→ P09), vinda de `obter_status` (REQ-48). No celular ficam só a marca, o sino e o botão de menu.
+- **Cabeçalho (barra flutuante):** cartão branco destacado do topo, com borda de tinta e sombra verde. Contém a marca (→ P01), o menu Emendas (P02), Comparar (P06), O que mudou (P08), Dados (P09) e API (D01), com a seção atual em realce verde-claro. Tem também a busca global ("Buscar emenda ou cidade", atalho `/`: 12 dígitos → P03 via `obter_emenda`; nome de município de `listar_opcoes_filtro.municipios` → P10 via `obter_municipio`; outro texto → P02 com `?q=`), o sino de alertas com o número de não lidos (S05 via `listar_alertas`, ou S03 sem chave) e o botão "Acompanhar" (S01). Logo abaixo da barra fica a linha "Dados de dd/mm/aaaa, lote n do Portal da Transparência. Ver origem" (→ P09), vinda de `obter_status` (REQ-48). No celular ficam só a marca, o sino e o botão de menu.
 - **Rodapé:** "O Rastro reúne registros públicos. Recebimento registrado não comprova aplicação final nem indica irregularidade." Links para P09 e para o repositório.
 - **Estados comuns:**
   - carregando (REQ-44);
@@ -85,6 +101,6 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
   - erro com `X-Request-Id` (REQ-46);
   - offline (REQ-47);
   - sem lote publicado (REQ-19);
-  - limite de taxa: "Muitas consultas seguidas. Tente de novo em N s." (REQ-28).
+  - limite de taxa: "Muitas consultas seguidas. Tente de novo em N s." (REQ-28). O painel repassa o IP do navegador à API (REQ-84), então o limite vale por pessoa, também no painel.
 
   As fichas citam esses estados e detalham só o que muda em cada tela.

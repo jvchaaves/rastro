@@ -28,7 +28,7 @@ Opção 3.
   1. Carrega as assinaturas `ativa` com `lote_base_id` < lote novo.
   2. Avalia em paralelo (`ThreadPoolExecutor`).
   3. Grava `Alerta` com `INSERT … ON CONFLICT(assinatura_id, mudanca_id) DO NOTHING`.
-- O evento e o resumo estão em `contratos/eventos.asyncapi.yaml`.
+- O evento e o resumo estão em `../contratos/eventos.asyncapi.yaml`.
 
 ## Consequências
 

@@ -13,6 +13,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Função | `Emenda.funcao_codigo`, `funcao_nome` | Área de governo da despesa (Saúde, Educação…), conforme a classificação orçamentária. |
 | Localidade do gasto | `Emenda.localidade_gasto` | Onde a despesa foi programada, segundo a CGU. **Não** é o endereço do favorecido. |
 | UF do gasto | `Emenda.uf_gasto` | UF derivada da localidade do gasto. Fica vazia quando a localidade é nacional ou abrange várias UFs ("Nacional ou múltiplas UFs"). |
+| Município do gasto | `Emenda.municipio_gasto` | Município derivado da localidade do gasto quando ela tem a forma "MUNICÍPIO - UF". Fica vazio quando a localidade é uma UF, uma região ou nacional; essas emendas aparecem na UF, não num município (REQ-66). |
 | Etapa | `RegistroExecucao.etapa` | Fase da despesa com valor próprio. As etapas nunca são somadas entre si. |
 | Valor empenhado | `etapa = empenhado` | Valor reservado no orçamento para a despesa (compromisso). Não significa que o dinheiro saiu. |
 | Valor liquidado | `etapa = liquidado` | Valor reconhecido como devido depois de verificada a entrega do bem ou serviço. |
@@ -23,6 +24,9 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Pessoa física (favorecido) | `Favorecido.tipo = pessoa_fisica` | Exibida só com o nome e o CPF mascarado publicados pela CGU, sem busca por pessoa (ADR-0007). |
 | Aplicação final | — | Uso concreto do recurso (obra, compra, serviço). **O Rastro não tem esse dado e não afirma nada sobre ele.** |
 | Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada ou paga (ADR-0006). |
+| Estado em linguagem simples | `estado_texto`; `TabelaTraducao.texto_simples` | Frase para o morador que traduz o estado ("A entrega foi conferida; falta pagar"). Vem da versão vigente da tabela de tradução (ADR-0008). |
+| Tabela de tradução | `TabelaTraducao` | Tabela versionada, só com inserção, com um texto simples e uma explicação por estado. Cada resposta diz a versão usada (`traducao_versao`). |
+| Empenhado e ainda não pago (pendente) | `pendentes=true`; `MunicipioDetalhe.quantidade_pendentes` | Emenda com estado `empenhada` ou `liquidada`. É o recorte que o gestor municipal acompanha (REQ-68). |
 
 ## Dados e proveniência
 
@@ -40,13 +44,23 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Linha do tempo | — | Sequência dos valores de cada etapa de uma emenda ao longo dos lotes publicados. |
 | Sincronização | `rastro sincronizar` | Download concorrente das fontes seguido de importação e publicação em série. |
 
+## Pessoas que usam o Rastro
+
+| Termo | Definição |
+| :-- | :-- |
+| Morador (cidadão) | Quem quer saber o que foi destinado à própria cidade e em que pé está, sem vocabulário técnico. Nas fichas aparece como "Cidadão". |
+| Jornalista ou pesquisador | Quem rastreia um valor da indicação ao pagamento e precisa citar a fonte de cada afirmação. |
+| Pessoa de controle social | Quem acompanha um conjunto de emendas por semanas, com assinaturas e alertas. |
+| Gestor municipal | Quem acompanha, pelo município, o que está empenhado e ainda não foi pago (tela P10). |
+| Operador de dados | Quem roda a CLI para importar e publicar lotes e versões da tabela de tradução. |
+
 ## Assinaturas
 
 | Termo | No modelo | Definição |
 | :-- | :-- | :-- |
 | Assinante | `Assinante` | Quem acompanha emendas no painel. Identificado só por uma chave, sem dado pessoal. |
 | Chave de assinante | `X-Chave-Assinante`; `Assinante.chave_hash` | Segredo de 32 caracteres mostrado uma única vez. Quem perde a chave perde as assinaturas. |
-| Assinatura | `Assinatura` | Um filtro (emenda, autor, UF do gasto e/ou função) mais uma condição, criados por um assinante. |
+| Assinatura | `Assinatura` | Um filtro (emenda, autor, UF do gasto, município do gasto e/ou função) mais uma condição, criados por um assinante. |
 | Condição | `Assinatura.condicao` | `limiar_valor` (o valor da etapa cruza o limiar) ou `mudanca_estado` (o estado de execução muda). |
 | Limiar | `Assinatura.limiar_centavos` | Valor em centavos que, ao ser cruzado de baixo para cima numa etapa, gera alerta. |
 | Lote base | `Assinatura.lote_base_id` | Lote ativo quando a assinatura foi criada. Só mudanças posteriores geram alertas. |
@@ -62,5 +76,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | ADR | Registro de decisão de arquitetura no formato MADR. |
 | EARS | Sintaxe controlada de requisitos (ubíquo, evento, estado, indesejado, opcional). |
 | PAUL | Ferramenta da disciplina que gera `PROJECT.md` e planos a partir destas especificações (`/paul:init`, `/paul:plan`). |
-| Operador de dados | Pessoa que executa a CLI `rastro` para importar e publicar lotes. |
-| Despachante de alertas | Parte da CLI que, após cada publicação, avalia as assinaturas e grava os alertas. |
+| Despachante de alertas | Parte da CLI (módulo `saida`) que, após cada publicação, avalia as assinaturas e grava os alertas. |
+| Módulo | Uma das quatro partes do sistema definidas no brief do grupo (`ingestao`, `nucleo`, `consulta`, `saida`), cada uma com persistência, API, concorrência, desempenho medido e testes (ADR-0009). |
+| Lote publicado (contrato) | O contrato principal entre os módulos: a ingestão publica o lote e os demais módulos só o leem. |
+| Ranking | Ordenação de pessoas por valor. O Rastro não faz: autores aparecem em ordem alfabética (REQ-71). |

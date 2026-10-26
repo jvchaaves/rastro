@@ -1,10 +1,11 @@
 ## P01 · Início
 
-- **Superfície · ator:** Painel web (celular e desktop) · Cidadão; também jornalista e controle social.
-- **Objetivo:** Levar o visitante, em uma ação, a uma emenda, a um recorte (UF, autor, função) ou ao que mudou, deixando claro de quando são os dados.
+- **Superfície · ator:** Painel web (celular e desktop) · Cidadão (morador); também jornalista, controle social e gestor municipal.
+- **Objetivo:** Levar o visitante, em uma ação, ao que chegou à cidade dele (P10), a uma emenda, a um recorte (UF, autor, função) ou ao que mudou, deixando claro de quando são os dados.
 - **Chega de / vai para:**
   - Chega de: link externo, marca "Rastro" em qualquer tela.
   - Vai para:
+    - P10 ("O que chegou à sua cidade");
     - P02 (busca ou atalho de filtro);
     - P03 (código completo digitado);
     - P06 ("Comparar");
@@ -17,20 +18,23 @@
     - quantidade de emendas;
     - `valor_centavos` de `empenhado`, `liquidado` e `pago`, cada um com o seu rótulo e um link "o que é?" para a definição do glossário.
   - "Mudanças no último lote": `resumo.quantidade_mudancas` → P08.
+  - Bloco "O que chegou à sua cidade": seletores de UF e de município (`OpcoesFiltro.municipios`, só municípios com emendas no lote ativo) e o botão "Ver minha cidade".
   - Atalhos de recorte: seletor de UF do gasto (`Emenda.uf_gasto`, de `listar_opcoes_filtro.ufs_gasto`) e "Ver por função" / "Ver por autor" (→ P06).
   - Bloco "Como ler estes números": três frases sobre empenhado, liquidado e pago, mais o aviso de que pagamento não comprova aplicação final.
 - **Coleta:**
   - `q` · texto (2–80 caracteres) · opcional. Busca por código da emenda, nome do autor ou função.
   - `uf_gasto` · seleção de UF · opcional.
+  - `municipio` · seleção dependente da UF (`OpcoesFiltro.municipios[].municipio`) · opcional; obrigatório para "Ver minha cidade".
 - **Ações:**
-  - "Buscar" → se `q` tem exatamente 12 dígitos: `obter_emenda` → P03; senão → P02 com `?q=`.
-  - Escolher UF → P02 com `?uf_gasto=XX`.
-  - "Comparar autores, UFs e funções" → P06.
-  - "Ver o que mudou" → P08 (`listar_mudancas` sem parâmetros).
-  - Faixa "Dados de … · Lote #n" → P09.
-  - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa o grupo da UF em `obter_agregacoes?dimensao=uf`; função usa o grupo em `obter_agregacoes?dimensao=funcao`.
-  - Faixa "371 mudanças no lote 14" → P08; cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03. A faixa rola sozinha e pausa com o mouse ou o foco do teclado.
-  - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → a moeda anda até a etapa e o painel mostra a definição do glossário e o valor da etapa no lote ativo. É conteúdo local mais os valores de `obter_status`, sem outra chamada.
+  - "Buscar" → se `q` tem exatamente 12 dígitos: P03 (`obter_emenda`); se `q` é o nome de um município de `listar_opcoes_filtro.municipios`: P10 (`obter_municipio`); senão: P02 com `?q=` (`listar_emendas`).
+  - "Ver minha cidade" (UF e município escolhidos) → P10 (`obter_municipio`).
+  - Escolher uma UF nos atalhos → P02 com `?uf_gasto=XX` (`listar_emendas`).
+  - "Comparar UFs, funções e autores" → P06 (`obter_agregacoes`).
+  - "Ver o que mudou" → P08 (`listar_mudancas`).
+  - Faixa "Dados de … · Lote #n" → P09 (`listar_lotes`).
+  - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa o grupo da UF em (`obter_agregacoes`) com `dimensao=uf`; função usa o grupo em (`obter_agregacoes`) com `dimensao=funcao`.
+  - Faixa "371 mudanças no lote 14" → P08 (`listar_mudancas`); cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03 (`obter_emenda`). A faixa rola sozinha e pausa com o mouse ou o foco do teclado.
+  - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → a moeda anda até a etapa e o painel mostra a definição do glossário e o valor da etapa já carregado de `obter_status` → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto do resumo e da faixa; campo de busca já utilizável (REQ-44).
   - **vazio:** não se aplica ao resumo. Lote com 0 mudanças → "Nenhuma mudança no último lote" (REQ-45).
@@ -45,10 +49,12 @@
   - Texto com dígitos mas sem 12 caracteres vai para P02 como busca textual (sem 422 na tela inicial).
 - **Requisitos · contrato:**
   - REQ-14, REQ-15, REQ-19, REQ-48 · `GET /api/status` (`obter_status`).
-  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
+  - REQ-67 · `GET /api/municipios/{uf}/{municipio}` (`obter_municipio`) ao escolher a cidade.
   - REQ-22 · `GET /api/agregacoes` (`obter_agregacoes`) para os recortes por UF e função.
   - REQ-24 · `GET /api/mudancas` (`listar_mudancas`) para a faixa de mudanças.
   - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) quando o texto é um código.
+  - REQ-74 · ações locais ("Como ler estes números").
 - **Acessibilidade:**
   - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
   - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").

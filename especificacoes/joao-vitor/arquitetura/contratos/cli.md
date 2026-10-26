@@ -1,6 +1,6 @@
 # Contrato da CLI de dados (`rastro`)
 
-Superfície do **operador de dados** e do **agendador** (launchd/cron na máquina local). Este é o contrato das telas O01 e O02. A CLI escreve no mesmo banco SQLite que a API lê (ADR-0002) e é o único escritor de dados de fonte.
+Superfície do **operador de dados** e do **agendador** (launchd/cron na máquina local). Este é o contrato das telas O01 e O02 e da publicação da tabela de tradução (ADR-0008). Módulos donos: `importar`, `publicar`, `sincronizar` e `lotes` são do módulo `ingestao`; `traducao publicar` é do `nucleo`; o despachante chamado por `publicar` é do `saida`. A CLI escreve no mesmo banco SQLite que a API lê (ADR-0002) e é o único escritor de dados de fonte.
 
 Regras comuns:
 
@@ -14,11 +14,12 @@ Regras comuns:
 | :-: | :-- | :-- |
 | 0 | Sucesso, inclusive "lote já importado" (no-op) | REQ-05 |
 | 1 | Uso inválido (argumento ausente ou arquivo inexistente) | — |
-| 2 | Lote recusado na validação (rejeições acima de 5%) ou arquivo de lote já recusado | REQ-06, REQ-52 |
+| 2 | Lote recusado na validação (rejeições acima de 5% ou nenhuma linha no recorte) ou arquivo de lote já recusado | REQ-06, REQ-73, REQ-52 |
 | 3 | Formato do pacote alterado (colunas ausentes) | REQ-04 |
 | 4 | Fonte indisponível (download falhou) | REQ-12 |
 | 5 | Outro processo escritor em execução | REQ-56 |
 | 6 | `publicar` sobre lote que não está `validado` | REQ-57 |
+| 7 | `traducao publicar` com tabela incompleta (falta ou sobra estado) | REQ-86 |
 
 ## `rastro importar` · `cli:importar` (tela O01)
 
@@ -28,7 +29,7 @@ rastro importar --fonte cgu --arquivo data/raw/EmendasParlamentares_2026-10-20.z
 
 1. Calcula `hash_sha256`. Se já existir lote `validado`/`publicado`/`substituido` com esse hash → "lote já importado (Lote #n)" e código 0 (REQ-05). Se existir lote `recusado` → "lote já recusado" e código 2 (REQ-52). Lotes `falhou` não contam e o arquivo é importado de novo (REQ-53).
 2. Cria `LoteImportacao` (`estado = importando`) e lê os CSVs em fluxo (Latin-1, `;`). Valida cada linha (REQ-02, REQ-03, REQ-21) e grava as aceitas em lotes de 5 000 linhas na tabela do lote.
-3. Ao terminar: `estado = validado`, ou `recusado` (REQ-06), ou `falhou` (REQ-04). Grava `duracao_etl_ms` (REQ-50).
+3. Ao terminar: `estado = validado`, ou `recusado` (REQ-06; ou REQ-73 quando nenhuma linha está no recorte), ou `falhou` (REQ-04). Grava `duracao_etl_ms` (REQ-82).
 4. Ao iniciar, qualquer lote em `importando` sem trava ativa vira `falhou` com `motivo_falha = interrompido` (REQ-10).
 
 Saída humana (resumo):
@@ -55,7 +56,7 @@ Eventos `--json`: `{"evento":"lote_criado",...}`, `{"evento":"progresso","linhas
 ## `rastro publicar` · `cli:publicar` (tela O02)
 
 ```
-rastro publicar --lote 14 [--simular] [--json] [--sem-cor]
+rastro publicar --lote 14 [--simular | --reprocessar-alertas] [--json] [--sem-cor]
 ```
 
 1. Exige o lote em `validado`; caso contrário, sai com código 6 (REQ-57). Com `--reprocessar-alertas`, exige o lote `publicado`.
@@ -94,3 +95,25 @@ rastro lotes [--fonte cgu] [--json]
 ```
 
 Lista os lotes com os mesmos campos de `GET /api/lotes` (REQ-27).
+
+## `rastro traducao publicar` · `cli:traducao`
+
+```
+rastro traducao publicar --arquivo traducoes/v2.yaml [--nota "texto"] [--json]
+```
+
+Publica uma versão nova da tabela que traduz `estado_execucao` para linguagem simples (ADR-0008).
+
+1. Lê o arquivo YAML com uma entrada por estado: `estado_execucao`, `texto_simples` (≤ 60 caracteres) e `explicacao` (≤ 280).
+2. Exige exatamente os quatro estados (`sem_execucao`, `empenhada`, `liquidada`, `paga`); com falta ou sobra, sai com código 7 sem gravar nada (REQ-86).
+3. Numa transação, insere as quatro linhas com `versao = máxima + 1` e `vigente_desde = agora`. As versões anteriores não mudam (REQ-70); o schema tem gatilhos que impedem `UPDATE` e `DELETE`.
+4. A API passa a usar a versão nova na próxima requisição (REQ-69). A tela P09 mostra todas as versões (`listar_traducoes`).
+
+Saída humana (resumo):
+
+```
+Rastro · traducao publicar · versão 2
+OK  4 estados · vigente desde 26/10/2026 21:10
+    liquidada  "A entrega foi conferida; falta pagar" → "Entrega conferida, pagamento pendente"
+Versão 1 preservada (consulte em /dados#traducao)
+```

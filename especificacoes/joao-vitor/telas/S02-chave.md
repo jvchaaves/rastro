@@ -14,11 +14,12 @@
     - "Ela fica guardada neste navegador."
   - Confirmação da assinatura criada: `Assinatura.nome` e o resumo do filtro e da condição (`AssinaturaCriada.assinatura`).
 - **Coleta:**
-  - `confirmacao` · caixa de seleção "Guardei minha chave" · obrigatório para continuar.
+  - Caixa de seleção "Guardei minha chave" · obrigatória para continuar. **Campo local**: só habilita o botão "Continuar"; não existe no modelo de dados nem é enviado à API (ADR-0005).
 - **Ações:**
-  - "Copiar chave" → área de transferência; anuncia "Chave copiada".
-  - "Baixar como arquivo .txt" → arquivo `rastro-chave.txt` gerado no navegador, com a chave e as instruções.
-  - "Continuar" (habilitado após a confirmação) → S04.
+  - "Copiar chave" → área de transferência; anuncia "Chave copiada" → ação local · sem chamada à API (REQ-74).
+  - "Baixar como arquivo .txt" → arquivo `rastro-chave.txt` gerado no navegador, com a chave e as instruções → ação local · sem chamada à API (REQ-74).
+  - "Continuar" (habilitado após a confirmação) → S04 (`listar_assinaturas`).
+  - "Entrar com chave" (estado vazio) → S03 → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** não se aplica, porque a chave já veio na resposta de S01 (REQ-44).
   - **vazio:** sem chave em memória (recarregou a página) → "A chave só é mostrada uma vez. Se você a guardou, use Entrar com chave." com link para S03; ela continua guardada no navegador se o `localStorage` funcionou (REQ-31).
@@ -32,7 +33,9 @@
   - A chave nunca aparece na URL, no título da página nem em logs de analytics (ADR-0005).
   - Não há "enviar por e-mail" (REQ-41).
 - **Requisitos · contrato:**
-  - REQ-31, REQ-41, REQ-58 · resposta 201 de `POST /api/assinaturas` (`criar_assinatura`), campo `chave_assinante`.
+  - REQ-31, REQ-41, REQ-58 · resposta 201 de `POST /api/assinaturas` (`criar_assinatura`), campo `chave_assinante`; a tela não faz nova chamada.
+  - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`), chamada por S04 ao continuar.
+  - REQ-74 · ações locais (copiar, baixar .txt, confirmação).
 - **Acessibilidade:**
   - A chave tem rótulo acessível lido caractere a caractere em grupos ("a 3 f 9, …") por `aria-label`.
   - O botão "Continuar" desabilitado explica o motivo (`aria-describedby` → "Confirme que guardou a chave").

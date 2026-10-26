@@ -22,10 +22,10 @@
   - `pagina` · inteiro ≥ 1.
   - `por_pagina` · seleção 20/50/100.
 - **Ações:**
-  - Paginação → `listar_favorecidos` com `pagina`.
-  - "Voltar à emenda" → P03.
-  - Faixa de proveniência → P09.
-  - "Conferir na CGU" → `Proveniencia.url_download`.
+  - Paginação → (`listar_favorecidos`) com `pagina`.
+  - "Voltar à emenda" → P03 (`obter_emenda`).
+  - Faixa de proveniência → P09 (`listar_lotes`).
+  - "Conferir na CGU" → `Proveniencia.url_download` em nova aba → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto da tabela; o aviso aparece já no esqueleto (REQ-44).
   - **vazio:** "Nenhum recebimento por favorecido registrado para esta emenda até dd/mm/aaaa." O aviso continua visível (REQ-45).
@@ -43,6 +43,7 @@
   - REQ-25, REQ-26, REQ-65, REQ-15, REQ-14 · `GET /api/emendas/{codigo}/favorecidos` (`listar_favorecidos`).
   - REQ-15 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho e o valor "pago" de referência (etapa `pago`).
   - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
+  - REQ-74 · ação local (link externo).
 - **Acessibilidade:**
   - O aviso é um `<p>` comum no fluxo (não um `role="alert"`), lido antes da tabela.
   - A tabela tem `<caption>` "Recebimentos registrados por favorecido, emenda 2025…".

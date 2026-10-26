@@ -69,6 +69,7 @@ erDiagram
         TEXT autor_codigo FK
         TEXT localidade_gasto
         TEXT uf_gasto
+        TEXT municipio_gasto
         TEXT funcao_codigo
         TEXT funcao_nome
         TEXT subfuncao_nome
@@ -124,6 +125,7 @@ erDiagram
         TEXT filtro_codigo_emenda
         TEXT filtro_autor_codigo
         TEXT filtro_uf_gasto
+        TEXT filtro_municipio_gasto
         TEXT filtro_funcao_codigo
         TEXT condicao
         TEXT etapa
@@ -139,6 +141,14 @@ erDiagram
         INTEGER mudanca_id FK
         DATETIME criado_em
         DATETIME lido_em
+    }
+    TabelaTraducao {
+        INTEGER versao PK
+        TEXT estado_execucao PK
+        TEXT texto_simples
+        TEXT explicacao
+        DATETIME vigente_desde
+        TEXT nota
     }
 ```
 
@@ -164,13 +174,13 @@ Um arquivo de uma fonte, importado uma vez e identificado por hash.
 | `arquivo_nome` | TEXT | NOT NULL | Nome do ZIP baixado |
 | `hash_sha256` | TEXT | NOT NULL; índice único parcial (`fonte_id`, `hash_sha256`) `WHERE estado <> 'falhou'` | Base da idempotência (REQ-05, REQ-52, REQ-53) |
 | `data_referencia` | DATE | NOT NULL | Data de atualização informada pela fonte |
-| `importado_em` | DATETIME | NOT NULL | |
+| `importado_em` | DATETIME | NOT NULL | Data de extração exibida na proveniência (REQ-14) |
 | `publicado_em` | DATETIME | NULL até publicar | |
 | `estado` | TEXT | `importando` \| `validado` \| `publicado` \| `substituido` \| `recusado` \| `falhou` | Ciclo em `adr/0001` |
 | `linhas_lidas` | INTEGER | ≥ 0 | |
 | `linhas_aceitas` | INTEGER | ≥ 0 | |
 | `linhas_rejeitadas` | INTEGER | ≥ 0 | `lidas = aceitas + rejeitadas` |
-| `motivo_falha` | TEXT | NULL \| `formato_alterado` \| `fonte_indisponivel` \| `interrompido` \| `rejeicoes_acima_do_limite` | REQ-04, REQ-06, REQ-10, REQ-12 |
+| `motivo_falha` | TEXT | NULL \| `formato_alterado` \| `fonte_indisponivel` \| `interrompido` \| `rejeicoes_acima_do_limite` \| `sem_linhas_no_recorte` | REQ-04, REQ-06, REQ-10, REQ-12, REQ-73 |
 | `duracao_etl_ms` | TEXT (JSON) | | `{"leitura":…, "validacao":…, "gravacao":…, "publicacao":…}` (REQ-50) |
 
 ### RejeicaoLote
@@ -213,13 +223,17 @@ Cadastro da emenda **no lote** (PK composta), para que nenhum atributo mude sob 
 | `tipo` | TEXT | NOT NULL | Tipo de Emenda |
 | `autor_codigo` | TEXT | FK → Autor | Código do Autor da Emenda |
 | `localidade_gasto` | TEXT | | Localidade do gasto (texto original) |
-| `uf_gasto` | TEXT | NULL = nacional/múltiplas | Derivado de `localidade_gasto` (REQ-21) |
+| `uf_gasto` | TEXT | NULL = nacional/múltiplas | Derivado de `localidade_gasto` (REQ-21, REQ-78) |
+| `municipio_gasto` | TEXT | NULL quando a localidade é UF, região ou nacional | Derivado de `localidade_gasto` na forma "MUNICÍPIO - UF" (REQ-66). Guardado como identificador sem acento (`joao-pessoa`); o nome exibido vem do texto original |
 | `funcao_codigo` / `funcao_nome` | TEXT | | Código Função / Nome Função |
 | `subfuncao_nome` | TEXT | | Nome Subfunção |
 | `programa_nome` | TEXT | | Nome Programa |
 | `acao_nome` | TEXT | | Nome Ação |
 
-Índices: (`lote_id`, `autor_codigo`), (`lote_id`, `uf_gasto`), (`lote_id`, `funcao_codigo`), (`lote_id`, `tipo`).
+| `estado_execucao` | — | derivado (view `v_emenda_estado`), não armazenado | ADR-0006 |
+| `estado_texto` / `traducao_versao` | — | derivados na API (junção com a versão vigente de `TabelaTraducao`) | REQ-69 |
+
+Índices: (`lote_id`, `autor_codigo`), (`lote_id`, `uf_gasto`, `municipio_gasto`), (`lote_id`, `funcao_codigo`), (`lote_id`, `tipo`).
 
 ### RegistroExecucao
 Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes forma a linha do tempo (REQ-23).
@@ -272,6 +286,7 @@ Diferença entre dois lotes da mesma fonte, calculada na publicação (REQ-08, A
 | `etapa` | TEXT | NULL quando `tipo = estado_alterado` | |
 | `valor_antes_centavos` / `valor_depois_centavos` | INTEGER | NULL quando não se aplica | |
 | `estado_antes` / `estado_depois` | TEXT | valores de `estado_execucao` | |
+| `autor_nome` / `uf_gasto` / `municipio_gasto` / `estado_depois_texto` | — | derivados na API (junção com `Emenda`, `Autor` e a versão vigente de `TabelaTraducao`), não armazenados | P08, S05; REQ-69 |
 
 Índice único de expressão (`lote_novo_id`, `codigo_emenda`, `tipo`, `COALESCE(etapa, '-')`), porque no SQLite valores NULL não colidem num UNIQUE comum.
 
@@ -293,7 +308,8 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 | `nome` | TEXT | 1–80 caracteres | Rótulo dado pelo assinante |
 | `filtro_codigo_emenda` | TEXT | NULL ou 12 dígitos | |
 | `filtro_autor_codigo` | TEXT | NULL ou FK → Autor | |
-| `filtro_uf_gasto` | TEXT | NULL, sigla de UF ou `NM` | `NM` = nacional ou múltiplas UFs (REQ-21) |
+| `filtro_uf_gasto` | TEXT | NULL, sigla de UF ou `NM` | `NM` = nacional ou múltiplas UFs (REQ-78) |
+| `filtro_municipio_gasto` | TEXT | NULL, ou identificador de município com `filtro_uf_gasto` de uma UF (CHECK) | "Acompanhar este município" (P10, REQ-72) |
 | `filtro_funcao_codigo` | TEXT | NULL ou código | Pelo menos um filtro preenchido (REQ-34) |
 | `condicao` | TEXT | `limiar_valor` \| `mudanca_estado` | |
 | `etapa` | TEXT | obrigatória se `limiar_valor` | |
@@ -319,3 +335,26 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 O FI-01 §9 previa `Alerta.estado`. Ele foi substituído por `lido_em`: o único estado do alerta no MVP é lido ou não lido, e a data atende à idempotência do REQ-39.
 
 UNIQUE (`assinatura_id`, `mudanca_id`): garante "no máximo um alerta por mudança e assinatura" (REQ-36).
+
+### TabelaTraducao
+Tradução do estado de execução para linguagem simples, **versionada e auditável** (brief do grupo; ADR-0008). Só se insere: uma versão nova nunca altera as anteriores (REQ-70). PK (`versao`, `estado_execucao`).
+
+| Campo | Tipo | Restrição | Nota |
+| :-- | :-- | :-- | :-- |
+| `versao` | INTEGER | PK, ≥ 1 | A maior versão é a vigente |
+| `estado_execucao` | TEXT | PK, `sem_execucao` \| `empenhada` \| `liquidada` \| `paga` | Uma linha por estado em cada versão (REQ-86) |
+| `texto_simples` | TEXT | NOT NULL, ≤ 60 caracteres | O que o morador lê no lugar do termo técnico |
+| `explicacao` | TEXT | NOT NULL, ≤ 280 caracteres | Uma frase que liga o texto ao termo técnico |
+| `vigente_desde` | DATETIME | NOT NULL | Momento de `rastro traducao publicar` |
+| `nota` | TEXT | | Motivo da versão |
+
+Versão 1, carregada na migração inicial:
+
+| `estado_execucao` | `texto_simples` | `explicacao` |
+| :-- | :-- | :-- |
+| `sem_execucao` | Ainda sem dinheiro reservado | Nenhum valor foi empenhado para esta emenda até a data dos dados. |
+| `empenhada` | O dinheiro foi reservado | Houve empenho: o orçamento separou o valor, mas a entrega ainda não foi conferida. |
+| `liquidada` | A entrega foi conferida; falta pagar | Houve liquidação: o governo reconheceu que o bem ou serviço foi entregue. |
+| `paga` | Já houve pagamento registrado | Houve pagamento registrado. Isso não comprova a aplicação final do recurso. |
+
+Gatilho `BEFORE UPDATE` e `BEFORE DELETE` em `TabelaTraducao` que aborta a operação: versões publicadas são imutáveis no próprio schema.

@@ -1,6 +1,6 @@
 ## S05 · Alertas
 
-- **Superfície · ator:** Painel web · Pessoa de controle social (assinante com chave).
+- **Superfície · ator:** Painel web · Pessoa de controle social, cidadão (morador) ou gestor municipal (assinante com chave).
 - **Objetivo:** Mostrar quais mudanças de lotes publicados satisfizeram as assinaturas e deixar claro o que cada uma significa.
 - **Chega de / vai para:**
   - Chega de: botão "Alertas (N)" do cabeçalho, S03, S04 ("Ver alertas").
@@ -16,19 +16,19 @@
     - `assinatura_nome`;
     - `criado_em`;
     - lote de origem: `lote_novo.id` e `lote_novo.data_referencia`;
-    - a mudança (`MudancaLote`): `codigo_emenda`, `autor_nome`, `uf_gasto` e o texto conforme `tipo`. Para limiar (`Alerta.assinatura_condicao = limiar_valor`): "O valor **pago** passou de R$ 900.000,00 para R$ 1.150.000,00 (limiar R$ 1.000.000,00)", com o limiar vindo de `Alerta.assinatura_limiar_centavos`. Para estado: "passou de **empenhada** para **liquidada**";
+    - a mudança (`MudancaLote`): `codigo_emenda`, `autor_nome`, `uf_gasto` e o texto conforme `tipo`. Para limiar (`Alerta.assinatura_condicao = limiar_valor`): "O valor **pago** passou de R$ 900.000,00 para R$ 1.150.000,00 (limiar R$ 1.000.000,00)", com o limiar vindo de `Alerta.assinatura_limiar_centavos`. Para estado: o texto simples do estado novo (`MudancaLote.estado_depois_texto`, "Agora: **A entrega foi conferida; falta pagar**") e o termo técnico ("passou de empenhada para liquidada");
     - marcação de lido (`lido_em`).
 - **Coleta:**
   - `lido` · abas (não lidos / todos) · padrão "não lidos".
   - `assinatura_id` · seleção · opcional.
   - `pagina` · inteiro ≥ 1.
 - **Ações:**
-  - Abrir um alerta (emenda) → P03; marca como lido via `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`, `lido: true`).
-  - "Marcar como lido" (sem sair) → `atualizar_alerta`; o item sai da aba "Não lidos" e é anunciado.
-  - "Ver linha do tempo" → P04.
-  - "Ver todas as mudanças deste lote" → P08 com `?lote_novo_id=`.
-  - Trocar aba ou assinatura → `listar_alertas` com `lido` / `assinatura_id`.
-  - "Gerenciar assinaturas" → S04.
+  - Abrir um alerta (emenda) → P03 (`obter_emenda`); marca como lido via `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`, `lido: true`).
+  - "Marcar como lido" (sem sair) → (`atualizar_alerta`); o item sai da aba "Não lidos" e é anunciado.
+  - "Ver linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Ver todas as mudanças deste lote" → P08 com `?lote_novo_id=` (`listar_mudancas`).
+  - Trocar aba ou assinatura → (`listar_alertas`) com `lido` / `assinatura_id`.
+  - "Gerenciar assinaturas" → S04 (`listar_assinaturas`).
 - **Estados:**
   - **carregando:** esqueleto da lista (REQ-44).
   - **vazio:**
@@ -41,11 +41,12 @@
 - **Regras:**
   - Cada alerta corresponde a uma única mudança de uma única assinatura, sem repetição (REQ-36).
   - Alertas só de lotes publicados após o lote base da assinatura (REQ-37).
-  - Marcar como lido é idempotente; reabrir não muda `lido_em` (REQ-39).
+  - Marcar como lido grava `lido_em` (REQ-39); reabrir não muda o valor (REQ-81).
   - O texto do alerta descreve o registro, nunca o interpreta ("passou de … para …").
 - **Requisitos · contrato:**
   - REQ-35, REQ-36, REQ-37, REQ-63, REQ-64, REQ-32, REQ-14 · `GET /api/alertas` (`listar_alertas`).
-  - REQ-39 · `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`).
+  - REQ-39, REQ-81, REQ-55 · `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`).
+  - REQ-69 · `MudancaLote.estado_depois_texto` no texto do alerta.
   - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`) para o filtro por assinatura.
   - REQ-35 · evento interno `alertas.gerados` (origem dos alertas, ver O02).
 - **Acessibilidade:**

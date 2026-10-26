@@ -7,7 +7,7 @@
   - Vai para: `/openapi.json` (contrato), chamadas `GET /api/...`, P09 ("Como o Rastro publica").
 - **Mostra:**
   - Introdução em três frases: o que a API devolve, que valores são inteiros em centavos (`valor_centavos`) e que toda resposta com valores traz `proveniencia` (`fonte_nome`, `lote_id`, `data_referencia`, `hash_sha256`, `url_download`).
-  - Limite de uso: 60 requisições/min por IP, com resposta 429 e `Retry-After`.
+  - Limite de uso: 60 requisições/min por IP de cliente, com resposta 429 e `Retry-After` (REQ-28, REQ-84).
   - Tabela de operações gerada do contrato (`obter_contrato`), uma linha por operação pública:
     - método e caminho;
     - `summary`;
@@ -15,17 +15,18 @@
     - códigos de resposta.
 
     Por exemplo: `GET /api/emendas/{codigo}` → 200 / 404 / 422 / 503.
-  - Exemplos prontos, para copiar, que reproduzem as telas P02, P03, P06 e P08 (`curl` e Python `httpx`).
+  - Exemplos prontos, para copiar, que reproduzem as telas P02, P03, P06, P08 e P10 (`curl` e Python `httpx`), inclusive "o que chegou a João Pessoa" (`obter_municipio`) e "empenhado e ainda não pago" (`listar_emendas?pendentes=true`).
   - Formato de erro (`Problema`: `status`, `codigo`, `detail`, `request_id`) e lista de `codigo` possíveis.
-  - Glossário curto das etapas (`Etapa`) e de `estado_execucao`.
+  - Glossário curto das etapas (`Etapa`) e de `estado_execucao`, com a explicação de `estado_texto` e `traducao_versao` e o link para a tabela de tradução (`listar_traducoes`).
   - Nota "O que a API não oferece": busca por favorecido pessoa física (REQ-65, ADR-0007), com indicação do download oficial da CGU.
 - **Coleta:**
   - `codigo` (campo "Experimente") · texto de 12 dígitos · opcional. Executa `obter_emenda` e mostra o JSON.
 - **Ações:**
   - "Baixar contrato (openapi.json)" → `GET /openapi.json` (`obter_contrato`).
-  - "Copiar exemplo" → área de transferência, com o anúncio "Exemplo copiado".
+  - "Copiar exemplo" → área de transferência, com o anúncio "Exemplo copiado" → ação local · sem chamada à API (REQ-74).
   - "Experimentar" → `GET /api/emendas/{codigo}` (`obter_emenda`) e exibe o status HTTP e o corpo formatado.
-  - Link de cada operação → âncora da operação na própria página.
+  - Link de cada operação → âncora da operação na própria página → ação local · sem chamada à API (REQ-74).
+  - "Como o Rastro publica" → P09 (`listar_lotes`).
 - **Estados:**
   - **carregando:** esqueleto da tabela de operações enquanto `/openapi.json` carrega (REQ-44).
   - **vazio:** "Experimente" sem código → botão desabilitado, com a dica do formato (REQ-45).
@@ -41,7 +42,8 @@
 - **Requisitos · contrato:**
   - REQ-30 · `GET /openapi.json` (`obter_contrato`).
   - REQ-16, REQ-17, REQ-18, REQ-19 · `GET /api/emendas/{codigo}` (`obter_emenda`).
-  - REQ-28, REQ-14 · todas as operações públicas.
+  - REQ-28, REQ-84, REQ-14, REQ-69, REQ-72 · todas as operações públicas.
+  - REQ-74 · ações locais (copiar exemplo, âncora).
 - **Acessibilidade:**
   - Blocos de código com `<pre><code>` e rótulo da linguagem; o botão "Copiar" tem nome acessível com a operação ("Copiar exemplo curl de obter_emenda").
   - O resultado do "Experimente" é anunciado (`aria-live`) com o status HTTP.

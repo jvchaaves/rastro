@@ -1,14 +1,20 @@
 openapi: 3.1.0
 info:
   title: Rastro API
-  version: 0.1.0
+  version: 0.2.0
   summary: Emendas parlamentares federais com valores por etapa e proveniência de cada dado.
   description: |
     API pública do Rastro (FastAPI). Todas as operações de leitura são públicas e limitadas a
-    60 requisições/min por IP (REQ-28). As operações de assinatura e alerta exigem o cabeçalho
-    `X-Chave-Assinante` (ADR-0005), exceto a criação da primeira assinatura, que gera a chave.
-    O limite de taxa não se aplica ao loopback (painel e script de carga).
-    Valores monetários são inteiros em centavos. Etapas diferentes nunca são somadas (REQ-15).
+    60 requisições/min por IP de cliente (REQ-28). O IP de cliente é o primeiro endereço de
+    `X-Forwarded-For` quando a requisição vem do loopback (o painel repassa o IP do navegador) e o
+    endereço da conexão nos demais casos (REQ-84). Só o modo de medição (`RASTRO_MEDICAO=1`, script
+    de carga) dispensa o limite para o loopback sem `X-Forwarded-For` (REQ-85).
+    As operações de assinatura e alerta exigem o cabeçalho `X-Chave-Assinante` (ADR-0005), exceto a
+    criação da primeira assinatura, que gera a chave (REQ-80).
+    Valores monetários são inteiros em centavos. Etapas diferentes nunca são somadas (REQ-15, REQ-77).
+    Todo `estado_execucao` vem com `estado_texto` e `traducao_versao` da tabela de tradução vigente
+    (REQ-69, ADR-0008). Parâmetro fora do domínio → 422 `parametro_invalido` (REQ-72).
+    Módulos donos de cada operação (brief do grupo): tag `x-modulo` em cada operação.
     Erros seguem `application/problem+json` (RFC 9457) com o campo `codigo`.
     Os ids de requisito (REQ-xx) citados nas operações estão em `../requisitos.md`.
   license:
@@ -20,8 +26,10 @@ servers:
 tags:
   - name: status
   - name: emendas
+  - name: municipios
   - name: agregacoes
   - name: lotes
+  - name: traducoes
   - name: assinaturas
   - name: alertas
   - name: contrato
@@ -30,6 +38,7 @@ paths:
   /api/status:
     get:
       operationId: obter_status
+      x-modulo: consulta
       tags: [status]
       summary: Lote ativo e resumo de cada fonte
       description: |
@@ -48,6 +57,7 @@ paths:
   /api/filtros/opcoes:
     get:
       operationId: listar_opcoes_filtro
+      x-modulo: consulta
       tags: [emendas]
       summary: Valores possíveis dos filtros no lote ativo
       description: Alimenta os filtros de P02, P06 e S01. Não inclui favorecidos (REQ-25).
@@ -63,15 +73,21 @@ paths:
   /api/emendas:
     get:
       operationId: listar_emendas
+      x-modulo: consulta
       tags: [emendas]
       summary: Lista paginada e filtrada de emendas do lote ativo
-      description: REQ-20, REQ-21. Tela P02.
+      description: REQ-20, REQ-21, REQ-66, REQ-68, REQ-69, REQ-72. Telas P02, P10.
       parameters:
         - $ref: '#/components/parameters/Ano'
         - $ref: '#/components/parameters/AutorCodigo'
         - $ref: '#/components/parameters/UfGasto'
+        - $ref: '#/components/parameters/Municipio'
         - $ref: '#/components/parameters/FuncaoCodigo'
         - $ref: '#/components/parameters/Tipo'
+        - name: pendentes
+          in: query
+          description: true = só emendas empenhadas e ainda não pagas (`estado_execucao` empenhada ou liquidada) (REQ-68).
+          schema: { type: boolean, default: false }
         - name: q
           in: query
           description: Texto livre sobre código da emenda, nome do autor e função. Nunca busca favorecidos (REQ-25).
@@ -97,6 +113,7 @@ paths:
   /api/emendas/{codigo}:
     get:
       operationId: obter_emenda
+      x-modulo: consulta
       tags: [emendas]
       summary: Emenda com valores por etapa e proveniência
       description: REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19 (AC-1, AC-4). Tela P03.
@@ -118,6 +135,7 @@ paths:
   /api/emendas/{codigo}/linha-do-tempo:
     get:
       operationId: obter_linha_do_tempo
+      x-modulo: consulta
       tags: [emendas]
       summary: Valores de cada etapa em todos os lotes publicados
       description: REQ-23. Tela P04.
@@ -137,6 +155,7 @@ paths:
   /api/emendas/{codigo}/favorecidos:
     get:
       operationId: listar_favorecidos
+      x-modulo: consulta
       tags: [emendas]
       summary: Valores recebidos por favorecido de uma emenda
       description: REQ-15, REQ-25, REQ-26. Tela P05.
@@ -158,9 +177,13 @@ paths:
   /api/agregacoes:
     get:
       operationId: obter_agregacoes
+      x-modulo: consulta
       tags: [agregacoes]
       summary: Somas por etapa agrupadas por autor, UF do gasto ou função
-      description: REQ-21, REQ-22, REQ-49. Tela P06.
+      description: |
+        REQ-21, REQ-22, REQ-49, REQ-79. Tela P06 (e P01 para os recortes). Na dimensão `autor`, os grupos
+        vêm em ordem alfabética, sem posição, e `ordenar_por_etapa` é ignorado: o Rastro não ranqueia
+        parlamentares (REQ-71).
       parameters:
         - name: dimensao
           in: query
@@ -172,6 +195,7 @@ paths:
         - $ref: '#/components/parameters/Tipo'
         - name: ordenar_por_etapa
           in: query
+          description: Ordena os grupos de `uf` e `funcao` pela etapa, decrescente. Ignorado em `dimensao=autor` (REQ-71).
           schema: { $ref: '#/components/schemas/Etapa' }
         - name: limite
           in: query
@@ -186,9 +210,42 @@ paths:
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
 
+  /api/municipios/{uf}/{municipio}:
+    get:
+      operationId: obter_municipio
+      x-modulo: consulta
+      tags: [municipios]
+      summary: Resumo das emendas com gasto num município
+      description: |
+        REQ-66, REQ-67, REQ-69, REQ-55. Tela P10 (morador e gestor municipal). A lista de emendas do
+        município vem de `listar_emendas?uf_gasto=&municipio=` (e `pendentes=true` para o gestor).
+      parameters:
+        - name: uf
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO]
+        - name: municipio
+          in: path
+          required: true
+          description: Identificador do município em `OpcoesFiltro.municipios[].municipio` (nome sem acento, minúsculo, com hífens; ex. `joao-pessoa`).
+          schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$', maxLength: 60 }
+      responses:
+        '200':
+          description: Município com emendas no lote ativo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MunicipioDetalhe' }
+        '404': { $ref: '#/components/responses/NaoEncontrada' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '503': { $ref: '#/components/responses/SemLote' }
+
   /api/autores/{codigo}:
     get:
       operationId: obter_autor
+      x-modulo: consulta
       tags: [agregacoes]
       summary: Autor com somas por etapa e suas emendas
       description: REQ-22, REQ-29. Tela P07.
@@ -212,9 +269,10 @@ paths:
   /api/mudancas:
     get:
       operationId: listar_mudancas
+      x-modulo: nucleo
       tags: [lotes]
       summary: O que mudou entre dois lotes publicados
-      description: REQ-24. Tela P08.
+      description: REQ-24, REQ-61, REQ-55. Tela P08 (e a faixa de mudanças de P01).
       parameters:
         - name: lote_novo_id
           in: query
@@ -227,6 +285,7 @@ paths:
           in: query
           schema: { $ref: '#/components/schemas/TipoMudanca' }
         - $ref: '#/components/parameters/UfGasto'
+        - $ref: '#/components/parameters/Municipio'
         - $ref: '#/components/parameters/AutorCodigo'
         - $ref: '#/components/parameters/Pagina'
         - $ref: '#/components/parameters/PorPagina'
@@ -241,9 +300,34 @@ paths:
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
 
+  /api/traducoes:
+    get:
+      operationId: listar_traducoes
+      x-modulo: nucleo
+      tags: [traducoes]
+      summary: Versões da tabela que traduz o estado de execução para linguagem simples
+      description: |
+        REQ-69, REQ-70, ADR-0008. Tela P09 ("Como traduzimos o estado"). Responde 200 mesmo sem lote
+        publicado. Versões antigas nunca são alteradas: quem citou um texto pode conferir a versão.
+      parameters:
+        - name: versao
+          in: query
+          description: Uma versão específica. Sem o parâmetro, todas, da mais recente para a mais antiga.
+          schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Versões da tabela
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Traducoes' }
+        '404': { $ref: '#/components/responses/NaoEncontrada' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+
   /api/lotes:
     get:
       operationId: listar_lotes
+      x-modulo: ingestao
       tags: [lotes]
       summary: Lotes de todas as fontes, com estado, hash e rejeições
       description: REQ-12, REQ-27. Tela P09. Responde 200 mesmo sem lote publicado.
@@ -268,6 +352,7 @@ paths:
   /api/lotes/{lote_id}:
     get:
       operationId: obter_lote
+      x-modulo: ingestao
       tags: [lotes]
       summary: Um lote com rejeições por motivo e duração do ETL
       description: REQ-27, REQ-50. Tela P09 (detalhe).
@@ -288,6 +373,7 @@ paths:
   /api/assinaturas:
     post:
       operationId: criar_assinatura
+      x-modulo: saida
       tags: [assinaturas]
       summary: Cria uma assinatura (e a chave do assinante, se não informada)
       description: |
@@ -313,6 +399,7 @@ paths:
         '503': { $ref: '#/components/responses/SemLote' }
     get:
       operationId: listar_assinaturas
+      x-modulo: saida
       tags: [assinaturas]
       summary: Assinaturas do assinante
       description: REQ-32. Telas S03 (validação da chave) e S04.
@@ -341,6 +428,7 @@ paths:
         schema: { type: integer, minimum: 1 }
     patch:
       operationId: atualizar_assinatura
+      x-modulo: saida
       tags: [assinaturas]
       summary: Pausa ou retoma uma assinatura
       description: REQ-38. Tela S04.
@@ -367,6 +455,7 @@ paths:
         '422': { $ref: '#/components/responses/Invalido' }
     delete:
       operationId: excluir_assinatura
+      x-modulo: saida
       tags: [assinaturas]
       summary: Exclui a assinatura e seus alertas
       description: REQ-40. Tela S04.
@@ -380,6 +469,7 @@ paths:
   /api/alertas:
     get:
       operationId: listar_alertas
+      x-modulo: saida
       tags: [alertas]
       summary: Alertas do assinante, mais recentes primeiro
       description: REQ-32, REQ-35. Tela S05 e contador do cabeçalho.
@@ -406,6 +496,7 @@ paths:
   /api/alertas/{alerta_id}:
     patch:
       operationId: atualizar_alerta
+      x-modulo: saida
       tags: [alertas]
       summary: Marca um alerta como lido (idempotente)
       description: REQ-39. Tela S05.
@@ -438,6 +529,7 @@ paths:
   /openapi.json:
     get:
       operationId: obter_contrato
+      x-modulo: consulta
       tags: [contrato]
       summary: Este contrato em JSON
       description: REQ-30. Tela D01.
@@ -481,6 +573,13 @@ components:
       in: query
       description: Sigla da UF do gasto, ou `NM` para nacional/múltiplas UFs (REQ-21).
       schema: { $ref: '#/components/schemas/UfGasto' }
+    Municipio:
+      name: municipio
+      in: query
+      description: |
+        Município do gasto (`OpcoesFiltro.municipios[].municipio`). Exige `uf_gasto` de uma UF; sem ela,
+        ou com `uf_gasto = NM`, a resposta é 422 `parametro_invalido` (REQ-66, REQ-72).
+      schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$', maxLength: 60 }
     FuncaoCodigo:
       name: funcao_codigo
       in: query
@@ -501,7 +600,7 @@ components:
 
   responses:
     Invalido:
-      description: Parâmetro inválido
+      description: Parâmetro fora do domínio do contrato (`codigo = parametro_invalido`, REQ-72), com o parâmetro em `campos`
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
@@ -511,7 +610,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
     NaoEncontrada:
-      description: Emenda inexistente no lote ativo (`emenda_nao_encontrada`, REQ-18); autor, lote, assinatura ou alerta inexistente (`nao_encontrado`, REQ-55)
+      description: Emenda inexistente no lote ativo (`emenda_nao_encontrada`, REQ-18); autor, lote, município, versão de tradução, assinatura ou alerta inexistente (`nao_encontrado`, REQ-55)
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
@@ -531,7 +630,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
     LimiteDeTaxa:
-      description: Mais de 60 requisições/min por IP (REQ-28)
+      description: Mais de 60 requisições/min do mesmo IP de cliente (REQ-28, REQ-84)
       headers:
         Retry-After:
           schema: { type: integer, description: segundos }
@@ -587,6 +686,17 @@ components:
       enum: [sem_execucao, empenhada, liquidada, paga]
       description: Derivado da etapa mais avançada com valor > 0 (ADR-0006).
 
+    EstadoComTexto:
+      type: object
+      description: Estado de execução com a tradução vigente (REQ-69, ADR-0008).
+      required: [estado_execucao, estado_texto, traducao_versao]
+      properties:
+        estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
+        estado_texto:
+          type: string
+          description: '`TabelaTraducao.texto_simples` da versão vigente, ex. "A entrega foi conferida; falta pagar"'
+        traducao_versao: { type: integer, minimum: 1 }
+
     TipoMudanca:
       type: string
       enum: [nova_emenda, valor_alterado, estado_alterado]
@@ -594,12 +704,16 @@ components:
     Proveniencia:
       type: object
       description: Origem de um valor (REQ-14).
-      required: [fonte_id, fonte_nome, lote_id, data_referencia, hash_sha256, url_download]
+      required: [fonte_id, fonte_nome, lote_id, data_referencia, importado_em, hash_sha256, url_download]
       properties:
         fonte_id: { type: string, enum: [cgu, siga] }
         fonte_nome: { type: string }
         lote_id: { type: integer }
         data_referencia: { type: string, format: date }
+        importado_em:
+          type: string
+          format: date-time
+          description: Data de extração do arquivo da fonte (`LoteImportacao.importado_em`)
         hash_sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
         url_download: { type: string, format: uri }
 
@@ -630,7 +744,7 @@ components:
             linhas_rejeitadas: { type: integer, minimum: 0 }
             motivo_falha:
               type: [string, 'null']
-              enum: [formato_alterado, fonte_indisponivel, interrompido, rejeicoes_acima_do_limite, null]
+              enum: [formato_alterado, fonte_indisponivel, interrompido, rejeicoes_acima_do_limite, sem_linhas_no_recorte, null]
             rejeicoes:
               type: array
               items:
@@ -709,14 +823,25 @@ components:
 
     OpcoesFiltro:
       type: object
-      required: [autores, ufs_gasto, funcoes, tipos, proveniencia]
+      required: [autores, ufs_gasto, municipios, funcoes, tipos, proveniencia]
       properties:
         autores:
           type: array
+          description: Em ordem alfabética (REQ-71)
           items: { $ref: '#/components/schemas/AutorResumo' }
         ufs_gasto:
           type: array
           items: { $ref: '#/components/schemas/UfGasto' }
+        municipios:
+          type: array
+          description: Municípios com ao menos uma emenda no lote ativo (REQ-66), em ordem alfabética
+          items:
+            type: object
+            required: [uf, municipio, nome]
+            properties:
+              uf: { $ref: '#/components/schemas/UfGasto' }
+              municipio: { type: string, description: 'Identificador usado em `obter_municipio` e no parâmetro `municipio`' }
+              nome: { type: string, description: Nome como publicado na localidade do gasto, ex. "João Pessoa" }
         funcoes:
           type: array
           items:
@@ -732,15 +857,18 @@ components:
 
     EmendaResumo:
       type: object
-      required: [codigo, ano, tipo, autor, uf_gasto, funcao_nome, estado_execucao, valores]
+      required: [codigo, ano, tipo, autor, uf_gasto, municipio_gasto, funcao_nome, estado_execucao, estado_texto, traducao_versao, valores]
       properties:
         codigo: { type: string }
         ano: { type: integer }
         tipo: { type: string }
         autor: { $ref: '#/components/schemas/AutorResumo' }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
+        municipio_gasto: { type: [string, 'null'], description: Nome do município do gasto; null se a localidade não é um município (REQ-66) }
         funcao_nome: { type: string }
         estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
+        estado_texto: { type: string, description: Tradução vigente do estado (REQ-69) }
+        traducao_versao: { type: integer }
         valores:
           type: array
           items: { $ref: '#/components/schemas/ValorEtapa' }
@@ -759,7 +887,7 @@ components:
 
     EmendaDetalhe:
       type: object
-      required: [codigo, ano, numero, tipo, autor, localidade_gasto, uf_gasto, funcao_codigo, funcao_nome, estado_execucao, valores, soma_valor_recebido_centavos, proveniencia]
+      required: [codigo, ano, numero, tipo, autor, localidade_gasto, uf_gasto, municipio_gasto, funcao_codigo, funcao_nome, estado_execucao, estado_texto, traducao_versao, valores, soma_valor_recebido_centavos, proveniencia]
       properties:
         codigo: { type: string }
         ano: { type: integer }
@@ -768,12 +896,15 @@ components:
         autor: { $ref: '#/components/schemas/AutorResumo' }
         localidade_gasto: { type: string }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
+        municipio_gasto: { type: [string, 'null'], description: REQ-66 }
         funcao_codigo: { type: string }
         funcao_nome: { type: string }
         subfuncao_nome: { type: [string, 'null'] }
         programa_nome: { type: [string, 'null'] }
         acao_nome: { type: [string, 'null'] }
         estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
+        estado_texto: { type: string, description: Tradução vigente do estado (REQ-69) }
+        traducao_versao: { type: integer }
         valores:
           type: array
           description: Um item por (fonte, etapa). Valores de fontes diferentes não são somados (REQ-13).
@@ -809,11 +940,13 @@ components:
           description: estado_execucao em cada lote
           items:
             type: object
-            required: [lote_id, data_referencia, estado_execucao]
+            required: [lote_id, data_referencia, estado_execucao, estado_texto, traducao_versao]
             properties:
               lote_id: { type: integer }
               data_referencia: { type: string, format: date }
               estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
+              estado_texto: { type: string, description: Tradução vigente (REQ-69) }
+              traducao_versao: { type: integer }
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }
 
     Favorecido:
@@ -855,13 +988,14 @@ components:
         dimensao: { type: string, enum: [autor, uf, funcao] }
         grupos:
           type: array
+          description: Em `dimensao=autor`, ordem alfabética de `rotulo`, sem posição (REQ-71)
           items:
             type: object
             required: [chave, rotulo, coletivo, quantidade_emendas, valores]
             properties:
               chave: { type: string, description: autor_codigo, uf_gasto (NM = nacional/múltiplas) ou funcao_codigo }
               rotulo: { type: string }
-              coletivo: { type: boolean, description: Autor não parlamentar (bancada, comissão, relator) (REQ-22) }
+              coletivo: { type: boolean, description: Autor não parlamentar (bancada, comissão, relator) (REQ-79) }
               quantidade_emendas: { type: integer }
               valores:
                 type: array
@@ -907,6 +1041,10 @@ components:
             - type: 'null'
         autor_nome: { type: string }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
+        municipio_gasto: { type: [string, 'null'] }
+        estado_depois_texto:
+          type: [string, 'null']
+          description: Tradução vigente de `estado_depois` (REQ-69)
 
     MudancasPagina:
       type: object
@@ -942,6 +1080,10 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UfGasto'
             - type: 'null'
+        filtro_municipio_gasto:
+          type: [string, 'null']
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+          description: Exige `filtro_uf_gasto` de uma UF (REQ-72)
         filtro_funcao_codigo: { type: [string, 'null'] }
         condicao: { type: string, enum: [limiar_valor, mudanca_estado] }
         etapa:
@@ -962,6 +1104,10 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UfGasto'
             - type: 'null'
+        filtro_municipio_gasto:
+          type: [string, 'null']
+          pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
+          description: Exige `filtro_uf_gasto` de uma UF (REQ-72)
         filtro_funcao_codigo: { type: [string, 'null'] }
         condicao: { type: string, enum: [limiar_valor, mudanca_estado] }
         etapa:
@@ -977,7 +1123,7 @@ components:
         alertas_total: { type: integer, description: Mostrado na confirmação de exclusão (REQ-40) }
         descricao:
           type: string
-          description: Resumo legível montado pela API com os rótulos do lote ativo, ex. "Saúde · gasto na PB · pago passar de R$ 1.000.000,00"
+          description: Resumo legível montado pela API com os rótulos do lote ativo, ex. "Saúde · gasto em João Pessoa (PB) · pago passar de R$ 1.000.000,00"
 
     AssinaturaCriada:
       type: object
@@ -1017,3 +1163,56 @@ components:
           items: { $ref: '#/components/schemas/Alerta' }
         total: { type: integer }
         nao_lidos: { type: integer }
+
+    MunicipioDetalhe:
+      type: object
+      description: Resumo de um município do gasto no lote ativo (REQ-67). Etapas nunca somadas (REQ-77).
+      required: [uf, municipio, nome, quantidade_emendas, valores, por_estado, quantidade_pendentes, traducao_versao, proveniencia]
+      properties:
+        uf: { $ref: '#/components/schemas/UfGasto' }
+        municipio: { type: string }
+        nome: { type: string }
+        quantidade_emendas: { type: integer, minimum: 1 }
+        valores:
+          type: array
+          items: { $ref: '#/components/schemas/ValorEtapa' }
+        por_estado:
+          type: array
+          description: Uma linha por estado, na ordem sem_execucao → paga, mesmo com quantidade 0
+          items:
+            allOf:
+              - $ref: '#/components/schemas/EstadoComTexto'
+              - type: object
+                required: [quantidade]
+                properties:
+                  quantidade: { type: integer, minimum: 0 }
+        quantidade_pendentes:
+          type: integer
+          description: Emendas empenhadas e ainda não pagas (empenhada + liquidada), o filtro `pendentes=true` (REQ-68)
+        traducao_versao: { type: integer }
+        proveniencia: { $ref: '#/components/schemas/Proveniencia' }
+
+    Traducoes:
+      type: object
+      required: [vigente, versoes]
+      properties:
+        vigente: { type: integer, description: Número da versão usada nas respostas atuais }
+        versoes:
+          type: array
+          items:
+            type: object
+            required: [versao, vigente_desde, itens]
+            properties:
+              versao: { type: integer, minimum: 1 }
+              vigente_desde: { type: string, format: date-time }
+              nota: { type: [string, 'null'], description: Motivo da mudança, escrito por quem publicou a versão }
+              itens:
+                type: array
+                description: Exatamente um item por valor de `estado_execucao` (REQ-86)
+                items:
+                  type: object
+                  required: [estado_execucao, texto_simples, explicacao]
+                  properties:
+                    estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
+                    texto_simples: { type: string, maxLength: 60 }
+                    explicacao: { type: string, maxLength: 280 }

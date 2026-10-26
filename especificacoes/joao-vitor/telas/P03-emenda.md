@@ -1,13 +1,14 @@
 ## P03 · Emenda
 
-- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Superfície · ator:** Painel web · Cidadão (morador) e jornalista; também o gestor municipal.
 - **Objetivo:** Mostrar uma emenda com o valor de cada etapa e a origem de cada valor, sem confundir destinação, pagamento e aplicação final.
 - **Chega de / vai para:**
-  - Chega de: P01 (código), P02, P05, P07, P08, S05, link externo.
+  - Chega de: P01 (código), P02, P04, P05, P07, P08, P10, S04, S05, link externo.
   - Vai para:
     - P04 ("Linha do tempo");
     - P05 ("Favorecidos");
     - P07 (nome do autor);
+    - P10 (município do gasto);
     - P09 (origem de um valor);
     - S01 ("Acompanhar esta emenda");
     - download oficial da CGU (`Fonte.url_download`).
@@ -17,8 +18,8 @@
     - `Emenda.ano` e `Emenda.numero`;
     - `Emenda.tipo`;
     - `Autor.nome` (link para P07, selo "coletivo" se `Autor.tipo ≠ parlamentar`);
-    - `estado_execucao` em texto ("Liquidada").
-  - Onde: `Emenda.localidade_gasto` (texto original) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
+    - o estado em linguagem simples, em destaque (`EmendaDetalhe.estado_texto`, ex. "A entrega foi conferida; falta pagar"), com o termo técnico ao lado (`estado_execucao`, "liquidada") e a marca "tradução v`traducao_versao`" que leva a P09.
+  - Onde: `Emenda.localidade_gasto` (texto original), `Emenda.municipio_gasto` (link para P10) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
   - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
   - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
     - Cada cartão traz `ValorComProveniencia.valor_centavos` e uma definição de uma linha.
@@ -27,13 +28,15 @@
   - Quando a fonte Siga estiver habilitada: bloco "Siga Brasil (Senado)" com os valores da fonte `siga` em cartões próprios, sem somar com a CGU.
 - **Coleta:** nenhum campo; o `codigo` vem da rota.
 - **Ações:**
-  - "Copiar código" → área de transferência; anuncia "Código copiado".
-  - "Origem" (em cada valor) → abre um painel com a proveniência; "Ver lote" → P09 com `?lote_id=`.
+  - "Copiar código" → área de transferência; anuncia "Código copiado" → ação local · sem chamada à API (REQ-74).
+  - "Origem" (em cada valor) → abre um painel com a proveniência já recebida → ação local · sem chamada à API (REQ-74); "Ver lote" → P09 com `?lote_id=` (`obter_lote`).
   - "Ver linha do tempo" → P04 (`obter_linha_do_tempo`).
   - "Ver favorecidos" → P05 (`listar_favorecidos`).
   - Nome do autor → P07 (`obter_autor`).
-  - "Acompanhar esta emenda" → S01 com `filtro_codigo_emenda` preenchido.
-  - "Abrir na CGU" → `Fonte.url_download` em nova aba (com aviso de link externo).
+  - Município do gasto → P10 (`obter_municipio`).
+  - "tradução v1" → P09 na seção de tradução (`listar_traducoes`).
+  - "Acompanhar esta emenda" → S01 (`listar_opcoes_filtro`) com `filtro_codigo_emenda` preenchido.
+  - "Abrir na CGU" → `Fonte.url_download` em nova aba, com aviso de link externo → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto do cabeçalho e dos cartões (REQ-44).
   - **vazio:** a emenda existe mas tem todas as etapas = 0 → "Nenhum valor executado registrado até dd/mm/aaaa" (`estado_execucao = sem_execucao`) (REQ-45).
@@ -50,8 +53,10 @@
   - Todo valor tem um botão "Origem" (REQ-14).
   - A página não usa "aplicado em" nem "investido em"; o texto fixo é "Pagamento registrado não comprova a aplicação final" (FI-01 §5).
   - Valores de fontes diferentes nunca são somados (REQ-13).
+  - O texto simples vem primeiro e o termo técnico depois; os dois vêm da API (REQ-69, ADR-0008).
 - **Requisitos · contrato:**
-  - REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-13 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-13, REQ-66, REQ-69, REQ-77 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-74 · ações locais (copiar, origem, link externo).
   - REQ-48 · `GET /api/status` (`obter_status`).
 - **Acessibilidade:**
   - Cartões de etapa numa lista ordenada (`<ol>`), porque a ordem do ciclo é informação.

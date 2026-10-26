@@ -15,13 +15,13 @@
 
 1. **Templates no servidor** (FastAPI + Jinja), sem front separado.
 2. **Next acessando o SQLite diretamente** (rotas de servidor do Next).
-3. **API FastAPI como única porta para os dados, e painel Next que só consome a API**, com tipos gerados de `contratos/openapi.yaml` (`openapi-typescript`).
+3. **API FastAPI como única porta para os dados, e painel Next que só consome a API**, com tipos gerados de `../contratos/openapi.yaml` (`openapi-typescript`).
 
 ## Decisão
 
 Opção 3.
 
-- O arquivo `contratos/openapi.yaml` é a fonte da verdade. A API serve um `/openapi.json` equivalente (REQ-30) e o CI compara os dois.
+- O arquivo `../contratos/openapi.yaml` é a fonte da verdade. A API serve um `/openapi.json` equivalente (REQ-30) e o CI compara os dois.
 - O painel gera `src/api/tipos.ts` a partir do contrato. Um campo que a tela usa e não existe no contrato quebra o typecheck.
 - Componentes do painel: shadcn/ui (Radix), que já traz acessibilidade de teclado e ARIA (REQ-43).
 

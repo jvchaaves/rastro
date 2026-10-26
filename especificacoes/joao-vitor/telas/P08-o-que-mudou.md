@@ -13,28 +13,31 @@
   - Par de lotes comparados: `MudancasPagina.lote_anterior` e `MudancasPagina.lote_novo`, cada um com `id` e `data_referencia` ("Lote #13, dados de 13/10/2026 → Lote #14, dados de 20/10/2026").
   - Contagem por tipo (`MudancasPagina.contagem_por_tipo`): novas emendas · valores alterados · mudanças de estado.
   - Lista (`MudancasPagina.itens[]`), uma linha por `MudancaLote`:
-    - `codigo_emenda`, `autor_nome`, `uf_gasto`;
+    - `codigo_emenda`, `autor_nome`, `uf_gasto`, `municipio_gasto`;
     - `tipo` em texto;
     - para `valor_alterado`: `etapa`, `valor_antes_centavos` → `valor_depois_centavos` e a diferença com sinal e texto ("aumentou R$ 120.000,00");
-    - para `estado_alterado`: `estado_antes` → `estado_depois`;
+    - para `estado_alterado`: `estado_antes` → `estado_depois`, com o texto simples do estado novo (`MudancaLote.estado_depois_texto`, ex. "agora: Já houve pagamento registrado");
     - para `nova_emenda`: "apareceu neste lote".
 - **Coleta:**
   - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
   - `uf_gasto` · seleção · opcional.
+  - `municipio` · seleção dependente da UF · opcional.
   - `autor_codigo` · combobox · opcional.
   - `lote_novo_id` · seleção de lotes publicados (`listar_lotes`) · opcional, padrão o lote ativo.
   - `pagina` · inteiro ≥ 1.
 - **Ações:**
-  - Alterar filtros ou lote → `listar_mudancas` com os parâmetros; atualiza a URL.
-  - Linha → P03; "Linha do tempo" → P04.
-  - "Acompanhar este recorte" → S01 com `filtro_uf_gasto` / `filtro_autor_codigo` preenchidos e `condicao = mudanca_estado`.
-  - Lote do cabeçalho → P09.
+  - Alterar filtros ou lote → (`listar_mudancas`) com os parâmetros; atualiza a URL.
+  - Contagem por tipo (filtro rápido) → (`listar_mudancas`) com `tipo`.
+  - Linha → P03 (`obter_emenda`); "Linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Acompanhar este recorte" → S01 (`listar_opcoes_filtro`) com `filtro_uf_gasto` / `filtro_municipio_gasto` / `filtro_autor_codigo` preenchidos e `condicao = mudanca_estado`.
+  - Lote do cabeçalho → P09 com `?lote_id=` (`obter_lote`).
+  - "Limpar filtros" → (`listar_mudancas`) sem filtros.
 - **Estados:**
   - **carregando:** esqueleto da lista (REQ-44).
   - **vazio:**
-    - primeiro lote (sem anterior) → "Este é o primeiro lote publicado; as mudanças aparecem a partir do próximo" (REQ-08);
+    - primeiro lote (sem anterior) → "Este é o primeiro lote publicado; as mudanças aparecem a partir do próximo" (REQ-75);
     - sem mudanças nos filtros → "Nenhuma mudança neste recorte" e "Limpar filtros" (REQ-45).
-  - **erro:** `lote_novo_id` inexistente (404) → volta ao lote ativo com aviso (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **erro:** `lote_novo_id` inexistente (404) → volta ao lote ativo com aviso (REQ-55); 422 `parametro_invalido` → filtros voltam ao padrão (REQ-72); 5xx → `X-Request-Id` (REQ-46).
   - **sucesso:** cabeçalho, contagem e lista (REQ-24).
   - **offline:** "Sem conexão" (REQ-47).
   - **sem permissão:** tela pública; limite de taxa (REQ-28).
@@ -44,9 +47,9 @@
   - O verbo é neutro ("aumentou", "diminuiu", "passou de … para …"). Diminuição não é marcada em vermelho.
   - Uma redução de estado (por exemplo, `paga` → `liquidada`) é mostrada como mudança, com a nota "pode indicar cancelamento ou correção na fonte" (ADR-0006).
 - **Requisitos · contrato:**
-  - REQ-24, REQ-61, REQ-08, REQ-14, REQ-55 · `GET /api/mudancas` (`listar_mudancas`).
+  - REQ-24, REQ-61, REQ-08, REQ-75, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
   - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
-  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF e autor.
+  - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF, município e autor.
 - **Acessibilidade:**
   - A diferença é escrita em texto ("aumentou"), além de qualquer seta ou cor.
   - Lista de mudanças em `<table>` no desktop e em `<ul>` de cartões no celular, sempre com o mesmo conteúdo.
