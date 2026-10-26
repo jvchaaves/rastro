@@ -38,8 +38,10 @@ Valem para todas as fichas de tela. As fichas não repetem estas diretrizes; reg
 ## Referência visual
 
 - **Ideia central: a trilha.** O mesmo elemento visual aparece em todas as telas com valores: uma barra única em que o empenhado é a trilha inteira e o liquidado e o pago a preenchem por dentro. Ela mostra quanto do dinheiro reservado já avançou, sem somar etapas. A cor segue uma escala sequencial de um só tom (claro → escuro = empenhado → liquidado → pago), e cada etapa sempre tem também o rótulo escrito.
-- **Tipografia:** Geist (interface, títulos e números, com algarismos tabulares) e Geist Mono só para identificadores (código da emenda, hash, CLI). Títulos com tracking levemente negativo; corpo de 16 px; escala 13/15/16/20/24/40/56.
-- **Paleta:** fundo cinza-esverdeado frio `#F2F4F3`, superfícies brancas, tinta `#0F1C22`, texto secundário `#4B5A60` (contraste ≥ 7:1), verde-pinho `#0E5E52` para ações e links, escala da trilha `#A7CFC4` / `#4A9E8B` / `#0E5E52`, âmbar `#FFF6E6`/`#8A4B00` só para avisos e diferenças entre lotes.
+- **Tipografia:** Geist (interface, títulos e números, com algarismos tabulares) e Geist Mono só para identificadores (código da emenda, hash, CLI). Títulos em peso 800 com tracking negativo; corpo de 16 px; escala 13/15/16/20/26/38/52/76.
+- **Superfícies:** fundo de papel `#F3F1EA` com textura leve. Cartões, campos e botões têm borda de tinta `#0F1C22` (1,5–2 px) e sombra dura deslocada (3–7 px), que afunda ao clicar. O cabeçalho tem a navegação dentro de uma pílula com contorno e a ação principal "Acompanhar emendas" à direita.
+- **Paleta:** tinta `#0F1C22`, texto secundário `#3B4A50`/`#4B5A60` (contraste ≥ 7:1 sobre o papel), verde-pinho `#0E5E52` para ações e links, escala da trilha `#A7CFC4` / `#4A9E8B` / `#0E5E52`, âmbar `#F5B83D` só como destaque (moeda, contador de alertas, faixa de mudanças).
+- **Movimento:** uma entrada suave por tela, as moedas correndo na trilha da P01 e a faixa de mudanças. Tudo para com `prefers-reduced-motion`.
 - **Inspira:** a clareza de produtos de dados com interface sóbria (painéis densos e legíveis, tabelas com números alinhados à direita) e o padrão de formulários do GOV.UK Design System (rótulo visível, erro junto ao campo).
 - **Evitar:**
   - visual de "dashboard de BI" (velocímetros, pizza, gradientes);

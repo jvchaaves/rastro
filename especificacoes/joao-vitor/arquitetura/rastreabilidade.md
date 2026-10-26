@@ -9,7 +9,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | D01 | REQ-14, REQ-16, REQ-17, REQ-18, REQ-19, REQ-28, REQ-30, REQ-44, REQ-45, REQ-46, REQ-47, REQ-65 | `obter_contrato`, `obter_emenda` |
 | O01 | REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-11, REQ-12, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59 | `cli:importar`, `cli:sincronizar` |
 | O02 | REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64 | `cli:publicar` |
-| P01 | REQ-14, REQ-15, REQ-16, REQ-19, REQ-20, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60 | `listar_mudancas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_status` |
+| P01 | REQ-14, REQ-15, REQ-16, REQ-19, REQ-20, REQ-22, REQ-24, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60 | `listar_mudancas`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_emenda`, `obter_status` |
 | P02 | REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-28, REQ-34, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-65 | `listar_emendas`, `listar_opcoes_filtro` |
 | P03 | REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60 | `listar_favorecidos`, `obter_autor`, `obter_emenda`, `obter_linha_do_tempo`, `obter_status` |
 | P04 | REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-23, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60 | `obter_emenda`, `obter_linha_do_tempo` |
@@ -49,9 +49,9 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-19 | D01, P01, P02, P03, P04, P05, P06, P07, P08, P09, S01 | qualidade |
 | REQ-20 | P01, P02, P06, P08, S01 | — |
 | REQ-21 | O01, P02, P03, P06 | — |
-| REQ-22 | P06, P07 | — |
+| REQ-22 | P01, P06, P07 | — |
 | REQ-23 | P04 | ADR-0006 |
-| REQ-24 | P08 | ADR-0004 |
+| REQ-24 | P01, P08 | ADR-0004 |
 | REQ-25 | P05 | ADR-0007 |
 | REQ-26 | P05 | ADR-0007 |
 | REQ-27 | P08, P09 | — |
@@ -104,7 +104,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | `obter_emenda` | `GET /api/emendas/{codigo}` | D01, P01, P03, P04, P05 |
 | `obter_linha_do_tempo` | `GET /api/emendas/{codigo}/linha-do-tempo` | P03, P04 |
 | `listar_favorecidos` | `GET /api/emendas/{codigo}/favorecidos` | P03, P05 |
-| `obter_agregacoes` | `GET /api/agregacoes` | P06 |
+| `obter_agregacoes` | `GET /api/agregacoes` | P01, P06 |
 | `obter_autor` | `GET /api/autores/{codigo}` | P03, P06, P07 |
 | `listar_mudancas` | `GET /api/mudancas` | P01, P08 |
 | `listar_lotes` | `GET /api/lotes` | P08, P09 |

@@ -28,7 +28,9 @@
   - "Comparar autores, UFs e funções" → P06.
   - "Ver o que mudou" → P08 (`listar_mudancas` sem parâmetros).
   - Faixa "Dados de … · Lote #n" → P09.
-  - Clicar no papel do topo (ou Enter no botão "Colar um adesivo no papel") → cola um adesivo com uma frase do glossário ("Empenhado ≠ pago", "Toda cifra tem origem") no ponto clicado. A interação é só visual, acontece no navegador, não chama a API e não guarda nada; "Limpar adesivos" remove todos.
+  - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa o grupo da UF em `obter_agregacoes?dimensao=uf`; função usa o grupo em `obter_agregacoes?dimensao=funcao`.
+  - Faixa "371 mudanças no lote 14" → P08; cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03. A faixa rola sozinha e pausa com o mouse ou o foco do teclado.
+  - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → a moeda anda até a etapa e o painel mostra a definição do glossário e o valor da etapa no lote ativo. É conteúdo local mais os valores de `obter_status`, sem outra chamada.
 - **Estados:**
   - **carregando:** esqueleto do resumo e da faixa; campo de busca já utilizável (REQ-44).
   - **vazio:** não se aplica ao resumo. Lote com 0 mudanças → "Nenhuma mudança no último lote" (REQ-45).
@@ -44,10 +46,13 @@
 - **Requisitos · contrato:**
   - REQ-14, REQ-15, REQ-19, REQ-48 · `GET /api/status` (`obter_status`).
   - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-22 · `GET /api/agregacoes` (`obter_agregacoes`) para os recortes por UF e função.
+  - REQ-24 · `GET /api/mudancas` (`listar_mudancas`) para a faixa de mudanças.
   - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) quando o texto é um código.
 - **Acessibilidade:**
   - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
   - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").
   - Foco inicial no conteúdo, não no campo, para não abrir o teclado no celular.
-  - Os adesivos são decorativos (`aria-hidden`), ficam atrás do texto e nunca cobrem a busca. O botão que cola adesivos tem nome acessível, a contagem é texto visível, e a animação some com `prefers-reduced-motion`.
+  - O recorte é um grupo de botões de opção (`role="radiogroup"`), e a mudança de valores é anunciada (`role="status"`). As etapas são abas (`role="tablist"`).
+  - As moedas que correm na trilha e a faixa em movimento são decorativas (`aria-hidden`) e param com `prefers-reduced-motion`. A faixa pausa com o foco do teclado.
 - **Anexo:** mockup de referência [anexos/P01.png](anexos/P01.png), exportado do canvas "Rastro — telas" (Claude Design).
