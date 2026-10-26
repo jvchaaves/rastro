@@ -2,11 +2,11 @@
 
 - **Status:** proposta (fecha provisoriamente a lacuna "definição de mudança de status" do FI-01 §12; será confirmada ao inspecionar dois lotes sucessivos da CGU, antes do PLAN da fase 5)
 - **Data:** 26/10/2026
-- **Requisitos ligados:** REQ-35, REQ-23
+- **Requisitos ligados:** REQ-35, REQ-23, REQ-63, REQ-64, REQ-69
 
 ## Contexto
 
-O brief promete "alerta quando o status de execução muda". O pacote da CGU não traz um campo de status: traz valores acumulados por etapa. Uma assinatura do tipo `mudanca_estado` precisa de uma definição testável.
+O brief pede que o sistema "avise quem assinou quando alguma coisa muda entre um lote e o seguinte", e o FI-01 §4.2 (funcionalidade 6) prevê assinar "mudança de estado". O pacote da CGU não traz um campo de status: traz valores acumulados por etapa. Uma assinatura do tipo `mudanca_estado` precisa de uma definição testável.
 
 ## Opções consideradas
 
@@ -24,7 +24,7 @@ Opção 3, porque é a única definição testável com os campos que a CGU publ
 - `paga` considera `pago + rap_pago > 0`.
 - O estado é calculado pela view `v_emenda_estado` em cada lote.
 - A mudança de estado é gravada como `MudancaLote.tipo = estado_alterado`, com `estado_antes` e `estado_depois`.
-- Variações de valor sem troca de estado ficam como `valor_alterado` e só geram alerta em assinaturas `limiar_valor`.
+- Toda variação de valor de uma etapa fica como `valor_alterado`, também quando o estado muda junto; nesse caso há as duas linhas. Assim, um limiar cruzado na mesma publicação que muda o estado também gera alerta (REQ-63).
 
 ## Consequências
 

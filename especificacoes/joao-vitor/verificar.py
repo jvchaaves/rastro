@@ -35,7 +35,7 @@ DESTINO = {  # operação que cada tela chama ao abrir (telas/diretrizes.md, dir
     "P01": {"obter_status"}, "P02": {"listar_emendas"}, "P03": {"obter_emenda"},
     "P04": {"obter_linha_do_tempo"}, "P05": {"listar_favorecidos"}, "P06": {"obter_agregacoes"},
     "P07": {"obter_autor"}, "P08": {"listar_mudancas"},
-    "P09": {"listar_lotes", "obter_lote", "listar_traducoes"}, "P10": {"obter_municipio"},
+    "P09": {"listar_lotes", "obter_lote"}, "P10": {"obter_municipio"}, "P11": {"listar_traducoes"},
     "D01": {"obter_contrato"}, "S01": {"listar_opcoes_filtro"}, "S02": None, "S03": None,
     "S04": {"listar_assinaturas"}, "S05": {"listar_alertas"}, "O02": {"cli:publicar"},
 }
@@ -195,9 +195,36 @@ for p in fichas:
         else:
             erros.append(f"{p.name}: entidade/schema desconhecido {ent}")
 
+# --- navegação: ações ⊆ "vai para"; "vai para" ↔ "chega de" do destino; aresta no mapa Mermaid
+ID = r"\b[PDSO]\d{2}\b"
+vai, chega, acoes_dest = {}, {}, {}
+for p in fichas:
+    tid, txt = p.name[:3], p.read_text()
+    bloco = txt.split("- **Chega de / vai para:**")[1].split("- **Mostra:**")[0]
+    ch, va = bloco.split("Vai para:") if "Vai para:" in bloco else (bloco, "")
+    chega[tid] = set(re.findall(ID, ch)) - {tid}
+    vai[tid] = set(re.findall(ID, va)) - {tid}
+    acoes_dest[tid] = set(re.findall(ID, txt.split("- **Ações:**")[1].split("- **Estados:**")[0])) - {tid}
+mermaid = inventario.split("```mermaid")[1].split("```")[0]
+arestas = set(re.findall(r"([PDSO]\d{2})\s*-[-.]+>(?:\|[^|]*\|)?\s*([PDSO]\d{2})", mermaid))
+for a in vai:
+    for b in sorted(acoes_dest[a] - vai[a]):
+        erros.append(f"{a}: ação leva a {b}, mas {b} não está em 'Vai para'")
+    for b in sorted(vai[a]):
+        if b in chega and a not in chega[b]:
+            erros.append(f"{a} → {b}: {b} não cita {a} em 'Chega de'")
+        if (a, b) not in arestas:
+            erros.append(f"{a} → {b}: aresta ausente no mapa Mermaid do inventário")
+    for b in sorted(chega[a]):
+        if b in vai and a not in vai[b]:
+            erros.append(f"{a} diz chegar de {b}, mas {b} não tem {a} em 'Vai para'")
+
 # --- diretiva 1: coluna "Telas" de requisitos.md
+# REQs dos elementos comuns (cabeçalho, estados comuns) valem para todas as telas do painel, sem repetir em cada ficha (diretiva 6)
+comuns = set(re.findall(r"REQ-\d{2}", diretrizes.split("## Elementos comuns a todas as telas do painel")[1]))
+painel = {t for t in ids_fichas if t[0] in "PDS"}
 def telas_de(r):
-    return ", ".join(ordenar(req_telas.get(r, []))) or "—"
+    return ", ".join(ordenar(req_telas.get(r, set()) | (painel if r in comuns else set()))) or "—"
 
 
 novo_req_txt = LINHA_REQ.sub(lambda m: f"| {m.group(1)} |{m.group(2)}| {telas_de(m.group(1))} |", req_txt)

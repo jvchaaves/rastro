@@ -3,12 +3,13 @@
 - **Superfície · ator:** Painel web · Pessoa de controle social, cidadão (morador) ou gestor municipal (assinante com chave).
 - **Objetivo:** Mostrar quais mudanças de lotes publicados satisfizeram as assinaturas e deixar claro o que cada uma significa.
 - **Chega de / vai para:**
-  - Chega de: botão "Alertas (N)" do cabeçalho, S03, S04 ("Ver alertas").
+  - Chega de: sino de alertas do cabeçalho, S03, S04 ("Ver alertas"), O02 (os alertas gerados na publicação aparecem aqui).
   - Vai para:
     - P03 (emenda do alerta);
     - P04 (linha do tempo);
     - P08 (todas as mudanças do lote);
-    - S04 ("Gerenciar assinaturas").
+    - S04 ("Gerenciar assinaturas");
+    - S03 (sem chave ou chave recusada).
 - **Mostra:**
   - Contador `AlertasPagina.nao_lidos` e abas "Não lidos" / "Todos".
   - Filtro por assinatura (`Assinatura.nome`).
@@ -29,6 +30,7 @@
   - "Ver todas as mudanças deste lote" → P08 com `?lote_novo_id=` (`listar_mudancas`).
   - Trocar aba ou assinatura → (`listar_alertas`) com `lido` / `assinatura_id`.
   - "Gerenciar assinaturas" → S04 (`listar_assinaturas`).
+  - Sem chave ou chave recusada (401) → S03 → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto da lista (REQ-44).
   - **vazio:**
@@ -49,9 +51,7 @@
   - REQ-69 · `MudancaLote.estado_depois_texto` no texto do alerta.
   - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`) para o filtro por assinatura.
   - REQ-35 · evento interno `alertas.gerados` (origem dos alertas, ver O02).
-  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - Abas com `role="tablist"` e navegação por setas.
-  - Estado lido / não lido em texto ("Não lido"), não só por um ponto colorido.
   - O contador do cabeçalho tem nome acessível "Alertas, 3 não lidos".
 - **Anexo:** mockup de referência [anexos/S05.png](anexos/S05.png), exportado do canvas "Rastro — telas" (Claude Design).

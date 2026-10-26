@@ -9,8 +9,10 @@
     - P07 ("Acompanhar emendas deste autor");
     - P08 ("Acompanhar este recorte");
     - P10 ("Acompanhar este município");
-    - S04 ("Nova assinatura").
-  - Vai para: S02 (primeira assinatura, sem chave), S04 (já tem chave), tela de origem ("Cancelar").
+    - S03 ("Criar uma assinatura");
+    - S04 ("Nova assinatura");
+    - botão "Acompanhar" do cabeçalho (todas as telas do painel).
+  - Vai para: S02 (primeira assinatura, sem chave), S04 (já tem chave), S03 ("Entrar com outra chave", no estado 401), tela de origem ("Cancelar").
 - **Mostra:**
   - Resumo legível do que será acompanhado, montado a partir dos campos. Exemplos: "Avisar quando o valor **pago** de emendas de **Saúde** com gasto na **PB** passar de **R$ 1.000.000,00**." e "Avisar quando o estado de uma emenda com gasto em **João Pessoa (PB)** mudar."
   - Lote base: "Vale a partir do lote #n (dados de dd/mm/aaaa)" (`obter_status`).
@@ -39,7 +41,7 @@
   - "Minhas assinaturas" (estado `limite_assinaturas`) → S04 (`listar_assinaturas`).
 - **Estados:**
   - **carregando:** botão "Criando…" desabilitado; opções de filtro com esqueleto enquanto `listar_opcoes_filtro` carrega (REQ-44).
-  - **vazio:** formulário sem filtro → resumo "Escolha pelo menos um filtro" e botão desabilitado (REQ-34).
+  - **vazio:** formulário sem filtro → resumo "Escolha pelo menos um filtro" e botão desabilitado (REQ-89).
   - **erro:**
     - 422 `assinatura_invalida` → erros junto aos campos (`Problema.campos[]`) e resumo no topo (REQ-34, REQ-62);
     - 422 `assinatura_invalida` com município sem UF (pré-preenchimento manipulado) → erro no campo de município (REQ-87);

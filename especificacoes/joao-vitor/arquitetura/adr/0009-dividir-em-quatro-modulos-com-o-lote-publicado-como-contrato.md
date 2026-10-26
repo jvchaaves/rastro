@@ -12,13 +12,16 @@
 
 ## Opções consideradas
 
-1. **Um módulo por contêiner** (CLI = ingestão, API = consulta…): quebra o brief, porque assinaturas e mudanças ficariam sem dono e o módulo `saida` não teria API.
-2. **Microsserviços**, um processo por módulo: contraria a restrição de execução local com dois processos (FI-01 §10.3) e multiplica a escrita no SQLite.
+1. **Um módulo por contêiner** (CLI = ingestão, API = consulta…).
+   - Prós: nenhuma mudança na arquitetura. Contras: assinaturas e mudanças ficariam sem dono e o módulo `saida` não teria API. **Descartada** porque quebra a tabela de módulos do brief.
+2. **Microsserviços**, um processo por módulo.
+   - Prós: independência de processo. Contras: contraria a execução local em dois processos (FI-01 §10.3) e multiplica escritores no SQLite. **Descartada** por isso.
 3. **Módulos de código** (`src/rastro/<modulo>/`) que rodam dentro dos contêineres existentes. A fronteira entre eles é o lote publicado (tabelas do lote + `PublicacaoAtiva`), uma porta de função e o evento `lote.publicado`.
+   - Prós: cumpre o brief sem mudar a implantação. Contras: a independência é de código e de dados, não de processo.
 
 ## Decisão
 
-Opção 3, porque cumpre a tabela de módulos do brief sem contrariar a execução local em dois processos (opções 1 e 2 descartadas pelos motivos acima). As fronteiras são estas:
+Opção 3, porque cumpre a tabela de módulos do brief sem contrariar a execução local em dois processos As fronteiras são estas:
 
 | De → para | Contrato | Onde está |
 | :-- | :-- | :-- |

@@ -3,7 +3,7 @@
 - **Superfície · ator:** Painel web · Jornalista e pessoa de controle social.
 - **Objetivo:** Mostrar o que mudou entre o lote anterior e o lote ativo, emenda por emenda, para quem acompanha a execução.
 - **Chega de / vai para:**
-  - Chega de: P01, cabeçalho "O que mudou", S05 (alerta).
+  - Chega de: P01, P09 ("Ver o que mudou neste lote"), S05 (alerta), O02 (saída da publicação), cabeçalho "O que mudou".
   - Vai para:
     - P03 (emenda);
     - P04 (linha do tempo);
@@ -21,7 +21,7 @@
 - **Coleta:**
   - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
   - `uf_gasto` · seleção · opcional.
-  - `municipio` · seleção dependente da UF · opcional.
+  - `municipio_gasto` · seleção dependente da UF · opcional.
   - `autor_codigo` · combobox · opcional.
   - `lote_novo_id` · seleção de lotes publicados (`listar_lotes`) · opcional, padrão o lote ativo.
   - `pagina` · inteiro ≥ 1.
@@ -45,14 +45,12 @@
 - **Regras:**
   - Só aparecem mudanças entre lotes publicados da mesma fonte (REQ-24, REQ-08).
   - O verbo é neutro ("aumentou", "diminuiu", "passou de … para …"). Diminuição não é marcada em vermelho.
-  - Uma redução de estado (por exemplo, `paga` → `liquidada`) é mostrada como mudança, com a nota "pode indicar cancelamento ou correção na fonte" (ADR-0006).
+  - Uma redução de estado (por exemplo, `paga` → `liquidada`) é mostrada como mudança, com a nota "valor reduzido na fonte entre os dois lotes", sem interpretar o motivo (ADR-0006).
 - **Requisitos · contrato:**
   - REQ-24, REQ-61, REQ-08, REQ-75, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
   - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
   - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF, município e autor.
-  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
-  - A diferença é escrita em texto ("aumentou"), além de qualquer seta ou cor.
-  - Lista de mudanças em `<table>` no desktop e em `<ul>` de cartões no celular, sempre com o mesmo conteúdo.
+  - A lista tem o mesmo conteúdo no desktop e no celular.
   - A contagem por tipo funciona como filtro rápido (botões com `aria-pressed`).
 - **Anexo:** mockup de referência [anexos/P08.png](anexos/P08.png), exportado do canvas "Rastro — telas" (Claude Design).

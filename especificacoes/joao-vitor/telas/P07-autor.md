@@ -14,7 +14,7 @@
   - `Autor.nome` e `Autor.tipo` em texto ("Parlamentar"; ou "Bancada (autor coletivo)").
   - `AutorDetalhe.quantidade_emendas`.
   - Somas por etapa (`AutorDetalhe.valores[]`): `empenhado`, `liquidado`, `pago`, `rap_pago` em cartões separados.
-  - Lista paginada das emendas (`AutorDetalhe.emendas.itens[]`): `Emenda.codigo`, `Emenda.tipo`, `Emenda.uf_gasto`, `Emenda.municipio_gasto`, `Emenda.funcao_nome`, valores por etapa e o estado (`EmendaResumo.estado_texto` e `estado_execucao`).
+  - Lista paginada das emendas (`AutorDetalhe.emendas.itens[]`): `Emenda.codigo`, `Emenda.tipo`, `Emenda.uf_gasto`, `Emenda.municipio_nome`, `Emenda.funcao_nome`, valores por etapa e o estado (`EmendaResumo.estado_texto` e `estado_execucao`).
   - Proveniência (`AutorDetalhe.emendas.proveniencia`).
   - Nota fixa: "Valores registrados para emendas deste autor. Autoria da emenda não significa execução pelo parlamentar."
 - **Coleta:** `pagina` · inteiro ≥ 1 · `por_pagina` · 20/50/100.
@@ -28,21 +28,19 @@
 - **Estados:**
   - **carregando:** esqueleto (REQ-44).
   - **vazio:** autor sem emendas no lote ativo (por exemplo, só emendas fora do recorte) → "Nenhuma emenda deste autor no lote de dd/mm/aaaa" (REQ-45).
-  - **erro:** 404 → "Autor não encontrado" e "Comparar autores" (P06) (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **erro:** 404 → "Autor não encontrado" e "Comparar autores" (P06) (REQ-55); 422 (`pagina` ou `por_pagina` fora do intervalo na URL) → volta à primeira página com aviso (REQ-72); 5xx → `X-Request-Id` (REQ-46).
   - **sucesso:** somas e lista (REQ-29).
   - **offline:** "Sem conexão" (REQ-47).
   - **sem permissão:** tela pública; limite de taxa (REQ-28).
   - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
 - **Regras:**
-  - Autor coletivo nunca é exibido como pessoa: aparece o rótulo do coletivo, sem foto ou cargo (REQ-22).
-  - Etapas sem soma única (REQ-15).
+  - Autor coletivo nunca é exibido como pessoa: aparece o rótulo do coletivo, sem foto ou cargo (REQ-79).
   - Não há foto, partido nem outros dados do parlamentar além dos publicados pela fonte.
   - Não há posição do autor em relação a outros ("3º que mais…") (REQ-71).
   - O estado de cada emenda aparece em linguagem simples, com o termo técnico abaixo (REQ-69).
 - **Requisitos · contrato:**
   - REQ-29, REQ-22, REQ-15, REQ-14, REQ-69, REQ-71, REQ-79 · `GET /api/autores/{codigo}` (`obter_autor`).
-  - REQ-55, REQ-19 · respostas 404 / 503 do mesmo contrato.
-  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
+  - REQ-55, REQ-72, REQ-19 · respostas 404 / 422 / 503 do mesmo contrato.
 - **Acessibilidade:**
   - O título `<h1>` é o nome do autor; o tipo vem logo abaixo em texto, não só num selo colorido.
   - A lista de emendas reutiliza a tabela de P02, com `<caption>` própria.

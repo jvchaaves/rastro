@@ -3,11 +3,11 @@
 - **Superfície · ator:** Painel web · Pessoa de controle social (assinante recém-criado).
 - **Objetivo:** Entregar a chave de assinante uma única vez e garantir que a pessoa a guarde antes de seguir.
 - **Chega de / vai para:**
-  - Chega de: S01 (201 com `chave_assinante` preenchida). É a única entrada; acesso direto pela URL sem chave recém-criada redireciona para S04 ou S03.
-  - Vai para: S04 ("Continuar").
+  - Chega de: S01 (201 com `chave_assinante` preenchida). É a única entrada; um acesso direto pela URL cai no estado vazio.
+  - Vai para: S04 ("Continuar"), S03 ("Entrar com chave", no estado vazio).
 - **Mostra:**
   - Título: "Guarde sua chave de assinante".
-  - A chave (`AssinaturaCriada.chave_assinante`, 32 caracteres) em fonte monoespaçada, agrupada em blocos de 4 para leitura.
+  - A chave (`AssinaturaCriada.chave_assinante`, 32 caracteres) agrupada para facilitar a leitura e a cópia manual.
   - Explicação:
     - "Esta chave é a única forma de ver suas assinaturas e alertas em outro navegador ou dispositivo."
     - "Não temos como recuperá-la."
@@ -21,12 +21,12 @@
   - "Continuar" (habilitado após a confirmação) → S04 (`listar_assinaturas`).
   - "Entrar com chave" (estado vazio) → S03 → ação local · sem chamada à API (REQ-74).
 - **Estados:**
-  - **carregando:** não se aplica, porque a chave já veio na resposta de S01 (REQ-44).
+  - **carregando:** não se aplica: a chave já veio na resposta 201 de S01 (REQ-31).
   - **vazio:** sem chave em memória (recarregou a página) → "A chave só é mostrada uma vez. Se você a guardou, use Entrar com chave." com link para S03; ela continua guardada no navegador se o `localStorage` funcionou (REQ-31).
   - **erro:** a área de transferência falhou → "Não foi possível copiar; selecione e copie manualmente", com o texto da chave selecionável (REQ-58).
   - **sucesso:** chave exibida e confirmação (REQ-31).
   - **offline:** a tela funciona sem rede (nenhuma chamada) (REQ-47).
-  - **sem permissão:** não se aplica: a tela só exibe o que S01 acabou de receber (REQ-32).
+  - **sem permissão:** não se aplica: a tela não chama a API e só exibe o que S01 acabou de receber (ADR-0005).
   - **armazenamento indisponível:** `localStorage` bloqueado (navegação privada) → aviso "Este navegador não vai lembrar sua chave; guarde-a agora" (REQ-58).
 - **Regras:**
   - A chave não é enviada de novo pela API nem mostrada em outra tela (REQ-31).
@@ -34,7 +34,6 @@
   - Não há "enviar por e-mail" (REQ-41).
 - **Requisitos · contrato:**
   - REQ-31, REQ-41, REQ-58 · resposta 201 de `POST /api/assinaturas` (`criar_assinatura`), campo `chave_assinante`; a tela não faz nova chamada.
-  - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`), chamada por S04 ao continuar.
   - REQ-74 · ações locais (copiar, baixar .txt, confirmação).
 - **Acessibilidade:**
   - A chave tem rótulo acessível lido caractere a caractere em grupos ("a 3 f 9, …") por `aria-label`.

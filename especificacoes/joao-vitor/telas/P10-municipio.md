@@ -1,16 +1,18 @@
 ## P10 · Município
 
 - **Superfície · ator:** Painel web (celular e desktop) · Cidadão (morador) e gestor municipal.
-- **Objetivo:** Responder, para uma cidade, "aquela emenda para a minha cidade virou alguma coisa?", mostrando em linguagem simples o que foi destinado ao município e em que pé está, inclusive o que foi empenhado e ainda não foi pago.
+- **Objetivo:** Mostrar, em linguagem simples, o que foi destinado a um município e em que etapa da execução está cada emenda, inclusive o que foi empenhado e ainda não foi pago.
 - **Chega de / vai para:**
-  - Chega de: P01 ("O que chegou à sua cidade" e busca pelo nome da cidade), busca global do cabeçalho, município do gasto em P02 e P03, S04 ("Ver município"), link compartilhado.
+  - Chega de: P01 ("O que chegou à sua cidade" e busca pelo nome da cidade), P02 e P03 (município do gasto), P11 ("Ver na prática"), S04 ("Ver município"), busca global do cabeçalho, link compartilhado.
   - Vai para:
     - P02 (lista completa do município, ou só as pendentes);
     - P03 (emenda da lista);
     - S01 ("Acompanhar este município");
-    - P09 (proveniência e tabela de tradução).
+    - P09 (proveniência);
+    - P11 ("Tradução v`traducao_versao`");
+    - P01 ("Escolher outra cidade", no estado vazio).
 - **Mostra:**
-  - Título: `MunicipioDetalhe.nome` e `MunicipioDetalhe.uf` ("João Pessoa (PB)"), com a frase "Emendas parlamentares federais de 2025 com gasto previsto nesta cidade".
+  - Título: `MunicipioDetalhe.municipio_nome` e `MunicipioDetalhe.uf_gasto` ("João Pessoa (PB)"), com a frase "Emendas parlamentares federais de 2025 com gasto previsto nesta cidade".
   - Faixa de proveniência (`MunicipioDetalhe.proveniencia`: `fonte_nome`, `lote_id`, `data_referencia`, `importado_em`).
   - Quantidade de emendas (`MunicipioDetalhe.quantidade_emendas`).
   - "Em que pé está", uma linha por estado, na ordem do ciclo (`MunicipioDetalhe.por_estado[]`):
@@ -20,22 +22,23 @@
 
     A trilha da identidade visual mostra a proporção de emendas em cada estado, sem valores somados.
   - Valores por etapa, em cartões separados e sem total (`MunicipioDetalhe.valores[]`): `empenhado`, `liquidado`, `pago`, cada um com o rótulo e o link "o que é?".
-  - Destaque para o gestor: "N emendas com valor empenhado ainda não pago" (`MunicipioDetalhe.quantidade_pendentes`: pago menor que o empenhado, inclusive as pagas em parte), com o botão "Ver as pendentes".
-  - Lista das emendas do município (primeiros 10 itens de `listar_emendas?uf_gasto=&municipio=&ordenar=codigo`): `Emenda.codigo`, `Autor.nome`, `Emenda.funcao_nome`, o estado (`EmendaResumo.estado_texto` e `estado_execucao`) e os valores por etapa.
-  - Marca "Tradução v`MunicipioDetalhe.traducao_versao`" com link para a tabela em P09.
+  - Destaque para o gestor: "N emendas com valor empenhado ainda não pago" (`MunicipioDetalhe.quantidade_pendentes`, o recorte do REQ-68, inclusive as pagas em parte), com o botão "Ver as pendentes".
+  - Lista das emendas do município (`listar_emendas?uf_gasto=&municipio_gasto=&ordenar=codigo&por_pagina=10`): `Emenda.codigo`, `Autor.nome`, `Emenda.funcao_nome`, o estado (`EmendaResumo.estado_texto` e `estado_execucao`) e os valores por etapa.
+  - Marca "Tradução v`MunicipioDetalhe.traducao_versao`" com link para P11.
   - Nota fixa: "Localidade do gasto segundo a CGU. Emendas de toda a UF ou nacionais não aparecem aqui; veja a UF em Emendas." e "Pagamento registrado não comprova a aplicação final."
 - **Coleta:**
-  - `uf` · da rota · obrigatório.
-  - `municipio` · da rota (`OpcoesFiltro.municipios[].municipio`) · obrigatório.
+  - `uf_gasto` · da rota · obrigatório.
+  - `municipio_gasto` · da rota (`OpcoesFiltro.municipios[].municipio_gasto`) · obrigatório.
   - `pendentes` · alternância "Todas" / "Empenhadas e ainda não pagas" na lista · opcional, padrão "Todas".
 - **Ações:**
-  - Abrir a tela → (`obter_municipio`) e (`listar_emendas`) com `uf_gasto`, `municipio` e `ordenar=codigo`.
+  - Abrir a tela → (`obter_municipio`) e (`listar_emendas`) com `uf_gasto`, `municipio_gasto`, `ordenar=codigo` e `por_pagina=10`.
   - Alternar "Todas" / "Empenhadas e ainda não pagas" → (`listar_emendas`) com `pendentes=true`; atualiza a URL.
-  - "Ver as pendentes" → P02 com `?uf_gasto=PB&municipio=joao-pessoa&pendentes=true` (`listar_emendas`).
-  - "Ver as N emendas" → P02 com `?uf_gasto=PB&municipio=joao-pessoa` (`listar_emendas`).
+  - "Ver as pendentes" → P02 com `?uf_gasto=PB&municipio_gasto=joao-pessoa&pendentes=true` (`listar_emendas`).
+  - "Ver as N emendas" → P02 com `?uf_gasto=PB&municipio_gasto=joao-pessoa` (`listar_emendas`).
   - Emenda da lista → P03 (`obter_emenda`).
   - "Acompanhar este município" → S01 (`listar_opcoes_filtro`) com `filtro_uf_gasto`, `filtro_municipio_gasto` e `condicao = mudanca_estado` pré-preenchidos.
-  - "Tradução v1" → P09 na seção de tradução (`listar_traducoes`).
+  - "Tradução v`traducao_versao`" → P11 (`listar_traducoes`).
+  - "Escolher outra cidade" (estado vazio) → P01 (`obter_status`).
   - Faixa de proveniência → P09 (`listar_lotes`).
   - "Copiar link desta cidade" → ação local · sem chamada à API (REQ-74).
   - "Baixar CSV das emendas" → gera, no navegador, um CSV dos itens já carregados, com colunas de proveniência e de tradução → ação local · sem chamada à API (REQ-74).
@@ -45,17 +48,17 @@
   - **erro:** 422 `parametro_invalido` (UF ou identificador de município fora do formato na URL) → "Endereço de cidade inválido", com "Escolher cidade" (REQ-72); 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
   - **sucesso:** estados com texto simples, valores por etapa, pendentes e lista (REQ-67, REQ-68, REQ-69).
   - **offline:** "Sem conexão"; nenhum valor anterior exibido como atual (REQ-47).
-  - **sem permissão:** tela pública; limite de taxa → "Muitas consultas seguidas. Tente de novo em N s." (REQ-28).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
   - **sem lote publicado:** 503 → "Dados ainda não publicados" (REQ-19, REQ-60).
 - **Regras:**
   - O município vem de `Emenda.municipio_gasto`, derivado da localidade do gasto, nunca do município do favorecido (REQ-66, REQ-21). Emendas de toda a UF, de uma região ou nacionais não têm município e não aparecem aqui (REQ-88).
   - Os estados aparecem primeiro em linguagem simples e o termo técnico logo abaixo; o texto vem da API, da versão vigente da tabela de tradução (REQ-69, ADR-0008).
-  - "Empenhado e ainda não pago" é o nome do recorte (pago menor que o empenhado, REQ-68), sem "atrasada", "parada" ou cor de alarme: o dado não diz o motivo (FI-01 §5).
-  - Etapas em cartões separados, sem total (REQ-77). A trilha mostra quantidades de emendas por estado, não soma valores.
+  - "Empenhado e ainda não pago" é o nome do recorte (REQ-68), sem "atrasada", "parada" ou cor de alarme: o dado não diz o motivo, e o Rastro não opina (brief; FI-01 §5).
+  - A trilha mostra quantidades de emendas por estado, nunca soma de valores de etapas diferentes (REQ-77).
   - A lista não ordena autores por valor nem destaca "quem mais mandou" (REQ-71); a ordem padrão é por código da emenda.
 - **Requisitos · contrato:**
-  - REQ-66, REQ-67, REQ-69, REQ-55, REQ-72, REQ-19 · `GET /api/municipios/{uf}/{municipio}` (`obter_municipio`).
-  - REQ-20, REQ-68 · `GET /api/emendas` (`listar_emendas`) com `uf_gasto`, `municipio` e `pendentes`.
+  - REQ-66, REQ-67, REQ-69, REQ-55, REQ-72, REQ-19 · `GET /api/municipios/{uf_gasto}/{municipio_gasto}` (`obter_municipio`).
+  - REQ-20, REQ-68 · `GET /api/emendas` (`listar_emendas`) com `uf_gasto`, `municipio_gasto` e `pendentes`.
   - REQ-14, REQ-48 · `MunicipioDetalhe.proveniencia`.
   - REQ-70 · `GET /api/traducoes` (`listar_traducoes`), pelo link da versão.
   - REQ-77, REQ-71 · regras de exibição.

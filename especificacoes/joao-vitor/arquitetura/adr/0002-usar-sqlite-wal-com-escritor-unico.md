@@ -2,7 +2,7 @@
 
 - **Status:** aceita
 - **Data:** 26/10/2026
-- **Requisitos ligados:** REQ-07, REQ-09, REQ-11, REQ-36, REQ-49
+- **Requisitos ligados:** REQ-07, REQ-09, REQ-11, REQ-36, REQ-49, REQ-56, REQ-96
 
 ## Contexto
 
@@ -27,7 +27,8 @@ Opção 3, porque atende ao gancho de concorrência do brief (leitura durante pu
 - `PRAGMA journal_mode=WAL`, `synchronous=NORMAL`, `busy_timeout=5000`, `foreign_keys=ON`.
 - Nas consultas, a API usa conexões só de leitura (`mode=ro`) e executa cada requisição dentro de uma transação de leitura. Com isso, o lote ativo lido no início vale para a requisição inteira (REQ-09).
 - Dados de fonte (lotes, emendas, execução, favorecidos, mudanças) e alertas novos: só a CLI escreve. Uma trava de arquivo (`data/rastro.lock`) impede duas CLIs ao mesmo tempo, e a publicação usa `BEGIN IMMEDIATE`.
-- A API tem uma conexão de escrita separada, restrita a transações curtas sobre `Assinante`, `Assinatura` e `Alerta.lido_em`. Essas tabelas não são escritas pela CLI, exceto a inserção de alertas, que nunca altera linhas existentes.
+- A API tem uma conexão de escrita separada, restrita a transações curtas sobre `Assinante`, `Assinatura` (criar, pausar, excluir), `Alerta` (marcar `lido_em` e apagar em cascata ao excluir a assinatura) e `CacheConsulta`. A CLI só insere em `Alerta`, e o faz com `INSERT … SELECT … WHERE EXISTS` na assinatura, então uma exclusão concorrente não quebra a chave estrangeira.
+- Se uma escrita da API esperar mais que o `busy_timeout` de 5 s (uma publicação longa), a API responde 503 `banco_ocupado` com `Retry-After`, nunca 500 (REQ-96).
 - A concorrência fica onde não há disputa por escrita:
   - downloads paralelos das fontes;
   - avaliação paralela das assinaturas;
@@ -37,6 +38,6 @@ Opção 3, porque atende ao gancho de concorrência do brief (leitura durante pu
 
 - **(+)** Não há servidor de banco: o projeto roda com `venv` + `node` e cada teste cria um banco temporário.
 - **(+)** Leitura durante importação sem bloqueio e sem mistura de lotes, testável com dois processos (QA-03).
-- **(−)** Um só escritor: duas publicações simultâneas são serializadas, e a segunda espera ou sai com código 5. É aceitável na cadência de atualização da CGU.
+- **(−)** Um só escritor: duas publicações simultâneas são serializadas, e a segunda sai na hora com código 5 (REQ-56), sem esperar. A trava usa `fcntl.flock`, que o sistema operacional solta quando o processo morre. É aceitável na cadência de atualização da CGU.
 - **(−)** O checkpoint do WAL precisa de atenção. Leitores longos impedem o checkpoint, por isso a API não mantém transações abertas entre requisições.
 - **(−)** Migrar para PostgreSQL exigiria reescrever a camada `store`. O contrato HTTP não muda.

@@ -11,14 +11,16 @@
     - P10 (município do gasto);
     - P09 (origem de um valor);
     - S01 ("Acompanhar esta emenda");
-    - download oficial da CGU (`Fonte.url_download`).
+    - P02 ("Buscar emendas", no estado não encontrada);
+    - P11 (marca "tradução v`traducao_versao`");
+    - download oficial da CGU (`Proveniencia.url_download`).
 - **Mostra:**
   - Cabeçalho:
-    - `Emenda.codigo` (monoespaçado, botão "copiar");
+    - `Emenda.codigo`, com botão "copiar";
     - `Emenda.ano` e `Emenda.numero`;
     - `Emenda.tipo`;
     - `Autor.nome` (link para P07, selo "coletivo" se `Autor.tipo ≠ parlamentar`);
-    - o estado em linguagem simples, em destaque (`EmendaDetalhe.estado_texto`, ex. "A entrega foi conferida; falta pagar"), com o termo técnico ao lado (`estado_execucao`, "liquidada") e a marca "tradução v`traducao_versao`" que leva a P09.
+    - o estado em linguagem simples, em destaque (`EmendaDetalhe.estado_texto`, ex. "A entrega foi conferida; falta pagar"), com o termo técnico ao lado (`estado_execucao`, "liquidada") e a marca "tradução v`traducao_versao`" que leva a P11.
   - Onde: `Emenda.localidade_gasto` (texto original), `Emenda.municipio_nome` (link para P10 pelo identificador `Emenda.municipio_gasto`) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
   - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
   - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
@@ -34,14 +36,15 @@
   - "Ver favorecidos" → P05 (`listar_favorecidos`).
   - Nome do autor → P07 (`obter_autor`).
   - Município do gasto → P10 (`obter_municipio`).
-  - "tradução v1" → P09 na seção de tradução (`listar_traducoes`).
+  - "tradução v`traducao_versao`" → P11 (`listar_traducoes`).
+  - "Buscar emendas" (estado 404) → P02 (`listar_emendas`).
   - "Acompanhar esta emenda" → S01 (`listar_opcoes_filtro`) com `filtro_codigo_emenda` preenchido.
-  - "Abrir na CGU" → `Fonte.url_download` em nova aba, com aviso de link externo → ação local · sem chamada à API (REQ-74).
+  - "Abrir na CGU" → `Proveniencia.url_download` em nova aba, com aviso de link externo → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto do cabeçalho e dos cartões (REQ-44).
-  - **vazio:** a emenda existe mas tem todas as etapas = 0 → "Nenhum valor executado registrado até dd/mm/aaaa" (`estado_execucao = sem_execucao`) (REQ-45).
+  - **vazio:** a emenda existe mas tem todas as etapas = 0 → "Nenhum valor executado registrado até dd/mm/aaaa", com o estado "Ainda sem dinheiro reservado" (REQ-45, REQ-69).
   - **erro:**
-    - 404 → "Não encontramos a emenda 2025… no lote de dd/mm/aaaa", com o link "Buscar emendas" (REQ-18);
+    - 404 → "Não encontramos a emenda 2025… no lote de dd/mm/aaaa", com o link "Buscar emendas" (P02) (REQ-18);
     - 422 → "O código precisa ter 12 dígitos" (REQ-17);
     - 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
   - **sucesso:** todos os blocos (REQ-16).
@@ -49,9 +52,9 @@
   - **sem permissão:** tela pública; limite de taxa (REQ-28).
   - **sem lote publicado:** 503 → "Dados ainda não publicados" (REQ-19, REQ-60).
 - **Regras:**
-  - As etapas aparecem em cartões separados e na ordem do ciclo, sem "total" (REQ-15).
+  - As etapas aparecem em cartões separados e na ordem do ciclo (REQ-15).
   - Todo valor tem um botão "Origem" (REQ-14).
-  - A página não usa "aplicado em" nem "investido em"; o texto fixo é "Pagamento registrado não comprova a aplicação final" (FI-01 §5).
+  - O texto fixo "Pagamento registrado não comprova a aplicação final" acompanha o bloco de execução (FI-01 §5: o sistema não declara o gasto final).
   - Valores de fontes diferentes nunca são somados (REQ-13).
   - O texto simples vem primeiro e o termo técnico depois; os dois vêm da API (REQ-69, ADR-0008).
 - **Requisitos · contrato:**

@@ -43,7 +43,7 @@ paths:
       summary: Lote ativo e resumo de cada fonte
       description: |
         Responde 200 mesmo sem lote publicado (`lote_ativo: null`), para que o painel mostre
-        "Dados ainda não publicados" (REQ-19, REQ-48). Telas: cabeçalho de todas, P01.
+        "Dados ainda não publicados" (REQ-60, REQ-48). Telas: cabeçalho de todas, P01.
       responses:
         '200':
           description: Situação das fontes
@@ -53,6 +53,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Status' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/filtros/opcoes:
     get:
@@ -60,7 +61,7 @@ paths:
       x-modulo: consulta
       tags: [emendas]
       summary: Valores possíveis dos filtros no lote ativo
-      description: Alimenta os filtros de P02, P06 e S01. Não inclui favorecidos (REQ-25).
+      description: Alimenta os filtros de P02, P06, P08 e S01. Não inclui favorecidos (REQ-65).
       responses:
         '200':
           description: Opções
@@ -69,6 +70,7 @@ paths:
               schema: { $ref: '#/components/schemas/OpcoesFiltro' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/emendas:
     get:
@@ -81,16 +83,16 @@ paths:
         - $ref: '#/components/parameters/Ano'
         - $ref: '#/components/parameters/AutorCodigo'
         - $ref: '#/components/parameters/UfGasto'
-        - $ref: '#/components/parameters/Municipio'
+        - $ref: '#/components/parameters/MunicipioGasto'
         - $ref: '#/components/parameters/FuncaoCodigo'
         - $ref: '#/components/parameters/Tipo'
         - name: pendentes
           in: query
-          description: true = só emendas com `pago` + `rap_pago` menor que `empenhado` (empenhado e ainda não pago por inteiro) (REQ-68).
+          description: true = só emendas com `pago` + `rap_pago` menor que `empenhado` − `rap_cancelado` (empenhado e ainda não pago por inteiro) (REQ-68).
           schema: { type: boolean, default: false }
         - name: q
           in: query
-          description: Texto livre sobre código da emenda, nome do autor e função. Nunca busca favorecidos (REQ-25).
+          description: Texto livre sobre código da emenda, nome do autor e função. Nunca busca favorecidos (REQ-65).
           schema: { type: string, minLength: 2, maxLength: 80 }
         - name: ordenar
           in: query
@@ -109,6 +111,7 @@ paths:
         '422': { $ref: '#/components/responses/Invalido' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/emendas/{codigo}:
     get:
@@ -131,6 +134,7 @@ paths:
         '422': { $ref: '#/components/responses/CodigoMalformado' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/emendas/{codigo}/linha-do-tempo:
     get:
@@ -151,6 +155,7 @@ paths:
         '422': { $ref: '#/components/responses/CodigoMalformado' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/emendas/{codigo}/favorecidos:
     get:
@@ -158,7 +163,9 @@ paths:
       x-modulo: consulta
       tags: [emendas]
       summary: Valores recebidos por favorecido de uma emenda
-      description: REQ-15, REQ-25, REQ-26. Tela P05.
+      description: |
+        REQ-15, REQ-25, REQ-26, REQ-65. Tela P05. Itens em `ano_mes` decrescente e, no mesmo mês, por
+        `nome_publicavel`; a linha agregada de pessoas físicas vem por último no mês (ordem fixa, sem ranking).
       parameters:
         - $ref: '#/components/parameters/CodigoEmenda'
         - $ref: '#/components/parameters/Pagina'
@@ -173,6 +180,7 @@ paths:
         '422': { $ref: '#/components/responses/CodigoMalformado' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/agregacoes:
     get:
@@ -181,7 +189,7 @@ paths:
       tags: [agregacoes]
       summary: Somas por etapa agrupadas por autor, UF do gasto ou função
       description: |
-        REQ-21, REQ-22, REQ-49, REQ-79. Tela P06 (e P01 para os recortes). Na dimensão `autor`, os grupos
+        REQ-21, REQ-22, REQ-49, REQ-79, REQ-91. Tela P06 (e P01 para os recortes). Na dimensão `autor`, os grupos
         vêm em ordem alfabética, sem posição, e `ordenar_por_etapa` é ignorado: o Rastro não ranqueia
         parlamentares (REQ-71).
       parameters:
@@ -197,11 +205,8 @@ paths:
           in: query
           description: Ordena os grupos de `uf` e `funcao` pela etapa, decrescente. Ignorado em `dimensao=autor` (REQ-71).
           schema: { $ref: '#/components/schemas/Etapa' }
-        - name: limite
-          in: query
-          description: Grupos por página (REQ-71 exige percorrer todos os autores em ordem alfabética)
-          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
         - $ref: '#/components/parameters/Pagina'
+        - $ref: '#/components/parameters/PorPagina'
       responses:
         '200':
           description: Grupos
@@ -211,8 +216,9 @@ paths:
         '422': { $ref: '#/components/responses/Invalido' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
-  /api/municipios/{uf}/{municipio}:
+  /api/municipios/{uf_gasto}/{municipio_gasto}:
     get:
       operationId: obter_municipio
       x-modulo: consulta
@@ -220,18 +226,18 @@ paths:
       summary: Resumo das emendas com gasto num município
       description: |
         REQ-66, REQ-67, REQ-69, REQ-55. Tela P10 (morador e gestor municipal). A lista de emendas do
-        município vem de `listar_emendas?uf_gasto=&municipio=` (e `pendentes=true` para o gestor).
+        município vem de `listar_emendas?uf_gasto=&municipio_gasto=` (e `pendentes=true` para o gestor).
       parameters:
-        - name: uf
+        - name: uf_gasto
           in: path
           required: true
           schema:
             type: string
             enum: [AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO]
-        - name: municipio
+        - name: municipio_gasto
           in: path
           required: true
-          description: Identificador do município em `OpcoesFiltro.municipios[].municipio` (nome sem acento, minúsculo, com hífens; ex. `joao-pessoa`).
+          description: Identificador do município em `OpcoesFiltro.municipios[].municipio_gasto` (minúsculo, sem acento, com hífens; ex. `joao-pessoa`).
           schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$', maxLength: 60 }
       responses:
         '200':
@@ -243,6 +249,7 @@ paths:
         '422': { $ref: '#/components/responses/Invalido' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/autores/{codigo}:
     get:
@@ -267,6 +274,8 @@ paths:
         '404': { $ref: '#/components/responses/NaoEncontrada' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/mudancas:
     get:
@@ -287,7 +296,7 @@ paths:
           in: query
           schema: { $ref: '#/components/schemas/TipoMudanca' }
         - $ref: '#/components/parameters/UfGasto'
-        - $ref: '#/components/parameters/Municipio'
+        - $ref: '#/components/parameters/MunicipioGasto'
         - $ref: '#/components/parameters/AutorCodigo'
         - $ref: '#/components/parameters/Pagina'
         - $ref: '#/components/parameters/PorPagina'
@@ -301,6 +310,7 @@ paths:
         '422': { $ref: '#/components/responses/Invalido' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
         '503': { $ref: '#/components/responses/SemLote' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/traducoes:
     get:
@@ -309,7 +319,7 @@ paths:
       tags: [traducoes]
       summary: Versões da tabela que traduz o estado de execução para linguagem simples
       description: |
-        REQ-69, REQ-70, ADR-0008. Tela P09 ("Como traduzimos o estado"). Responde 200 mesmo sem lote
+        REQ-69, REQ-70, ADR-0008. Tela P11 ("Como traduzimos o estado"). Responde 200 mesmo sem lote
         publicado. Versões antigas nunca são alteradas: quem citou um texto pode conferir a versão.
       parameters:
         - name: versao
@@ -325,6 +335,7 @@ paths:
         '404': { $ref: '#/components/responses/NaoEncontrada' }
         '422': { $ref: '#/components/responses/Invalido' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/lotes:
     get:
@@ -350,6 +361,8 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Lote' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/lotes/{lote_id}:
     get:
@@ -371,6 +384,8 @@ paths:
               schema: { $ref: '#/components/schemas/Lote' }
         '404': { $ref: '#/components/responses/NaoEncontrada' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/assinaturas:
     post:
@@ -398,7 +413,8 @@ paths:
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '422': { $ref: '#/components/responses/AssinaturaInvalida' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
-        '503': { $ref: '#/components/responses/SemLote' }
+        '503': { $ref: '#/components/responses/SemLoteOuOcupado' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
     get:
       operationId: listar_assinaturas
       x-modulo: saida
@@ -421,6 +437,7 @@ paths:
                     items: { $ref: '#/components/schemas/Assinatura' }
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/assinaturas/{assinatura_id}:
     parameters:
@@ -455,6 +472,9 @@ paths:
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '404': { $ref: '#/components/responses/NaoEncontrada' }
         '422': { $ref: '#/components/responses/Invalido' }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '503': { $ref: '#/components/responses/BancoOcupado' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
     delete:
       operationId: excluir_assinatura
       x-modulo: saida
@@ -467,6 +487,10 @@ paths:
         '204': { description: Excluída }
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '404': { $ref: '#/components/responses/NaoEncontrada' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '503': { $ref: '#/components/responses/BancoOcupado' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/alertas:
     get:
@@ -494,6 +518,8 @@ paths:
               schema: { $ref: '#/components/schemas/AlertasPagina' }
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /api/alertas/{alerta_id}:
     patch:
@@ -527,6 +553,10 @@ paths:
               schema: { $ref: '#/components/schemas/Alerta' }
         '401': { $ref: '#/components/responses/ChaveInvalida' }
         '404': { $ref: '#/components/responses/NaoEncontrada' }
+        '422': { $ref: '#/components/responses/Invalido' }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '503': { $ref: '#/components/responses/BancoOcupado' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
   /openapi.json:
     get:
@@ -541,6 +571,8 @@ paths:
           content:
             application/json:
               schema: { type: object }
+        '429': { $ref: '#/components/responses/LimiteDeTaxa' }
+        '500': { $ref: '#/components/responses/ErroInterno' }
 
 components:
   securitySchemes:
@@ -573,13 +605,13 @@ components:
     UfGasto:
       name: uf_gasto
       in: query
-      description: Sigla da UF do gasto, ou `NM` para nacional/múltiplas UFs (REQ-21).
+      description: Sigla da UF do gasto, ou `NM` para nacional/múltiplas UFs (REQ-78).
       schema: { $ref: '#/components/schemas/UfGasto' }
-    Municipio:
-      name: municipio
+    MunicipioGasto:
+      name: municipio_gasto
       in: query
       description: |
-        Município do gasto (`OpcoesFiltro.municipios[].municipio`). Exige `uf_gasto` de uma UF; sem ela,
+        Município do gasto (`OpcoesFiltro.municipios[].municipio_gasto`). Exige `uf_gasto` de uma UF; sem ela,
         ou com `uf_gasto = NM`, a resposta é 422 `parametro_invalido` (REQ-66, REQ-72).
       schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$', maxLength: 60 }
     FuncaoCodigo:
@@ -631,6 +663,29 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
+    ErroInterno:
+      description: Erro inesperado (`codigo = erro_interno`), sempre com `X-Request-Id` e `request_id` no corpo (REQ-46)
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/XRequestId' }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
+    SemLoteOuOcupado:
+      description: Sem lote publicado (`sem_lote_publicado`, REQ-19) ou escrita esperando a publicação por mais de 5 s (`banco_ocupado`, com `Retry-After`, REQ-96)
+      headers:
+        Retry-After:
+          schema: { type: integer, description: segundos; só com banco_ocupado }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
+    BancoOcupado:
+      description: Escrita esperou mais de 5 s pela trava do banco durante uma publicação (`codigo = banco_ocupado`, REQ-96)
+      headers:
+        Retry-After:
+          schema: { type: integer, description: segundos }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problema' }
     LimiteDeTaxa:
       description: Mais de 60 requisições/min do mesmo IP de cliente (REQ-28, REQ-84)
       headers:
@@ -661,6 +716,7 @@ components:
             - limite_assinaturas
             - parametro_invalido
             - limite_de_taxa
+            - banco_ocupado
             - erro_interno
         campos:
           type: array
@@ -673,9 +729,14 @@ components:
               mensagem: { type: string }
         request_id: { type: string }
 
+    SiglaUf:
+      type: string
+      description: Sigla de uma UF (sem `NM`).
+      enum: [AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO]
+
     UfGasto:
       type: string
-      description: UF do gasto; `NM` = nacional ou múltiplas UFs (REQ-21).
+      description: UF do gasto; `NM` = nacional ou múltiplas UFs (REQ-78).
       enum: [AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO, NM]
 
     Etapa:
@@ -722,14 +783,15 @@ components:
     LoteResumo:
       type: object
       required: [id, fonte_id, estado, data_referencia, hash_sha256]
+      description: '`data_referencia` e `hash_sha256` são null só num lote `falhou` por `fonte_indisponivel` (REQ-12)'
       properties:
         id: { type: integer }
         fonte_id: { type: string, enum: [cgu, siga] }
         estado:
           type: string
           enum: [importando, validado, publicado, substituido, recusado, falhou]
-        data_referencia: { type: string, format: date }
-        hash_sha256: { type: string }
+        data_referencia: { type: [string, 'null'], format: date }
+        hash_sha256: { type: [string, 'null'] }
         publicado_em: { type: [string, 'null'], format: date-time }
 
     Lote:
@@ -739,7 +801,7 @@ components:
           required: [arquivo_nome, importado_em, linhas_lidas, linhas_aceitas, linhas_rejeitadas, rejeicoes]
           properties:
             fonte_nome: { type: string }
-            arquivo_nome: { type: string }
+            arquivo_nome: { type: [string, 'null'] }
             importado_em: { type: string, format: date-time }
             linhas_lidas: { type: integer, minimum: 0 }
             linhas_aceitas: { type: integer, minimum: 0 }
@@ -839,11 +901,11 @@ components:
           description: Municípios com ao menos uma emenda no lote ativo (REQ-66), em ordem alfabética
           items:
             type: object
-            required: [uf, municipio, nome]
+            required: [uf_gasto, municipio_gasto, municipio_nome]
             properties:
-              uf: { $ref: '#/components/schemas/UfGasto' }
-              municipio: { type: string, description: 'Identificador usado em `obter_municipio` e no parâmetro `municipio`' }
-              nome: { type: string, description: Nome como publicado na localidade do gasto, ex. "João Pessoa" }
+              uf_gasto: { $ref: '#/components/schemas/SiglaUf' }
+              municipio_gasto: { type: string, description: 'Identificador usado em `obter_municipio` e no parâmetro `municipio_gasto`' }
+              municipio_nome: { type: string, description: Nome como publicado na localidade do gasto, ex. "João Pessoa" }
         funcoes:
           type: array
           items:
@@ -934,11 +996,12 @@ components:
                 type: array
                 items:
                   type: object
-                  required: [lote_id, data_referencia, valor_centavos]
+                  required: [lote_id, data_referencia, valor_centavos, proveniencia]
                   properties:
                     lote_id: { type: integer }
                     data_referencia: { type: string, format: date }
                     valor_centavos: { type: integer }
+                    proveniencia: { $ref: '#/components/schemas/Proveniencia', description: Origem do valor naquele lote (REQ-14) }
         estados:
           type: array
           description: estado_execucao em cada lote
@@ -951,15 +1014,15 @@ components:
               estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
               estado_texto: { type: string, description: Tradução vigente (REQ-69) }
               traducao_versao: { type: integer }
-        proveniencia: { $ref: '#/components/schemas/Proveniencia' }
+        proveniencia: { $ref: '#/components/schemas/Proveniencia', description: Lote ativo, que define a lista de etapas e a tradução }
 
     Favorecido:
       type: object
       required: [id, codigo_origem, tipo, nome_publicavel]
       properties:
         id: { type: integer }
-        codigo_origem: { type: string, description: CNPJ ou CPF mascarado como publicado pela CGU }
-        tipo: { type: string, enum: [pessoa_fisica, pessoa_juridica, ente_publico, outro] }
+        codigo_origem: { type: string, description: CNPJ ou código do ente como publicado pela CGU }
+        tipo: { type: string, enum: [pessoa_juridica, ente_publico, outro], description: Pessoa física nunca é identificada (REQ-25, ADR-0007) }
         nome_publicavel: { type: string }
         natureza_juridica: { type: [string, 'null'] }
         uf: { type: [string, 'null'] }
@@ -973,9 +1036,22 @@ components:
           type: array
           items:
             type: object
-            required: [favorecido, ano_mes, valor_recebido_centavos]
+            required: [favorecido, pessoas_fisicas, ano_mes, valor_recebido_centavos]
+            description: Um favorecido identificado (pessoa jurídica, ente público) ou a linha agregada de pessoas físicas do mês (REQ-25)
             properties:
-              favorecido: { $ref: '#/components/schemas/Favorecido' }
+              favorecido:
+                description: Null na linha agregada de pessoas físicas
+                oneOf:
+                  - $ref: '#/components/schemas/Favorecido'
+                  - type: 'null'
+              pessoas_fisicas:
+                description: Só na linha agregada; null nas demais
+                oneOf:
+                  - type: object
+                    required: [quantidade]
+                    properties:
+                      quantidade: { type: integer, minimum: 1, description: Pessoas físicas distintas que receberam no mês }
+                  - type: 'null'
               ano_mes: { type: string, pattern: '^[0-9]{4}-[0-9]{2}$' }
               valor_recebido_centavos: { type: integer }
         total: { type: integer }
@@ -1179,11 +1255,11 @@ components:
     MunicipioDetalhe:
       type: object
       description: Resumo de um município do gasto no lote ativo (REQ-67). Etapas nunca somadas (REQ-77).
-      required: [uf, municipio, nome, quantidade_emendas, valores, por_estado, quantidade_pendentes, traducao_versao, proveniencia]
+      required: [uf_gasto, municipio_gasto, municipio_nome, quantidade_emendas, valores, por_estado, quantidade_pendentes, traducao_versao, proveniencia]
       properties:
-        uf: { $ref: '#/components/schemas/UfGasto' }
-        municipio: { type: string }
-        nome: { type: string }
+        uf_gasto: { $ref: '#/components/schemas/SiglaUf' }
+        municipio_gasto: { type: string }
+        municipio_nome: { type: string }
         quantidade_emendas: { type: integer, minimum: 1 }
         valores:
           type: array
@@ -1200,7 +1276,7 @@ components:
                   quantidade: { type: integer, minimum: 0 }
         quantidade_pendentes:
           type: integer
-          description: Emendas com `pago` + `rap_pago` menor que `empenhado`, o mesmo recorte de `pendentes=true` (REQ-68)
+          description: Emendas com `pago` + `rap_pago` menor que `empenhado` − `rap_cancelado`, o mesmo recorte de `pendentes=true` (REQ-68)
         traducao_versao: { type: integer }
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }
 

@@ -3,7 +3,7 @@
 - **Superfície · ator:** Painel web · Pessoa de controle social (assinante em outro navegador ou dispositivo).
 - **Objetivo:** Recuperar assinaturas e alertas digitando a chave de assinante.
 - **Chega de / vai para:**
-  - Chega de: botão "Alertas" do cabeçalho sem chave no navegador; links de S01/S02 em estados de erro.
+  - Chega de: sino de alertas do cabeçalho sem chave no navegador; S01 e S02 (links em estados de erro ou vazio); S04 e S05 (sem chave ou chave recusada); "Sair" de S04.
   - Vai para:
     - S05 (chave aceita, padrão);
     - S04 (se veio de "Minhas assinaturas");

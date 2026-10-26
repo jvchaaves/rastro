@@ -26,7 +26,8 @@ Opção 3, porque é a única que dá, ao mesmo tempo, publicação atômica par
 
 - Cada `LoteImportacao` é identificado pelo `hash_sha256` do arquivo e passa pelos estados `importando → validado → publicado → substituido`, ou termina em `recusado`/`falhou`.
 - Publicar é **uma** transação que calcula as mudanças, troca `PublicacaoAtiva.lote_id` e marca o lote anterior como `substituido`.
-- Um lote com mais de 5% de linhas rejeitadas não é publicado.
+- Um lote cujas rejeições por defeito passem de 5% das linhas do recorte (linhas lidas menos `ano_fora_do_recorte`) é recusado e não pode ser publicado (REQ-06).
+- Lotes são publicados em ordem de `data_referencia`: um lote igual ou mais antigo que o ativo é recusado na publicação (REQ-95).
 
 ```mermaid
 stateDiagram-v2

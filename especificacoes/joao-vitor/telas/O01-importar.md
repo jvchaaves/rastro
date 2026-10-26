@@ -12,7 +12,7 @@
   - Progresso: `linhas_lidas`, atualizado a cada 10 000 linhas (em TTY; sem TTY, uma linha por marco).
   - Resultado:
     - `linhas_aceitas`;
-    - `linhas_rejeitadas` com percentual;
+    - `linhas_rejeitadas` e a taxa de rejeição sobre as linhas do recorte (sem contar `ano_fora_do_recorte`, REQ-06);
     - uma linha por `RejeicaoLote.motivo` com `quantidade`;
     - `duracao_etl_ms` por etapa;
     - `LoteImportacao.estado` final;
@@ -28,27 +28,26 @@
   - Ctrl-C → interrompe o processo; na próxima execução de (`cli:importar`), o lote é marcado como `falhou` / `interrompido` (REQ-10).
   - `rastro publicar --lote n` (sugerido na última linha) → O02 (`cli:publicar`).
 - **Estados:**
-  - **carregando:** progresso de linhas lidas, com o tempo decorrido (REQ-50).
+  - **carregando:** progresso de linhas lidas, etapa atual e tempo decorrido (REQ-90).
   - **vazio:** ZIP sem nenhuma linha de 2025 → `ERRO` "Nenhuma emenda de 2025 no arquivo; lote RECUSADO (sem_linhas_no_recorte)" (código 2) (REQ-73).
   - **erro:**
     - colunas ausentes → `ERRO formato_alterado`, com a lista das colunas faltantes (código 3) (REQ-04);
     - arquivo inexistente → código 1;
-    - rejeições > 5% → `ERRO` "lote RECUSADO" (código 2) (REQ-06).
+    - rejeições por defeito acima de 5% das linhas do recorte → `ERRO` "lote RECUSADO" (código 2) (REQ-06).
   - **sucesso:** `OK` "Lote #n VALIDADO", seguido de `rastro publicar --lote n` (REQ-01).
   - **já importado:** mesmo hash de lote validado/publicado → `OK` "lote já importado (Lote #n)", sem alterar nada (código 0) (REQ-05); hash de lote recusado → `ERRO` "lote já recusado" (código 2) (REQ-52); hash só de lotes `falhou` → importa de novo (REQ-53).
   - **offline:** não se aplica ao `importar`, que lê o arquivo local. No `sincronizar`, a fonte indisponível vira lote `falhou` (código 4) (REQ-12).
-  - **sem permissão:** outro processo escritor ativo → `ERRO` "outra importação/publicação em andamento" (código 5) (REQ-56); sem permissão de escrita em `data/` → código 1.
+  - **sem permissão:** outro processo escritor ativo → `ERRO` "outra importação/publicação em andamento" (código 5) (REQ-56); sem permissão de leitura do arquivo ou de escrita em `data/` → `ERRO` com o caminho, código 1 (contrato da CLI).
 - **Regras:**
   - Leitura em fluxo, Latin-1, `;` (REQ-01).
-  - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido de qualquer `ano_mes` entram (REQ-54).
+  - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido com `ano_mes` até o mês da referência entram (REQ-54); linha com colunas faltando → `linha_malformada` (REQ-97); favorecido de emenda ausente do arquivo → `emenda_sem_cadastro` (REQ-98); pessoas físicas são agregadas por emenda e mês, sem nome nem CPF (REQ-25).
   - Valor inválido → `valor_malformado` (REQ-03).
   - `uf_gasto` derivada de "Localidade do gasto" (REQ-21), com `NM` para nacional ou várias UFs (REQ-78); `municipio_gasto` e `municipio_nome` derivados da mesma coluna quando ela nomeia um município (REQ-66), e nulos quando ela é uma UF, uma região ou nacional (REQ-88).
   - Importar nunca publica: o lote validado fica invisível até O02 (ADR-0001).
 - **Requisitos · contrato:**
-  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
+  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88, REQ-90, REQ-97, REQ-98 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
   - REQ-11, REQ-12 · `rastro sincronizar` (`cli:sincronizar`).
 - **Acessibilidade:**
-  - Todos os estados com rótulo textual (`OK`, `AVISO`, `ERRO`), nunca só cor.
   - Números com separador de milhar pt-BR.
   - Sem animações de spinner sem TTY.
   - `--json` permite consumo por leitor de tela ou outro programa.

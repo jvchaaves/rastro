@@ -3,7 +3,7 @@
 - **Superfície · ator:** Painel web · Pessoa de controle social ou gestor municipal (assinante com chave).
 - **Objetivo:** Ver, pausar, retomar e excluir as assinaturas da chave.
 - **Chega de / vai para:**
-  - Chega de: S02 ("Continuar"), S01 (após criar), S03, menu "Alertas" → "Minhas assinaturas".
+  - Chega de: S02 ("Continuar"), S01 (após criar), S03, S05 ("Gerenciar assinaturas").
   - Vai para: S01 ("Nova assinatura"), S05 ("Ver alertas" de uma assinatura), P03 ("Ver emenda", quando o filtro é uma emenda), P10 ("Ver município", quando o filtro é um município), S03 ("Sair").
 - **Mostra:**
   - Contagem "N de 20 assinaturas".
@@ -23,8 +23,9 @@
   - "Ver município" (cartão com `filtro_municipio_gasto`) → P10 (`obter_municipio`).
   - "Nova assinatura" → S01 (`listar_opcoes_filtro`) (desabilitado com 20).
   - "Sair deste navegador" → remove a chave do `localStorage` → S03 → ação local · sem chamada à API (REQ-74).
+  - Sem chave ou chave recusada (401) → S03 → ação local · sem chamada à API (REQ-74).
 - **Estados:**
-  - **carregando:** esqueleto de três cartões (REQ-44).
+  - **carregando:** esqueleto dos cartões (REQ-44).
   - **vazio:** "Você ainda não tem assinaturas", com o botão "Nova assinatura" e a explicação de como assinar a partir de uma emenda ou filtro (REQ-45).
   - **erro:** falha em pausar ou excluir → o cartão volta ao estado anterior, com mensagem e `X-Request-Id` (REQ-46); 404 `nao_encontrado` (já excluída em outro dispositivo) → o cartão some, com o aviso "Esta assinatura já tinha sido excluída" (REQ-55).
   - **sucesso:** lista atualizada (REQ-38, REQ-40).

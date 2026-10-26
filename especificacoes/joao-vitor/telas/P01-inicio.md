@@ -1,30 +1,33 @@
 ## P01 · Início
 
 - **Superfície · ator:** Painel web (celular e desktop) · Cidadão (morador); também jornalista, controle social e gestor municipal.
-- **Objetivo:** Levar o visitante, em uma ação, ao que chegou à cidade dele (P10), a uma emenda, a um recorte (UF, autor, função) ou ao que mudou, deixando claro de quando são os dados.
+- **Objetivo:** Encaminhar o visitante, em uma ação, ao dado que ele procura (a cidade dele, uma emenda, um recorte ou o que mudou), dizendo de quando são os dados.
 - **Chega de / vai para:**
-  - Chega de: link externo, marca "Rastro" em qualquer tela.
+  - Chega de: link externo, marca "Rastro" em qualquer tela, P10 ("Escolher outra cidade").
   - Vai para:
     - P10 ("O que chegou à sua cidade");
     - P02 (busca ou atalho de filtro);
     - P03 (código completo digitado);
     - P06 ("Comparar");
     - P08 ("O que mudou");
-    - P09 (faixa de data do lote).
+    - P09 (faixa de proveniência).
 - **Mostra:**
   - Pergunta-título: "Para onde vão as emendas parlamentares?"
-  - Faixa de proveniência: `LoteImportacao.data_referencia`, `LoteImportacao.id` e `Fonte.nome` do lote ativo (`Status.fontes[].lote_ativo`).
+  - Faixa de proveniência do lote ativo (`Status.fontes[].proveniencia`): `Proveniencia.fonte_nome`, `Proveniencia.lote_id`, `Proveniencia.data_referencia` e `Proveniencia.importado_em`.
   - Resumo do lote ativo, uma linha por etapa e sem somar etapas (`Status.fontes[].resumo`):
     - quantidade de emendas;
     - `valor_centavos` de `empenhado`, `liquidado` e `pago`, cada um com o seu rótulo e um link "o que é?" para a definição do glossário.
   - "Mudanças no último lote": `resumo.quantidade_mudancas` → P08.
+  - Faixa com as mudanças mais recentes (primeiros itens de `listar_mudancas`): `MudancaLote.codigo_emenda` e o texto da mudança, conforme `MudancaLote.tipo`.
+  - "O caminho do dinheiro": a trilha das etapas para o recorte escolhido (Brasil, uma UF ou uma função), com os valores de `empenhado`, `liquidado` e `pago` do recorte.
   - Bloco "O que chegou à sua cidade": seletores de UF e de município (`OpcoesFiltro.municipios`, só municípios com emendas no lote ativo) e o botão "Ver minha cidade".
   - Atalhos de recorte: seletor de UF do gasto (`Emenda.uf_gasto`, de `listar_opcoes_filtro.ufs_gasto`) e "Ver por função" / "Ver por autor" (→ P06).
   - Bloco "Como ler estes números": três frases sobre empenhado, liquidado e pago, mais o aviso de que pagamento não comprova aplicação final.
 - **Coleta:**
   - `q` · texto (2–80 caracteres) · opcional. Busca por código da emenda, nome do autor ou função.
   - `uf_gasto` · seleção de UF · opcional.
-  - `municipio` · seleção dependente da UF (`OpcoesFiltro.municipios[].municipio`) · opcional; obrigatório para "Ver minha cidade".
+  - `municipio_gasto` · seleção dependente da UF (`OpcoesFiltro.municipios[].municipio_gasto`) · opcional; obrigatório para "Ver minha cidade".
+  - Recorte do caminho do dinheiro · opção única (Brasil, Paraíba, Saúde, Educação) · padrão Brasil.
 - **Ações:**
   - "Buscar" → se `q` tem exatamente 12 dígitos: P03 (`obter_emenda`); se `q` é o nome de um município de `listar_opcoes_filtro.municipios`: P10 (`obter_municipio`); senão: P02 com `?q=` (`listar_emendas`).
   - "Ver minha cidade" (UF e município escolhidos) → P10 (`obter_municipio`).
@@ -33,18 +36,17 @@
   - "Ver o que mudou" → P08 (`listar_mudancas`).
   - Faixa "Dados de … · Lote #n" → P09 (`listar_lotes`).
   - Escolher um recorte do caminho do dinheiro (Brasil, Paraíba, Saúde, Educação) → a trilha anima as frações liquidada e paga e troca os valores. Brasil usa `Status.fontes[].resumo` (`obter_status`); UF usa o grupo da UF em (`obter_agregacoes`) com `dimensao=uf`; função usa o grupo em (`obter_agregacoes`) com `dimensao=funcao`.
-  - Faixa "371 mudanças no lote 14" → P08 (`listar_mudancas`); cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03 (`obter_emenda`). A faixa rola sozinha e pausa com o mouse ou o foco do teclado.
-  - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → a moeda anda até a etapa e o painel mostra a definição do glossário e o valor da etapa já carregado de `obter_status` → ação local · sem chamada à API (REQ-74).
+  - Faixa "371 mudanças no lote 14" → P08 (`listar_mudancas`); cada item da faixa (`MudancaLote.codigo_emenda` e o texto da mudança, de `listar_mudancas`) → P03 (`obter_emenda`). A faixa pausa com o mouse ou com o foco do teclado.
+  - "Como ler estes números": escolher Empenho, Liquidação ou Pagamento (ou "Próxima etapa") → o painel mostra a definição do glossário e o valor da etapa já carregado de `obter_status` → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto do resumo e da faixa; campo de busca já utilizável (REQ-44).
   - **vazio:** não se aplica ao resumo. Lote com 0 mudanças → "Nenhuma mudança no último lote" (REQ-45).
   - **erro:** resumo indisponível, com `X-Request-Id` e "Tentar de novo"; a busca continua ativa (REQ-46).
   - **sucesso:** resumo e faixa preenchidos (REQ-48).
   - **offline:** aviso "Sem conexão"; resumo oculto, sem valores anteriores (REQ-47).
-  - **sem permissão:** tela pública. Ao estourar o limite de taxa: "Muitas consultas seguidas. Tente de novo em N s." (REQ-28).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
   - **sem lote publicado:** `lote_ativo = null` → "Dados ainda não publicados. A primeira carga da CGU ainda não foi concluída." e nenhum valor (REQ-19, REQ-60).
 - **Regras:**
-  - O resumo nunca mostra um "total" de etapas somadas (REQ-15).
   - Código de 12 dígitos inexistente → P03 no estado "não encontrada", não P02.
   - Texto com dígitos mas sem 12 caracteres vai para P02 como busca textual (sem 422 na tela inicial).
 - **Requisitos · contrato:**
@@ -56,9 +58,9 @@
   - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) quando o texto é um código.
   - REQ-74 · ações locais ("Como ler estes números").
 - **Acessibilidade:**
-  - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, autor ou função" e dica de formato do código.
+  - Um único `<h1>`; campo de busca com rótulo visível "Buscar emenda, cidade, autor ou função" e dica de formato do código.
   - Os três valores do resumo formam uma lista (`<dl>`) com o valor completo no texto acessível ("R$ 1,2 bilhão", não "R$ 1,2 bi").
   - Foco inicial no conteúdo, não no campo, para não abrir o teclado no celular.
   - O recorte é um grupo de botões de opção (`role="radiogroup"`), e a mudança de valores é anunciada (`role="status"`). As etapas são abas (`role="tablist"`).
-  - As moedas que correm na trilha e a faixa em movimento são decorativas (`aria-hidden`) e param com `prefers-reduced-motion`. A faixa pausa com o foco do teclado.
+  - A animação da trilha e a faixa em movimento são decorativas (`aria-hidden`); o conteúdo delas está também em texto.
 - **Anexo:** mockup de referência [anexos/P01.png](anexos/P01.png), exportado do canvas "Rastro — telas" (Claude Design).

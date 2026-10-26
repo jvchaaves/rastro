@@ -17,17 +17,18 @@
   - `--reprocessar-alertas` · booleano · opcional (só refaz o fan-out de um lote já publicado).
   - `--json`, `--sem-cor` · opcionais.
 - **Ações:**
-  - `rastro publicar --lote n` → transação `BEGIN IMMEDIATE` que calcula as mudanças, troca o lote ativo e faz o commit; depois emite `lote.publicado` e o despachante grava os alertas (`cli:publicar`).
+  - `rastro publicar --lote n` → uma única transação que calcula as mudanças, publica o lote e troca o lote ativo; depois emite `lote.publicado` e o despachante grava os alertas (`cli:publicar`).
   - `--simular` → mostra as mudanças e termina sem commit, código 0 (`cli:publicar`).
   - `--reprocessar-alertas` → refaz o fan-out a partir de `lote.publicado`; idempotente (`cli:publicar`).
   - Ver o resultado no painel → P09 (`listar_lotes`) e P08 (`listar_mudancas`).
 - **Estados:**
-  - **carregando:** "Calculando mudanças…" e depois "Avaliando N assinaturas…", com o tempo decorrido (REQ-50).
+  - **carregando:** "Calculando mudanças…" e depois "Avaliando N assinaturas…", com o tempo decorrido (REQ-90).
   - **vazio:**
     - 0 mudanças em relação ao ativo → `AVISO` "Nenhuma mudança; o lote será publicado só para atualizar a data de referência" (REQ-08);
     - primeiro lote da fonte → `AVISO` "Primeiro lote publicado; as mudanças começam no próximo" (REQ-75).
   - **erro:**
     - lote não está `validado` (por exemplo, `recusado`) → `ERRO`, código 6, nada muda (REQ-57);
+    - lote com `data_referencia` igual ou anterior à do lote ativo → `ERRO`, código 6, nada muda (REQ-95);
     - falha durante a transação → rollback e `ERRO` "nada foi publicado; lote ativo continua #m" (REQ-07).
   - **sucesso:** `OK` "Lote #n publicado" e o resumo de alertas (REQ-07, REQ-35).
   - **reprocessamento:** `alertas_criados = 0` e `alertas_ja_existentes = N` quando já processado, sem duplicar (REQ-36).
@@ -39,7 +40,7 @@
   - Os alertas consideram só assinaturas `ativa` com `lote_base_id` anterior ao lote (REQ-37, REQ-38).
   - Há no máximo um alerta por (assinatura, mudança) (REQ-36).
 - **Requisitos · contrato:**
-  - REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82 · `rastro publicar` (`cli:publicar`, ver `../arquitetura/contratos/cli.md`).
+  - REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82, REQ-90, REQ-93, REQ-94, REQ-95 · `rastro publicar` (`cli:publicar`, ver `../arquitetura/contratos/cli.md`).
   - REQ-35, REQ-36 · eventos `lote.publicado` e `alertas.gerados` (`../arquitetura/contratos/eventos.asyncapi.yaml`).
 - **Acessibilidade:**
   - Resumo final em linhas curtas com rótulo antes do número.

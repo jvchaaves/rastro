@@ -28,7 +28,7 @@ Opção 3, porque a restrição UNIQUE resolve a entrega única no próprio sche
 
 - A diferença é calculada com SQL (junção do lote novo com o anterior por `codigo_emenda` e `etapa`) dentro da transação de publicação. Assim, nenhum leitor vê um lote ativo sem as suas mudanças.
 - Depois do commit, o despachante faz o seguinte:
-  1. Carrega as assinaturas `ativa` com `lote_base_id` < lote novo.
+  1. Carrega as assinaturas `ativa` criadas antes da publicação do lote novo (`criada_em` < `publicado_em`, REQ-37).
   2. Avalia em paralelo (`ThreadPoolExecutor`).
   3. Grava `Alerta` com `INSERT … ON CONFLICT(assinatura_id, mudanca_id) DO NOTHING`.
 - O evento e o resumo estão em `../contratos/eventos.asyncapi.yaml`.
@@ -38,5 +38,5 @@ Opção 3, porque a restrição UNIQUE resolve a entrega única no próprio sche
 - **(+)** P08 e os alertas usam a mesma tabela. O que o assinante recebe é exatamente o que a tela P08 mostra.
 - **(+)** A idempotência é garantida pelo banco, não pela lógica: reprocessar um lote produz `alertas_criados = 0`.
 - **(+)** A avaliação paralela é segura porque a única escrita é idempotente.
-- **(−)** A publicação fica mais lenta, porque a diferença entra no tempo de publicação. Ela é medida em `duracao_etl_ms.publicacao` (REQ-50).
+- **(−)** A publicação fica mais lenta, porque a diferença entra no tempo de publicação. Ela é medida em `duracao_etl_ms.publicacao` (REQ-82) e tem o teto do REQ-93.
 - **(−)** Se o despachante cair depois do commit, os alertas atrasam até `rastro publicar --reprocessar-alertas` (ou a próxima sincronização). Nada é perdido nem duplicado.

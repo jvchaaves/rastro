@@ -2,12 +2,12 @@
 
 Banco SQLite em modo WAL (ADR-0002). Os nomes abaixo são os mesmos usados nas fichas de tela (`Entidade.campo`), no `openapi.yaml` e no código. Valores monetários são `INTEGER` em centavos; datas seguem ISO 8601.
 
-Regra central (ADR-0001): **dados de fonte nunca são atualizados no lugar**. Cada lote grava as suas próprias linhas (`Emenda`, `RegistroExecucao`, `RegistroFavorecido`), e as consultas leem só o lote indicado por `PublicacaoAtiva`. `Autor` e `Favorecido` são dimensões em que só se insere, nunca se altera.
+Regra central (ADR-0001): **dados de fonte nunca são atualizados no lugar**. Cada tabela tem um único módulo dono, o único que escreve nela (ADR-0009; tabela de envelope em `../README.md`). Cada lote grava as suas próprias linhas (`Emenda`, `RegistroExecucao`, `RegistroFavorecido`), e as consultas leem só o lote indicado por `PublicacaoAtiva`. `Autor` e `Favorecido` são dimensões em que só se insere, nunca se altera.
 
 ```mermaid
 erDiagram
     Fonte ||--o{ LoteImportacao : origina
-    Fonte ||--|| PublicacaoAtiva : "tem lote ativo"
+    Fonte ||--o| PublicacaoAtiva : "tem lote ativo"
     LoteImportacao ||--o| PublicacaoAtiva : "é apontado por"
     LoteImportacao ||--o{ RejeicaoLote : conta
     LoteImportacao ||--o{ Emenda : contém
@@ -16,7 +16,7 @@ erDiagram
     Autor ||--o{ Emenda : "é autor de"
     Emenda ||--o{ RegistroExecucao : "tem valores por etapa"
     Emenda ||--o{ RegistroFavorecido : "tem pagamentos a"
-    Favorecido ||--o{ RegistroFavorecido : recebe
+    Favorecido |o--o{ RegistroFavorecido : recebe
     LoteImportacao ||--o{ MudancaLote : "é lote novo de"
     Assinante ||--o{ Assinatura : possui
     Assinatura ||--o{ Alerta : produz
@@ -100,6 +100,7 @@ erDiagram
         INTEGER favorecido_id FK
         TEXT ano_mes
         INTEGER valor_recebido_centavos
+        INTEGER quantidade_pessoas_fisicas
     }
     MudancaLote {
         INTEGER id PK
@@ -143,6 +144,12 @@ erDiagram
         DATETIME criado_em
         DATETIME lido_em
     }
+    CacheConsulta {
+        INTEGER lote_id PK
+        TEXT chave_consulta PK
+        TEXT resposta
+        DATETIME criado_em
+    }
     TabelaTraducao {
         INTEGER versao PK
         TEXT estado_execucao PK
@@ -172,10 +179,10 @@ Um arquivo de uma fonte, importado uma vez e identificado por hash.
 | :-- | :-- | :-- | :-- |
 | `id` | INTEGER | PK autoincremento | Exibido como "Lote #id" |
 | `fonte_id` | TEXT | FK → Fonte | |
-| `arquivo_nome` | TEXT | NOT NULL | Nome do ZIP baixado |
-| `hash_sha256` | TEXT | NOT NULL; índice único parcial (`fonte_id`, `hash_sha256`) `WHERE estado <> 'falhou'` | Base da idempotência (REQ-05, REQ-52, REQ-53) |
-| `data_referencia` | DATE | NOT NULL | Data de atualização informada pela fonte |
-| `importado_em` | DATETIME | NOT NULL | Data de extração exibida na proveniência (REQ-14) |
+| `arquivo_nome` | TEXT | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel` (REQ-12) | Nome do ZIP baixado |
+| `hash_sha256` | TEXT | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel`; índice único parcial (`fonte_id`, `hash_sha256`) `WHERE estado <> 'falhou'` | Base da idempotência (REQ-05, REQ-52, REQ-53) |
+| `data_referencia` | DATE | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel` | Data de atualização dos dados informada pela CGU: a data do nome do arquivo (`EmendasParlamentares_AAAA-MM-DD.zip`) |
+| `importado_em` | DATETIME | NOT NULL | Momento em que o Rastro baixou ou recebeu o arquivo e começou a importá-lo: a "data de extração" da proveniência (REQ-14) |
 | `publicado_em` | DATETIME | NULL até publicar | |
 | `estado` | TEXT | `importando` \| `validado` \| `publicado` \| `substituido` \| `recusado` \| `falhou` | Ciclo em `adr/0001` |
 | `linhas_lidas` | INTEGER | ≥ 0 | |
@@ -210,7 +217,7 @@ Dimensão em que só se insere.
 | :-- | :-- | :-- | :-- |
 | `codigo` | TEXT | PK | Código do Autor da Emenda |
 | `nome` | TEXT | NOT NULL | Nome do Autor da Emenda |
-| `tipo` | TEXT | `parlamentar` \| `bancada` \| `comissao` \| `relator` \| `outro` | Derivado de Tipo de Emenda (REQ-22) |
+| `tipo` | TEXT | `parlamentar` \| `bancada` \| `comissao` \| `relator` \| `outro` | Derivado de Tipo de Emenda (REQ-79) |
 
 ### Emenda
 Cadastro da emenda **no lote** (PK composta), para que nenhum atributo mude sob um leitor.
@@ -250,28 +257,31 @@ Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes fo
 **Estado de execução** (derivado, ADR-0006): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga` (`pago` + `rap_pago` > 0).
 
 ### Favorecido
-Dimensão em que só se insere. UNIQUE (`codigo_origem`, `nome_publicavel`).
+Dimensão em que só se insere, **só com pessoas jurídicas, entes públicos e outros**. Pessoa física nunca é gravada aqui: o importador agrega os recebimentos de pessoas físicas por emenda e mês (`RegistroFavorecido` com `favorecido_id` nulo, REQ-25, ADR-0007), e o nome e o CPF delas não entram no banco. UNIQUE (`codigo_origem`, `nome_publicavel`).
 
 | Campo | Tipo | Restrição | Coluna CGU (arquivo por favorecido) |
 | :-- | :-- | :-- | :-- |
 | `id` | INTEGER | PK | — |
-| `codigo_origem` | TEXT | NOT NULL | Código do Favorecido (CNPJ; CPF já mascarado pela CGU, `***.123.456-**`) |
-| `tipo` | TEXT | `pessoa_fisica` \| `pessoa_juridica` \| `ente_publico` \| `outro` | Tipo Favorecido |
-| `nome_publicavel` | TEXT | NOT NULL | Favorecido, como publicado (ADR-0007) |
+| `codigo_origem` | TEXT | NOT NULL | Código do Favorecido (CNPJ ou código do ente) |
+| `tipo` | TEXT | `pessoa_juridica` \| `ente_publico` \| `outro` | Tipo Favorecido; linhas de pessoa física vão para o agregado |
+| `nome_publicavel` | TEXT | NOT NULL | Favorecido, como publicado |
 | `natureza_juridica` | TEXT | | Natureza Jurídica |
 | `uf` / `municipio` | TEXT | | UF Favorecido / Município Favorecido. **Não** é o local do gasto (REQ-21) |
 
 ### RegistroFavorecido
-Valor recebido por um favorecido num mês, num lote.
+Valor recebido por um favorecido num mês, num lote; ou, com `favorecido_id` nulo, a soma recebida por pessoas físicas naquele mês (REQ-25).
 
 | Campo | Tipo | Restrição | Coluna CGU |
 | :-- | :-- | :-- | :-- |
 | `id` | INTEGER | PK | — |
 | `lote_id` | INTEGER | FK | — |
 | `codigo_emenda` | TEXT | FK (`lote_id`, `codigo_emenda`) → Emenda | Código da Emenda |
-| `favorecido_id` | INTEGER | FK → Favorecido | — |
+| `favorecido_id` | INTEGER | FK → Favorecido; NULL na linha agregada de pessoas físicas | — |
 | `ano_mes` | TEXT | `AAAA-MM` | Ano/Mês |
-| `valor_recebido_centavos` | INTEGER | ≥ 0 | Valor Recebido |
+| `valor_recebido_centavos` | INTEGER | ≥ 0 | Valor Recebido (soma, na linha agregada) |
+| `quantidade_pessoas_fisicas` | INTEGER | > 0 na linha agregada; NULL nas demais (CHECK) | Pessoas físicas distintas no mês, contadas na importação pelo código mascarado + nome, que depois são descartados |
+
+Índice único parcial (`lote_id`, `codigo_emenda`, `ano_mes`) `WHERE favorecido_id IS NULL`: uma linha agregada por emenda e mês.
 
 ### MudancaLote
 Diferença entre dois lotes da mesma fonte, calculada na publicação (REQ-08, ADR-0004).
@@ -283,7 +293,7 @@ Diferença entre dois lotes da mesma fonte, calculada na publicação (REQ-08, A
 | `codigo_emenda` | TEXT | NOT NULL | |
 | `lote_anterior_id` | INTEGER | FK, NOT NULL | O primeiro lote de uma fonte não gera mudanças (REQ-08) |
 | `lote_novo_id` | INTEGER | FK | |
-| `tipo` | TEXT | `nova_emenda` \| `valor_alterado` \| `estado_alterado` | |
+| `tipo` | TEXT | `nova_emenda` \| `valor_alterado` \| `estado_alterado` | Toda variação de valor de uma etapa gera `valor_alterado`, também quando o estado muda junto (aí há também uma linha `estado_alterado`) (ADR-0006) |
 | `etapa` | TEXT | Preenchida só em `valor_alterado`; NULL em `nova_emenda` (uma linha por emenda nova) e em `estado_alterado` | REQ-63 lê o valor da emenda nova em `RegistroExecucao` |
 | `valor_antes_centavos` / `valor_depois_centavos` | INTEGER | NULL quando não se aplica | |
 | `estado_antes` / `estado_depois` | TEXT | valores de `estado_execucao` | |
@@ -317,7 +327,7 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 | `limiar_centavos` | INTEGER | > 0 se `limiar_valor` | |
 | `canal` | TEXT | = `painel` | Único canal do MVP (FI-01 §10.2) |
 | `estado` | TEXT | `ativa` \| `pausada` | REQ-38 |
-| `lote_base_id` | INTEGER | FK → LoteImportacao | REQ-37 |
+| `lote_base_id` | INTEGER | FK → LoteImportacao | Lote ativo na criação, exibido em S01/S04; o filtro de mudanças do REQ-37 compara `publicado_em` com `criada_em` |
 | `criada_em` | DATETIME | NOT NULL | |
 | `descricao` | — | derivado na API, não armazenado | Resumo legível com os rótulos do lote ativo (S04) |
 | `alertas_total` / `alertas_nao_lidos` | — | derivados na API (COUNT de `Alerta`) | S04, REQ-40 |
@@ -327,7 +337,7 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 | Campo | Tipo | Restrição |
 | :-- | :-- | :-- |
 | `id` | INTEGER | PK |
-| `assinatura_id` | INTEGER | FK → Assinatura, ON DELETE CASCADE |
+| `assinatura_id` | INTEGER | FK → Assinatura, ON DELETE CASCADE. O despachante insere com `INSERT … SELECT … WHERE EXISTS (assinatura ativa)`, então uma assinatura excluída durante o fan-out só deixa de receber alertas |
 | `mudanca_id` | INTEGER | FK → MudancaLote |
 | `criado_em` | DATETIME | NOT NULL |
 | `lido_em` | DATETIME | NULL = não lido |
@@ -347,7 +357,7 @@ Tradução do estado de execução para linguagem simples, **versionada e audit�
 | `texto_simples` | TEXT | NOT NULL, ≤ 60 caracteres | O que o morador lê no lugar do termo técnico |
 | `explicacao` | TEXT | NOT NULL, ≤ 280 caracteres | Uma frase que liga o texto ao termo técnico |
 | `vigente_desde` | DATETIME | NOT NULL | Momento de `rastro traducao publicar` |
-| `nota` | TEXT | | Motivo da versão |
+| `nota` | TEXT | NOT NULL | Motivo da versão (obrigatório em `rastro traducao publicar --nota`; na versão 1, "Versão inicial") |
 
 Versão 1, carregada na migração inicial:
 
@@ -359,3 +369,15 @@ Versão 1, carregada na migração inicial:
 | `paga` | Já houve pagamento registrado | Houve pagamento registrado. Isso não comprova a aplicação final do recurso. |
 
 Gatilho `BEFORE UPDATE` e `BEFORE DELETE` em `TabelaTraducao` que aborta a operação: versões publicadas são imutáveis no próprio schema.
+
+### CacheConsulta
+Persistência própria do módulo `consulta` (brief: cada módulo com persistência). Como o lote publicado é imutável, o resultado de uma agregação para um lote nunca muda e pode ser guardado para sempre (REQ-91). PK (`lote_id`, `chave_consulta`).
+
+| Campo | Tipo | Restrição | Nota |
+| :-- | :-- | :-- | :-- |
+| `lote_id` | INTEGER | PK, FK → LoteImportacao | Lote ativo no momento da consulta |
+| `chave_consulta` | TEXT | PK | SHA-256 da operação e dos parâmetros em forma canônica (ordem fixa, valores padrão explícitos) |
+| `resposta` | TEXT (JSON) | NOT NULL | Corpo da resposta 200 |
+| `criado_em` | DATETIME | NOT NULL | |
+
+Gravação com `INSERT … ON CONFLICT DO NOTHING`: duas requisições iguais em paralelo gravam uma linha só. As linhas de lotes substituídos ficam: são poucas (uma por combinação de filtros pedida) e só o `consulta` escreve nesta tabela.

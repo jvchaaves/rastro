@@ -8,9 +8,8 @@
 - **Mostra:**
   - Cabeçalho curto: `Emenda.codigo` e `Autor.nome`.
   - Gráfico de degraus, uma série por etapa (`LinhaDoTempo.etapas[].etapa`):
-    - eixo X = `data_referencia` dos lotes;
-    - eixo Y = `valor_centavos`;
-    - séries distinguidas por rótulo direto no fim da linha e por padrão de traço, não só por cor.
+    - no tempo, a `data_referencia` de cada lote; no valor, `valor_centavos`;
+    - séries distinguíveis sem depender de cor.
   - Faixa de estados abaixo do gráfico, por lote: o texto simples (`LinhaDoTempo.estados[].estado_texto`, "O dinheiro foi reservado → A entrega foi conferida; falta pagar") com o termo técnico (`estado_execucao`) abaixo.
   - Tabela equivalente, sempre visível no desktop e recolhível no celular:
     - linhas = lotes (`pontos[].lote_id`, `data_referencia`);
@@ -19,14 +18,14 @@
 - **Coleta:**
   - `etapa` (`Etapa`) · caixas de seleção, várias por vez (`empenhado`, `liquidado`, `pago`, `rap_pago`) · opcional, padrão: as três primeiras. Campo local: filtra as séries já recebidas, não vai à API.
 - **Ações:**
-  - Ligar ou desligar uma etapa → só re-renderiza as séries já recebidas → ação local · sem chamada à API (REQ-74).
+  - Ligar ou desligar uma etapa → redesenha só as séries já recebidas → ação local · sem chamada à API (REQ-74).
   - Ponto ou linha da tabela → P09 com `?lote_id=` (`obter_lote`).
   - "Voltar à emenda" → P03 (`obter_emenda`).
   - "Acompanhar esta emenda" → S01 (`listar_opcoes_filtro`) com `filtro_codigo_emenda` e `condicao = mudanca_estado` sugerida.
   - "Baixar CSV desta linha do tempo" → gera, no navegador, um CSV a partir da resposta de `obter_linha_do_tempo`, com as colunas de proveniência → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto do gráfico e da tabela (REQ-44).
-  - **vazio:** um único lote publicado → "Ainda há só um lote. A linha do tempo aparece a partir do segundo lote publicado.", com a tabela de um ponto (REQ-45).
+  - **vazio:** um único lote publicado → "Ainda há só um lote. A linha do tempo aparece a partir do segundo lote publicado.", com a tabela de um ponto (REQ-23, REQ-45).
   - **erro:** 404 / 422 / 5xx como em P03 (REQ-17, REQ-18, REQ-46).
   - **sucesso:** gráfico, faixa de estados e tabela (REQ-23).
   - **offline:** "Sem conexão" (REQ-47).
@@ -35,16 +34,15 @@
 - **Regras:**
   - Cada ponto mostra o lote em que o valor apareceu (REQ-23).
   - As etapas são séries separadas, nunca empilhadas: um gráfico empilhado sugeriria soma (REQ-15).
-  - Lotes `recusado` ou `falhou` não aparecem; só lotes publicados (atuais ou substituídos).
+  - Lotes `recusado` ou `falhou` não aparecem; só lotes publicados, o ativo e os substituídos (REQ-76).
+  - Cada ponto tem a própria proveniência (`LinhaDoTempo.etapas[].pontos[].proveniencia`), aberta pelo ponto ou pela linha da tabela (REQ-14).
 - **Requisitos · contrato:**
   - REQ-23, REQ-15, REQ-14 · `GET /api/emendas/{codigo}/linha-do-tempo` (`obter_linha_do_tempo`).
   - REQ-16 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho (`Emenda.codigo`, `Autor.nome`).
   - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
   - REQ-69 · `LinhaDoTempo.estados[].estado_texto` e `traducao_versao`.
   - REQ-74 · ações locais (etapas, CSV).
-  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - O gráfico é uma imagem com resumo textual ("Pago passou de R$ 0 em 13/10 para R$ 450 mil em 20/10/2026"); a tabela é a fonte acessível.
   - As caixas de etapa são `<input type=checkbox>` com rótulo.
-  - Não há informação disponível só ao passar o mouse.
 - **Anexo:** mockup de referência [anexos/P04.png](anexos/P04.png), exportado do canvas "Rastro — telas" (Claude Design).

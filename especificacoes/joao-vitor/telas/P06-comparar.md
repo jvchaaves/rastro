@@ -3,7 +3,7 @@
 - **Superfície · ator:** Painel web · Jornalista ou pesquisador; também o cidadão.
 - **Objetivo:** Comparar somas por etapa entre UFs do gasto, funções ou autores num mesmo lote, sem transformar a comparação em ranking: o Rastro não classifica, não pontua e não ranqueia parlamentares (brief).
 - **Chega de / vai para:**
-  - Chega de: P01, cabeçalho "Comparar".
+  - Chega de: P01, P07 ("Comparar autores", no estado de erro), cabeçalho "Comparar".
   - Vai para:
     - P07 (grupo da dimensão `autor`);
     - P02 (grupo de `uf` ou `funcao` → lista filtrada);
@@ -11,7 +11,7 @@
 - **Mostra:**
   - Seletor de dimensão: "Autor", "UF do gasto", "Função" (`Agregacoes.dimensao`).
   - Para cada grupo (`Agregacoes.grupos[]`):
-    - `rotulo` e o selo "coletivo" quando `coletivo = true`;
+    - `rotulo` (com `chave`, usada para abrir P07 ou filtrar P02) e o selo "coletivo" quando `coletivo = true`;
     - `quantidade_emendas`;
     - os valores de `empenhado`, `liquidado` e `pago` (`valores[].valor_centavos`) em três colunas separadas.
   - Gráfico de barras agrupadas (não empilhadas): uma barra por etapa e por grupo. Em "UF do gasto" e "Função", os grupos seguem a etapa escolhida. Em "Autor", os grupos vêm em ordem alfabética, sem número de posição, e o seletor de ordenação some (REQ-71).
@@ -23,11 +23,11 @@
   - `dimensao` · seleção (`autor`, `uf`, `funcao`) · obrigatório, padrão `uf`.
   - `ordenar_por_etapa` · seleção (`empenhado`, `liquidado`, `pago`) · padrão `empenhado`; só em `uf` e `funcao` (ignorado em `autor`, REQ-71).
   - `ano`, `uf_gasto`, `funcao_codigo`, `tipo` · filtros de recorte · opcionais.
-  - `limite` · seleção 10/20/50 · padrão 20.
+  - `por_pagina` · seleção 10/20/50 · padrão 20.
   - `pagina` · inteiro ≥ 1 · para percorrer todos os grupos, em especial todos os autores em ordem alfabética (REQ-71).
 - **Ações:**
   - Trocar dimensão, ordenação ou filtros → (`obter_agregacoes`) com os parâmetros; atualiza a URL.
-  - Paginação ("Próximos 20 grupos", "A–F", …) → (`obter_agregacoes`) com `pagina`; mostra "Grupos 21 a 40 de `Agregacoes.total_grupos`".
+  - Paginação ("Anteriores" / "Próximos") → (`obter_agregacoes`) com `pagina`; mostra "Grupos 21 a 40 de `Agregacoes.total_grupos`".
   - Grupo de autor parlamentar ou coletivo → P07 (`obter_autor`).
   - Grupo de UF ou função → P02 com `uf_gasto` (inclusive `NM`) ou `funcao_codigo` aplicado (`listar_emendas`).
   - "Copiar link desta comparação" → URL na área de transferência → ação local · sem chamada à API (REQ-74).
@@ -42,17 +42,16 @@
   - **sem permissão:** tela pública; limite de taxa (REQ-28).
   - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
 - **Regras:**
-  - As barras são agrupadas, nunca empilhadas (REQ-15).
+  - As barras são agrupadas, nunca empilhadas, porque empilhar sugeriria soma (REQ-15).
   - UF = UF do gasto (REQ-21).
   - Autores não parlamentares nunca aparecem como pessoa (REQ-79).
   - Na dimensão "Autor" não há ordenação por valor, posição, "maiores" nem destaque do primeiro grupo (REQ-71).
   - O título da tela diz "Comparar", nunca "Ranking"; não há cores de alarme.
 - **Requisitos · contrato:**
-  - REQ-22, REQ-21, REQ-15, REQ-14, REQ-49, REQ-71, REQ-72, REQ-79 · `GET /api/agregacoes` (`obter_agregacoes`).
+  - REQ-22, REQ-21, REQ-15, REQ-14, REQ-49, REQ-71, REQ-72, REQ-79 · `GET /api/agregacoes` (`obter_agregacoes`), servida do `CacheConsulta` a partir da segunda consulta igual no mesmo lote (REQ-91).
   - REQ-74 · ações locais (copiar link, CSV).
   - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
-  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
-  - A tabela é a representação principal para leitores de tela; o gráfico tem `aria-hidden` e um resumo textual (em UF e função, os três maiores grupos; em autor, só o número de grupos, para não criar ranking).
+  - A tabela é a representação principal para leitores de tela; o gráfico tem `aria-hidden` e um resumo textual (em UF e função, os três primeiros grupos da ordenação escolhida; em autor, só o número de grupos).
   - O seletor de dimensão é um grupo de botões de opção (`radiogroup`) com setas do teclado.
 - **Anexo:** mockup de referência [anexos/P06.png](anexos/P06.png), exportado do canvas "Rastro — telas" (Claude Design).

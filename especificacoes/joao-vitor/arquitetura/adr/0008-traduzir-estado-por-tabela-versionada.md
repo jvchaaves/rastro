@@ -13,9 +13,12 @@
 
 ## Opções consideradas
 
-1. **Textos no código do painel** (um dicionário em TypeScript): simples, mas a mudança some no histórico do Git, a API não devolve o texto e um cliente da API pode traduzir de outro jeito. **Descartada** porque a tradução ficaria escondida no código, o que o brief proíbe.
-2. **Textos num arquivo de configuração da API**, recarregado na inicialização: a API devolve o texto, mas não há registro de qual versão estava valendo quando um alerta ou uma resposta foi produzida. **Descartada** porque não é auditável.
-3. **Tabela `TabelaTraducao` no banco, só com inserção**, uma linha por (versão, estado), publicada por um comando da CLI, e devolvida pela API com o número da versão.
+1. **Textos no código do painel** (um dicionário em TypeScript).
+   - Prós: simples. Contras: a mudança some no histórico do Git, a API não devolve o texto e um cliente da API pode traduzir de outro jeito. **Descartada** porque a tradução ficaria escondida no código, o que o brief proíbe.
+2. **Textos num arquivo de configuração da API**, recarregado na inicialização.
+   - Prós: a API devolve o texto. Contras: não há registro de qual versão valia quando uma resposta ou um alerta foi produzido. **Descartada** porque não é auditável.
+3. **Tabela `TabelaTraducao` no banco, só com inserção**, uma linha por (versão, estado), publicada por um comando da CLI e devolvida pela API com o número da versão.
+   - Prós: auditável e igual para painel e API. Contras: uma junção a mais por resposta e um comando a mais para o operador.
 
 ## Decisão
 
@@ -24,13 +27,13 @@ Opção 3, porque é a única em que um texto exibido pode ser conferido depois,
 - A versão 1 é carregada na migração inicial (textos em `../contratos/modelo-de-dados.md`).
 - Uma versão nova só entra por `rastro traducao publicar` (`../contratos/cli.md`), que exige os quatro estados (REQ-86) e grava `versao = máxima + 1`.
 - Gatilhos `BEFORE UPDATE` e `BEFORE DELETE` impedem alterar ou apagar uma versão publicada (REQ-70).
-- Toda resposta com `estado_execucao` traz `estado_texto` e `traducao_versao` (REQ-69). `GET /api/traducoes` (`listar_traducoes`) devolve todas as versões, e a tela P09 as mostra.
+- Toda resposta com `estado_execucao` traz `estado_texto` e `traducao_versao` (REQ-69). `GET /api/traducoes` (`listar_traducoes`) devolve todas as versões, e a tela P11 as mostra.
 - O dono é o módulo `nucleo`, o mesmo que deriva o estado consolidado (brief, tabela de módulos).
 
 ## Consequências
 
 - **(+)** Auditável: uma captura de tela com "A entrega foi conferida; falta pagar (tradução v1)" pode ser conferida a qualquer momento.
 - **(+)** O painel, a API e qualquer cliente de jornalista mostram o mesmo texto.
-- **(+)** Corrigir uma tradução não exige deploy; exige um comando registrado, com nota de motivo.
-- **(−)** Uma junção a mais em cada resposta com estado. O custo é baixo (4 linhas na versão vigente, mantidas em memória pela API) e está dentro do orçamento do REQ-49.
+- **(+)** Corrigir uma tradução não exige deploy; exige um comando registrado, com nota de motivo obrigatória (`--nota`).
+- **(−)** Uma junção a mais em cada resposta com estado. O custo é baixo: a API lê as 4 linhas da versão vigente a cada requisição, por índice, sem cache em memória que precise ser invalidado; isso cabe no orçamento do REQ-49.
 - **(−)** Respostas antigas guardadas por terceiros podem ter um texto diferente do atual. O campo `traducao_versao` resolve a dúvida.

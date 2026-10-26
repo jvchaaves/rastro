@@ -1,10 +1,10 @@
 ## P09 · Lotes e fontes
 
-- **Superfície · ator:** Painel web · Cidadão e jornalista (conferir a origem); operador de dados (conferir a publicação).
-- **Objetivo:** Permitir conferir a origem de tudo o que o painel mostra: de que lote vem cada valor (importação, rejeições, lote ativo, arquivo original) e de que versão da tabela de tradução vem cada texto simples.
+- **Superfície · ator:** Painel web · Cidadão (morador) e jornalista (conferir a origem); operador de dados (conferir a publicação).
+- **Objetivo:** Permitir conferir de que lote vem cada valor do painel: quais lotes foram importados, qual está ativo, quantas linhas foram aceitas ou rejeitadas e onde baixar o arquivo original.
 - **Chega de / vai para:**
-  - Chega de: faixa "Dados de … · Lote #n" (todas as telas), botão "Origem" de P03, P04, P08, marca "tradução v1" de P03 e P10, rodapé, saída de O02.
-  - Vai para: download oficial (`Fonte.url_download`), P08 (mudanças de um lote publicado).
+  - Chega de: faixa de proveniência do cabeçalho (todas as telas do painel), P01, P02, P03 ("Ver lote" no painel "Origem"), P04 (ponto da linha do tempo), P05, P06, P07, P08 (lote do cabeçalho), P10, P11 ("Lotes e fontes"), D01 ("Como o Rastro publica"), O01 e O02 (o lote aparece aqui), rodapé.
+  - Vai para: download oficial (`Fonte.url_download`), P08 (mudanças de um lote publicado), P11 ("Como traduzimos o estado").
 - **Mostra:**
   - Por fonte (`Status.fontes[]`):
     - `Fonte.nome`;
@@ -24,46 +24,38 @@
     - `rejeicoes[]` (`RejeicaoLote.motivo`, `quantidade`), com explicação de cada motivo;
     - `duracao_etl_ms` (leitura, validação, gravação, publicação).
   - Texto fixo "Como o Rastro publica": em três frases, lote imutável, troca atômica e mais de 5% de rejeição bloqueia a publicação.
-  - Seção "Como traduzimos o estado" (âncora `#traducao`, `listar_traducoes`):
-    - versão vigente (`Traducoes.vigente`) e `vigente_desde`;
-    - tabela com uma linha por estado: termo técnico (`estado_execucao`), `texto_simples` e `explicacao`;
-    - versões anteriores recolhidas, cada uma com `versao`, `vigente_desde` e `nota`, sem nenhuma edição possível;
-    - frase fixa: "A tradução é uma tabela pública e versionada. Toda resposta da API diz qual versão usou."
+  - Link "Como traduzimos o estado" para P11.
   - `importado_em` aparece como "Extraído em dd/mm/aaaa, hh:mm" (data de extração, REQ-14).
 - **Coleta:**
   - `fonte_id` · seleção (todas, `cgu`, `siga`) · opcional.
   - `lote_id` · da URL, para abrir o detalhe · opcional.
-  - `versao` · da URL (`#traducao?versao=n`), para abrir uma versão antiga da tradução · opcional.
 - **Ações:**
   - Filtrar por fonte → (`listar_lotes`) com `fonte_id`.
   - Abrir detalhe → (`obter_lote`).
-  - Abrir uma versão antiga da tradução → (`listar_traducoes`) com `versao`.
+  - "Como traduzimos o estado" → P11 (`listar_traducoes`).
   - "Copiar hash" → área de transferência → ação local · sem chamada à API (REQ-74).
   - "Baixar o original na CGU" → `Fonte.url_download` em nova aba → ação local · sem chamada à API (REQ-74).
   - "Ver o que mudou neste lote" (só lotes publicados) → P08 com `?lote_novo_id=` (`listar_mudancas`).
 - **Estados:**
   - **carregando:** esqueleto da tabela (REQ-44).
   - **vazio:** nenhum lote importado → "Nenhum lote importado ainda", com uma explicação do processo (REQ-45).
-  - **erro:** `lote_id` ou `versao` inexistente → aviso e tabela sem detalhe (REQ-55); 5xx → `X-Request-Id` (REQ-46).
-  - **sucesso:** fontes, tabela, detalhe e tradução vigente (REQ-27, REQ-70).
+  - **erro:** `lote_id` inexistente → aviso e tabela sem detalhe (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** fontes, tabela e detalhe (REQ-27).
   - **offline:** "Sem conexão" (REQ-47).
   - **sem permissão:** tela pública; limite de taxa (REQ-28).
-  - **sem lote publicado:** a tela funciona e mostra lotes `validado`/`falhou`/`recusado` e a tradução, com "Nenhum lote publicado ainda" no topo (REQ-19, REQ-60).
+  - **sem lote publicado:** a tela funciona e mostra lotes `validado`/`falhou`/`recusado`, com "Nenhum lote publicado ainda" no topo (REQ-19, REQ-60).
   - **fonte indisponível:** último lote `falhou` com `fonte_indisponivel` → "A última tentativa de atualização falhou em dd/mm; os dados exibidos continuam sendo os de dd/mm" (REQ-12).
 - **Regras:**
   - Lotes `recusado` e `falhou` aparecem, por transparência, mas nunca como ativos (REQ-06, REQ-10).
   - A data mostrada ao público é sempre `data_referencia` (dado da fonte); `importado_em` é secundária.
   - O hash completo é recuperável (copiar) para quem quiser conferir o arquivo baixado.
-  - Versões da tradução só são lidas aqui; não há botão de editar. A versão nova entra pela CLI (`rastro traducao publicar`, REQ-70, ADR-0008).
   - Lote `recusado` por `sem_linhas_no_recorte` aparece com a explicação "o arquivo não tinha emendas de 2025" (REQ-73).
 - **Requisitos · contrato:**
   - REQ-27, REQ-12, REQ-06, REQ-10, REQ-73 · `GET /api/lotes` (`listar_lotes`).
-  - REQ-69, REQ-70 · `GET /api/traducoes` (`listar_traducoes`).
   - REQ-74 · ações locais (copiar hash, link externo).
   - REQ-27, REQ-50, REQ-82, REQ-55 · `GET /api/lotes/{lote_id}` (`obter_lote`).
   - REQ-13, REQ-14, REQ-48 · `GET /api/status` (`obter_status`).
 - **Acessibilidade:**
-  - Estado do lote em texto, não só por cor ou ícone.
   - O detalhe expansível usa `<details>` ou um botão com `aria-expanded`.
   - Percentuais com casas decimais por extenso no rótulo acessível ("0,95 por cento").
 - **Anexo:** mockup de referência [anexos/P09.png](anexos/P09.png), exportado do canvas "Rastro — telas" (Claude Design).
