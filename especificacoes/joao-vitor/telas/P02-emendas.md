@@ -12,7 +12,7 @@
     - `Emenda.codigo` (monoespaçado);
     - `Autor.nome`, com o selo "coletivo" quando `Autor.tipo ≠ parlamentar`;
     - `Emenda.tipo`;
-    - `Emenda.uf_gasto` ("Nacional ou múltiplas UFs" se nulo) e `Emenda.municipio_gasto`, quando houver;
+    - `Emenda.uf_gasto` (`NM` aparece como "Nacional ou múltiplas UFs") e `Emenda.municipio_nome`, quando houver, com link para P10 pelo identificador `Emenda.municipio_gasto`;
     - `Emenda.funcao_nome`;
     - três colunas separadas: `empenhado`, `liquidado` e `pago` (`RegistroExecucao.valor_centavos` por `etapa`);
     - o estado em linguagem simples (`EmendaResumo.estado_texto`, ex. "O dinheiro foi reservado") com o termo técnico abaixo (`estado_execucao`, "empenhada").
@@ -24,7 +24,7 @@
   - `autor_codigo` · combobox com busca sobre `listar_opcoes_filtro.autores` · opcional.
   - `uf_gasto` · seleção (UFs + "Nacional ou múltiplas UFs" = `NM`) · opcional.
   - `municipio` · seleção dependente da UF (`listar_opcoes_filtro.municipios`) · opcional; desabilitado sem UF ou com `NM`.
-  - `pendentes` · caixa "Só empenhado e ainda não pago" · opcional, padrão desligada.
+  - `pendentes` · caixa "Só empenhado e ainda não pago por inteiro" · opcional, padrão desligada.
   - `funcao_codigo` · seleção · opcional.
   - `tipo` · seleção · opcional.
   - `ordenar` · seleção (`-empenhado`, `-liquidado`, `-pago`, `codigo`) · padrão `-empenhado`.
@@ -53,7 +53,7 @@
   - Nenhuma coluna soma etapas (REQ-15).
   - `por_pagina` máximo de 100 (REQ-20).
   - Município só com UF de uma UF; sem ela, o seletor fica desabilitado e a URL manipulada recebe 422 (REQ-72).
-  - "Só empenhado e ainda não pago" mostra emendas `empenhada` ou `liquidada` (REQ-68). O texto da caixa usa linguagem simples e não insinua atraso nem culpa.
+  - "Só empenhado e ainda não pago por inteiro" mostra emendas em que o pago (com restos a pagar pagos) é menor que o empenhado, inclusive as pagas em parte (REQ-68). O texto da caixa usa linguagem simples e não insinua atraso nem culpa.
   - O texto do estado vem da API (`estado_texto`), nunca do código do painel (REQ-69).
 - **Requisitos · contrato:**
   - REQ-20, REQ-21, REQ-65, REQ-15, REQ-66, REQ-68, REQ-69, REQ-72 · `GET /api/emendas` (`listar_emendas`).

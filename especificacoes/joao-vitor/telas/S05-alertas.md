@@ -49,6 +49,7 @@
   - REQ-69 · `MudancaLote.estado_depois_texto` no texto do alerta.
   - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`) para o filtro por assinatura.
   - REQ-35 · evento interno `alertas.gerados` (origem dos alertas, ver O02).
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - Abas com `role="tablist"` e navegação por setas.
   - Estado lido / não lido em texto ("Não lido"), não só por um ponto colorido.

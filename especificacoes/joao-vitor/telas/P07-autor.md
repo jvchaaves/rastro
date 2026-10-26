@@ -42,6 +42,7 @@
 - **Requisitos · contrato:**
   - REQ-29, REQ-22, REQ-15, REQ-14, REQ-69, REQ-71, REQ-79 · `GET /api/autores/{codigo}` (`obter_autor`).
   - REQ-55, REQ-19 · respostas 404 / 503 do mesmo contrato.
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - O título `<h1>` é o nome do autor; o tipo vem logo abaixo em texto, não só num selo colorido.
   - A lista de emendas reutiliza a tabela de P02, com `<caption>` própria.

@@ -24,8 +24,10 @@
   - `ordenar_por_etapa` · seleção (`empenhado`, `liquidado`, `pago`) · padrão `empenhado`; só em `uf` e `funcao` (ignorado em `autor`, REQ-71).
   - `ano`, `uf_gasto`, `funcao_codigo`, `tipo` · filtros de recorte · opcionais.
   - `limite` · seleção 10/20/50 · padrão 20.
+  - `pagina` · inteiro ≥ 1 · para percorrer todos os grupos, em especial todos os autores em ordem alfabética (REQ-71).
 - **Ações:**
   - Trocar dimensão, ordenação ou filtros → (`obter_agregacoes`) com os parâmetros; atualiza a URL.
+  - Paginação ("Próximos 20 grupos", "A–F", …) → (`obter_agregacoes`) com `pagina`; mostra "Grupos 21 a 40 de `Agregacoes.total_grupos`".
   - Grupo de autor parlamentar ou coletivo → P07 (`obter_autor`).
   - Grupo de UF ou função → P02 com `uf_gasto` (inclusive `NM`) ou `funcao_codigo` aplicado (`listar_emendas`).
   - "Copiar link desta comparação" → URL na área de transferência → ação local · sem chamada à API (REQ-74).
@@ -49,6 +51,7 @@
   - REQ-22, REQ-21, REQ-15, REQ-14, REQ-49, REQ-71, REQ-72, REQ-79 · `GET /api/agregacoes` (`obter_agregacoes`).
   - REQ-74 · ações locais (copiar link, CSV).
   - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - A tabela é a representação principal para leitores de tela; o gráfico tem `aria-hidden` e um resumo textual (em UF e função, os três maiores grupos; em autor, só o número de grupos, para não criar ranking).
   - O seletor de dimensão é um grupo de botões de opção (`radiogroup`) com setas do teclado.

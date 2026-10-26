@@ -14,12 +14,15 @@
 ## Opções consideradas
 
 1. **Templates no servidor** (FastAPI + Jinja), sem front separado.
+   - Prós: um processo só. Contras: sem contrato HTTP separado para jornalistas, interface menos rica no celular. **Descartada** porque a API pública é requisito (FI-01 §4.2 #2).
 2. **Next acessando o SQLite diretamente** (rotas de servidor do Next).
+   - Prós: menos código no back-end. Contras: duas portas para os mesmos dados, regras duplicadas em TypeScript. **Descartada** porque o painel poderia mostrar algo que a API não oferece.
 3. **API FastAPI como única porta para os dados, e painel Next que só consome a API**, com tipos gerados de `../contratos/openapi.yaml` (`openapi-typescript`).
+   - Prós: um contrato só para o painel e para jornalistas, verificado no typecheck. Contras: dois processos e uma etapa de geração de tipos.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque faz do contrato a fonte única da verdade: o que o painel mostra é exatamente o que a API devolve.
 
 - O arquivo `../contratos/openapi.yaml` é a fonte da verdade. A API serve um `/openapi.json` equivalente (REQ-30) e o CI compara os dois.
 - O painel gera `src/api/tipos.ts` a partir do contrato. Um campo que a tela usa e não existe no contrato quebra o typecheck.

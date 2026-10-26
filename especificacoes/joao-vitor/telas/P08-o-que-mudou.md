@@ -13,11 +13,11 @@
   - Par de lotes comparados: `MudancasPagina.lote_anterior` e `MudancasPagina.lote_novo`, cada um com `id` e `data_referencia` ("Lote #13, dados de 13/10/2026 → Lote #14, dados de 20/10/2026").
   - Contagem por tipo (`MudancasPagina.contagem_por_tipo`): novas emendas · valores alterados · mudanças de estado.
   - Lista (`MudancasPagina.itens[]`), uma linha por `MudancaLote`:
-    - `codigo_emenda`, `autor_nome`, `uf_gasto`, `municipio_gasto`;
+    - `codigo_emenda`, `autor_nome`, `uf_gasto`, `MudancaLote.municipio_nome`;
     - `tipo` em texto;
     - para `valor_alterado`: `etapa`, `valor_antes_centavos` → `valor_depois_centavos` e a diferença com sinal e texto ("aumentou R$ 120.000,00");
-    - para `estado_alterado`: `estado_antes` → `estado_depois`, com o texto simples do estado novo (`MudancaLote.estado_depois_texto`, ex. "agora: Já houve pagamento registrado");
-    - para `nova_emenda`: "apareceu neste lote".
+    - para `estado_alterado`: o texto simples antes e depois (`MudancaLote.estado_antes_texto` → `MudancaLote.estado_depois_texto`, ex. "A entrega foi conferida; falta pagar → Já houve pagamento registrado"), com os termos técnicos `estado_antes` → `estado_depois` abaixo e a versão `MudancaLote.traducao_versao`;
+    - para `nova_emenda` (uma linha por emenda, sem etapa): "apareceu neste lote".
 - **Coleta:**
   - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
   - `uf_gasto` · seleção · opcional.
@@ -50,6 +50,7 @@
   - REQ-24, REQ-61, REQ-08, REQ-75, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
   - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
   - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF, município e autor.
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - A diferença é escrita em texto ("aumentou"), além de qualquer seta ou cor.
   - Lista de mudanças em `<table>` no desktop e em `<ul>` de cartões no celular, sempre com o mesmo conteúdo.

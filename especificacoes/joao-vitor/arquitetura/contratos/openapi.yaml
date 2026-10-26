@@ -86,7 +86,7 @@ paths:
         - $ref: '#/components/parameters/Tipo'
         - name: pendentes
           in: query
-          description: true = só emendas empenhadas e ainda não pagas (`estado_execucao` empenhada ou liquidada) (REQ-68).
+          description: true = só emendas com `pago` + `rap_pago` menor que `empenhado` (empenhado e ainda não pago por inteiro) (REQ-68).
           schema: { type: boolean, default: false }
         - name: q
           in: query
@@ -199,7 +199,9 @@ paths:
           schema: { $ref: '#/components/schemas/Etapa' }
         - name: limite
           in: query
+          description: Grupos por página (REQ-71 exige percorrer todos os autores em ordem alfabética)
           schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - $ref: '#/components/parameters/Pagina'
       responses:
         '200':
           description: Grupos
@@ -378,7 +380,7 @@ paths:
       summary: Cria uma assinatura (e a chave do assinante, se não informada)
       description: |
         Sem `X-Chave-Assinante`: cria um Assinante e devolve `chave_assinante` uma única vez (REQ-31).
-        Com chave: cria a assinatura para o assinante (REQ-33). REQ-34, REQ-41, REQ-42. Telas S01 → S02/S04.
+        Com chave: cria a assinatura para o assinante (REQ-33). REQ-34, REQ-41, REQ-42, REQ-62, REQ-80, REQ-87. Telas S01 → S02/S04.
       security:
         - {}
         - chaveAssinante: []
@@ -625,7 +627,7 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
     AssinaturaInvalida:
-      description: Filtro vazio, condição incompleta (`assinatura_invalida`, REQ-34) ou limite de 20 (`limite_assinaturas`, REQ-42)
+      description: Filtro vazio, condição incompleta ou município sem UF (`assinatura_invalida`, REQ-34, REQ-62, REQ-87) ou limite de 20 (`limite_assinaturas`, REQ-42)
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problema' }
@@ -864,7 +866,8 @@ components:
         tipo: { type: string }
         autor: { $ref: '#/components/schemas/AutorResumo' }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
-        municipio_gasto: { type: [string, 'null'], description: Nome do município do gasto; null se a localidade não é um município (REQ-66) }
+        municipio_gasto: { type: [string, 'null'], description: 'Identificador do município do gasto, o mesmo de `obter_municipio` (ex. joao-pessoa); null se a localidade não é um município (REQ-66, REQ-88)' }
+        municipio_nome: { type: [string, 'null'], description: Nome como publicado (ex. João Pessoa) }
         funcao_nome: { type: string }
         estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
         estado_texto: { type: string, description: Tradução vigente do estado (REQ-69) }
@@ -896,7 +899,8 @@ components:
         autor: { $ref: '#/components/schemas/AutorResumo' }
         localidade_gasto: { type: string }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
-        municipio_gasto: { type: [string, 'null'], description: REQ-66 }
+        municipio_gasto: { type: [string, 'null'], description: 'Identificador usado em `obter_municipio` (REQ-66, REQ-88)' }
+        municipio_nome: { type: [string, 'null'] }
         funcao_codigo: { type: string }
         funcao_nome: { type: string }
         subfuncao_nome: { type: [string, 'null'] }
@@ -983,9 +987,11 @@ components:
 
     Agregacoes:
       type: object
-      required: [dimensao, grupos, proveniencia]
+      required: [dimensao, grupos, total_grupos, pagina, proveniencia]
       properties:
         dimensao: { type: string, enum: [autor, uf, funcao] }
+        total_grupos: { type: integer }
+        pagina: { type: integer }
         grupos:
           type: array
           description: Em `dimensao=autor`, ordem alfabética de `rotulo`, sem posição (REQ-71)
@@ -1017,7 +1023,7 @@ components:
 
     MudancaLote:
       type: object
-      required: [id, fonte_id, codigo_emenda, lote_novo_id, tipo]
+      required: [id, fonte_id, codigo_emenda, lote_novo_id, tipo, traducao_versao]
       properties:
         id: { type: integer }
         fonte_id: { type: string, enum: [cgu, siga] }
@@ -1026,6 +1032,7 @@ components:
         lote_novo_id: { type: integer }
         tipo: { $ref: '#/components/schemas/TipoMudanca' }
         etapa:
+          description: Só em `valor_alterado`; null em `nova_emenda` (uma linha por emenda nova) e em `estado_alterado`
           oneOf:
             - $ref: '#/components/schemas/Etapa'
             - type: 'null'
@@ -1041,10 +1048,15 @@ components:
             - type: 'null'
         autor_nome: { type: string }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
-        municipio_gasto: { type: [string, 'null'] }
+        municipio_gasto: { type: [string, 'null'], description: Identificador do município (REQ-66) }
+        municipio_nome: { type: [string, 'null'] }
+        estado_antes_texto:
+          type: [string, 'null']
+          description: Tradução vigente de `estado_antes` (REQ-69)
         estado_depois_texto:
           type: [string, 'null']
           description: Tradução vigente de `estado_depois` (REQ-69)
+        traducao_versao: { type: integer, description: Versão da tabela de tradução usada nos dois textos (REQ-69) }
 
     MudancasPagina:
       type: object
@@ -1083,7 +1095,7 @@ components:
         filtro_municipio_gasto:
           type: [string, 'null']
           pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
-          description: Exige `filtro_uf_gasto` de uma UF (REQ-72)
+          description: Exige `filtro_uf_gasto` de uma UF; sem ela, 422 `assinatura_invalida` (REQ-87)
         filtro_funcao_codigo: { type: [string, 'null'] }
         condicao: { type: string, enum: [limiar_valor, mudanca_estado] }
         etapa:
@@ -1107,7 +1119,7 @@ components:
         filtro_municipio_gasto:
           type: [string, 'null']
           pattern: '^[a-z0-9]+(-[a-z0-9]+)*$'
-          description: Exige `filtro_uf_gasto` de uma UF (REQ-72)
+          description: Exige `filtro_uf_gasto` de uma UF; sem ela, 422 `assinatura_invalida` (REQ-87)
         filtro_funcao_codigo: { type: [string, 'null'] }
         condicao: { type: string, enum: [limiar_valor, mudanca_estado] }
         etapa:
@@ -1188,7 +1200,7 @@ components:
                   quantidade: { type: integer, minimum: 0 }
         quantidade_pendentes:
           type: integer
-          description: Emendas empenhadas e ainda não pagas (empenhada + liquidada), o filtro `pendentes=true` (REQ-68)
+          description: Emendas com `pago` + `rap_pago` menor que `empenhado`, o mesmo recorte de `pendentes=true` (REQ-68)
         traducao_versao: { type: integer }
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }
 

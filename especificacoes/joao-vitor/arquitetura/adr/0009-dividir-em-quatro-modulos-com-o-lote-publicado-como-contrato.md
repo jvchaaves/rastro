@@ -18,13 +18,13 @@
 
 ## Decisão
 
-Opção 3, com estas fronteiras:
+Opção 3, porque cumpre a tabela de módulos do brief sem contrariar a execução local em dois processos (opções 1 e 2 descartadas pelos motivos acima). As fronteiras são estas:
 
 | De → para | Contrato | Onde está |
 | :-- | :-- | :-- |
 | `ingestao` → todos | Lote publicado: `PublicacaoAtiva` + linhas do lote em `Emenda`, `RegistroExecucao`, `RegistroFavorecido` | `../contratos/modelo-de-dados.md`, REQ-07, REQ-76 |
 | `ingestao` → `nucleo` | Porta `calcular_mudancas(lote_anterior_id, lote_novo_id) -> int`, chamada dentro da transação de publicação | REQ-08, REQ-75 |
-| `ingestao` → `saida` | Evento `lote.publicado` | `../contratos/eventos.asyncapi.yaml`, REQ-35 |
+| `ingestao` → `saida` | Evento `lote.publicado`, emitido depois do commit; o despachante roda fora da transação | `../contratos/eventos.asyncapi.yaml`, REQ-35 |
 | `nucleo` → `consulta`, `saida` | View `v_emenda_estado`, `MudancaLote` e `TabelaTraducao` | ADR-0006, ADR-0008 |
 | `consulta`, `saida`, `nucleo`, `ingestao` → painel e jornalistas | Operações HTTP, cada uma marcada com `x-modulo` | `../contratos/openapi.yaml` |
 
@@ -36,5 +36,5 @@ Opção 3, com estas fronteiras:
 
 - **(+)** Cada integrante do grupo pode rodar `/paul:init` no seu módulo com requisitos, telas e contratos já separados (coluna "Módulo" de `../requisitos.md`).
 - **(+)** O lote imutável (ADR-0001) vira, de graça, o contrato estável entre módulos.
-- **(−)** A publicação depende de duas portas síncronas (`calcular_mudancas` e o despachante). Uma falha no `nucleo` desfaz a publicação inteira, o que é o comportamento desejado (REQ-07).
-- **(−)** A API é um único processo FastAPI com rotas de três módulos. A independência é de código e de dados, não de processo.
+- **(−)** A publicação depende de uma porta síncrona, `calcular_mudancas`: uma falha no `nucleo` desfaz a publicação inteira, o que é o comportamento desejado (REQ-07). O despachante do `saida` roda depois do commit, pelo evento; se falhar, o lote continua publicado e `rastro publicar --reprocessar-alertas` refaz os alertas sem duplicar (ADR-0004).
+- **(−)** A API é um único processo FastAPI com rotas dos quatro módulos (`ingestao` só nas rotas de lotes). A independência é de código e de dados, não de processo.

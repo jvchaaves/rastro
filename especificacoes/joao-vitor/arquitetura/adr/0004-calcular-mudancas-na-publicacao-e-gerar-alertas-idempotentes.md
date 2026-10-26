@@ -16,12 +16,15 @@ Há também duas exigências sobre os alertas:
 ## Opções consideradas
 
 1. **Calcular a diferença sob demanda** em cada consulta e, para alertas, comparar com um "último valor visto" por assinatura.
+   - Prós: nada a guardar. Contras: custo em toda consulta e estado "último visto" por assinatura, difícil de tornar idempotente. **Descartada** porque não garante um alerta por mudança.
 2. **Gatilhos (triggers) SQLite** que gravam mudanças a cada upsert.
+   - Prós: automático. Contras: o lote é imutável (ADR-0001), então não há upsert para disparar o gatilho, e a lógica fica escondida no banco. **Descartada** por incompatibilidade com o lote imutável.
 3. **Materializar `MudancaLote` na transação de publicação e derivar os alertas dela**, com UNIQUE(`assinatura_id`, `mudanca_id`).
+   - Prós: mudanças visíveis junto com o lote, alertas idempotentes por restrição do banco, reprocessamento seguro. Contras: a publicação fica mais longa.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque a restrição UNIQUE resolve a entrega única no próprio schema, inclusive sob execução paralela e reprocessamento.
 
 - A diferença é calculada com SQL (junção do lote novo com o anterior por `codigo_emenda` e `etapa`) dentro da transação de publicação. Assim, nenhum leitor vê um lote ativo sem as suas mudanças.
 - Depois do commit, o despachante faz o seguinte:

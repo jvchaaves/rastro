@@ -9,7 +9,7 @@
   - Contagem "N de 20 assinaturas".
   - Lista (`listar_assinaturas.itens[]`), um cartão por `Assinatura`:
     - `nome`;
-    - resumo legível `Assinatura.descricao`, montado pela API a partir de `filtro_codigo_emenda`, `filtro_autor_codigo`, `filtro_uf_gasto`, `filtro_funcao_codigo`, `condicao`, `etapa` e `limiar_centavos`;
+    - resumo legível `Assinatura.descricao`, montado pela API a partir de `filtro_codigo_emenda`, `filtro_autor_codigo`, `filtro_uf_gasto`, `filtro_municipio_gasto`, `filtro_funcao_codigo`, `condicao`, `etapa` e `limiar_centavos`;
     - `estado` em texto ("Ativa" / "Pausada");
     - `criada_em`;
     - "Vale a partir do lote #`lote_base_id`";

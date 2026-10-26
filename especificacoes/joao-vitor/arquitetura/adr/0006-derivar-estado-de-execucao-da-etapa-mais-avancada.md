@@ -11,12 +11,15 @@ O brief promete "alerta quando o status de execução muda". O pacote da CGU nã
 ## Opções consideradas
 
 1. **Esperar um campo oficial de status** (não existe no pacote inspecionado em 24/09/2026).
+   - Prós: nenhuma regra própria. Contras: o campo não existe. **Descartada** porque bloquearia a funcionalidade 7 do FI-01.
 2. **Qualquer variação de valor** conta como mudança de status: gera alertas demais e confunde "valor" com "estado".
+   - Prós: simples. Contras: alerta a cada centavo e confunde valor com estado. **Descartada** pelo excesso de alertas.
 3. **Estado derivado:** a etapa mais avançada com valor > 0, na ordem `sem_execucao` < `empenhada` < `liquidada` < `paga`.
+   - Prós: testável com dois lotes sintéticos, vocabulário controlado. Contras: cancelamentos podem fazer o estado recuar.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque é a única definição testável com os campos que a CGU publica hoje.
 
 - `paga` considera `pago + rap_pago > 0`.
 - O estado é calculado pela view `v_emenda_estado` em cada lote.

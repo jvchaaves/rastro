@@ -15,7 +15,7 @@ O padrão é o **arc42** (Starke e Hruschka) como índice. Cada seção usa a no
 | §9 Decisões | 9 decisões com o porquê | ADR (MADR) | [adr/](adr/) |
 | §10 Qualidade | 5 cenários, um por item do envelope | Bass, Clements e Kazman (6 partes) | [qualidade.md](qualidade.md) |
 | §12 Glossário | Vocabulário do domínio e do sistema | texto | [glossario.md](glossario.md) |
-| — Requisitos | 86 requisitos testáveis, cada um com módulo e telas | EARS | [requisitos.md](requisitos.md) |
+| — Requisitos | 89 requisitos testáveis, cada um com módulo e telas | EARS | [requisitos.md](requisitos.md) |
 | — Contratos | API HTTP, eventos internos, CLI e modelo de dados | OpenAPI 3.1, AsyncAPI 3.0, Markdown, Mermaid ER | [contratos/](contratos/) |
 | — Rastreabilidade | Tela ↔ requisito ↔ contrato | matriz gerada por script | [rastreabilidade.md](rastreabilidade.md) |
 
@@ -33,7 +33,7 @@ As seções §4 (estratégia de solução), §6 (visão de execução), §7 (imp
 | **Limites e vizinhos** | `c4-contexto.md` (atores, CGU, Siga, agendador; seção "Limites"), `c4-conteineres.md` (quem escreve no banco) e o mapa de módulos abaixo (o que cada módulo possui e consome) | Escopo do `PROJECT.md` e *boundaries* de cada plano. Exemplo: "a API não escreve dados de fonte", "nenhum canal externo de alerta" |
 | **Decisões e porquês** | `adr/0001`–`0009`, com opções descartadas e consequências | Decisões que o agente não reabre a cada sessão (lote imutável, SQLite WAL, chave anônima…) |
 | **Contratos** | `contratos/openapi.yaml` (20 operações, cada uma com o módulo dono em `x-modulo`), `contratos/eventos.asyncapi.yaml`, `contratos/cli.md`, `contratos/modelo-de-dados.md` | Tasks com `files` e `verify` precisos. Exemplo: "`obter_emenda` responde 422/404/503 conforme o contrato" |
-| **Requisitos testáveis** | `requisitos.md`: 86 REQ em EARS, cada um com o teste que o verifica, a origem (FI-01 ou brief), o módulo e as telas | Critérios de aceite Given/When/Then. O molde EARS traduz direto: QUANDO → *When*, SE … ENTÃO → *Given/Then*. A tabela final liga AC-1…AC-4 do FI-01 aos REQ |
+| **Requisitos testáveis** | `requisitos.md`: 89 REQ em EARS, cada um com o teste que o verifica, a origem (FI-01 ou brief), o módulo e as telas | Critérios de aceite Given/When/Then. O molde EARS traduz direto: QUANDO → *When*, SE … ENTÃO → *Given/Then*. A tabela final liga AC-1…AC-4 do FI-01 aos REQ |
 | **Qualidade com medida** | `qualidade.md`: QA-01 persistência, QA-02 API, QA-03 concorrência, QA-04 desempenho medido, QA-05 testes | ACs do envelope com número e ferramenta de medida (0 mistura de lotes em 100 execuções, p95 < 100 ms, cobertura ≥ 80%) |
 | **Restrições** | §2 abaixo, ADR-0002 (execução local), ADR-0005 e ADR-0007 (dados pessoais) | Stack, hospedagem e LGPD que o *audit* cobra |
 
@@ -116,11 +116,11 @@ O brief do grupo divide o Rastro em quatro módulos, e o contrato principal é *
 
 | Módulo | O que faz (brief) | Contêineres | Requisitos | Contratos | Telas |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| `ingestao` | Baixa, valida e normaliza os lotes; guarda proveniência; publica de forma atômica | CLI de dados, Arquivos brutos, Banco | REQ-01–07, 10–13, 21, 27, 50, 52–54, 56, 57, 59, 66, 73, 78, 82 | `cli:importar`, `cli:publicar`, `cli:sincronizar`, `cli:lotes`; `listar_lotes`, `obter_lote`; evento `lote.publicado` | O01, O02, P09 (lotes) |
+| `ingestao` | Baixa, valida e normaliza os lotes; guarda proveniência; publica de forma atômica | CLI de dados, Arquivos brutos, Banco | REQ-01–07, 10–13, 21, 27, 50, 52–54, 56, 57, 59, 66, 73, 78, 82, 88 | `cli:importar`, `cli:publicar`, `cli:sincronizar`, `cli:lotes`; `listar_lotes`, `obter_lote`; evento `lote.publicado` | O01, O02, P09 (lotes) |
 | `nucleo` | Diferença entre lotes e estado de execução consolidado | CLI (dentro da publicação), API, Banco | REQ-08, 24, 61, 69, 70, 75, 86 | porta `calcular_mudancas`; `listar_mudancas`, `listar_traducoes`; `cli:traducao`; view `v_emenda_estado` | P08, P09 (tradução) |
-| `consulta` | API e busca por município, parlamentar e função; agregações; contrato versionado | API, Painel | REQ-09, 14–20, 22, 23, 25, 26, 28–30, 49, 55, 65, 67, 68, 71, 72, 76, 77, 79, 84, 85 | `obter_status`, `listar_opcoes_filtro`, `listar_emendas`, `obter_emenda`, `obter_linha_do_tempo`, `listar_favorecidos`, `obter_agregacoes`, `obter_autor`, `obter_municipio`, `obter_contrato` | P01–P07, P10, D01 |
-| `saida` | Assinaturas por filtro e limiar; alerta com entrega única por assinante | API, CLI (despachante), Painel | REQ-31–42, 55, 58, 62–64, 80, 81 | `criar_assinatura`, `listar_assinaturas`, `atualizar_assinatura`, `excluir_assinatura`, `listar_alertas`, `atualizar_alerta`; consome `lote.publicado`, emite `alertas.gerados` | S01–S05 |
-| todos | Requisitos transversais do painel e da engenharia | — | REQ-43–48, 51, 60, 74, 83 | — | todas as telas do painel |
+| `consulta` | API e busca por município, parlamentar e função; agregações; contrato versionado | API, Painel | REQ-09, 14–20, 22, 23, 25, 26, 28–30, 49, 65, 67, 68, 71, 72, 76, 77, 79, 84, 85 | `obter_status`, `listar_opcoes_filtro`, `listar_emendas`, `obter_emenda`, `obter_linha_do_tempo`, `listar_favorecidos`, `obter_agregacoes`, `obter_autor`, `obter_municipio`, `obter_contrato` | P01–P07, P10, D01 |
+| `saida` | Assinaturas por filtro e limiar; alerta com entrega única por assinante | API, CLI (despachante), Painel | REQ-31–42, 58, 62–64, 80, 81, 87 | `criar_assinatura`, `listar_assinaturas`, `atualizar_assinatura`, `excluir_assinatura`, `listar_alertas`, `atualizar_alerta`; consome `lote.publicado`, emite `alertas.gerados` | S01–S05 |
+| todos | Requisitos transversais do painel e da engenharia | — | REQ-43–48, 51, 55, 60, 74, 83, 89 | — | todas as telas do painel |
 
 ### Envelope de cada módulo (persistência, API, concorrência, desempenho, testes)
 

@@ -22,7 +22,7 @@
   - "Sair" (quando já há chave guardada) → remove a chave do navegador e permanece em S03 → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** botão "Verificando…" desabilitado (REQ-44).
-  - **vazio:** campo vazio → botão desabilitado, com a dica do formato (REQ-45).
+  - **vazio:** campo vazio → botão desabilitado, com a dica do formato (REQ-89).
   - **erro:**
     - formato inválido (local) → "A chave tem 32 caracteres (0–9, a–f)";
     - 401 → "Chave não reconhecida", sem dizer se ela existe ou não (REQ-32);

@@ -44,6 +44,7 @@
   - REQ-15 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho e o valor "pago" de referência (etapa `pago`).
   - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
   - REQ-74 · ação local (link externo).
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - O aviso é um `<p>` comum no fluxo (não um `role="alert"`), lido antes da tabela.
   - A tabela tem `<caption>` "Recebimentos registrados por favorecido, emenda 2025…".

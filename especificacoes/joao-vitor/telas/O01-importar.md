@@ -42,10 +42,10 @@
   - Leitura em fluxo, Latin-1, `;` (REQ-01).
   - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido de qualquer `ano_mes` entram (REQ-54).
   - Valor inválido → `valor_malformado` (REQ-03).
-  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21), com `NM` para nacional ou várias UFs (REQ-78); `municipio_gasto` derivado da mesma coluna quando ela nomeia um município (REQ-66).
+  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21), com `NM` para nacional ou várias UFs (REQ-78); `municipio_gasto` e `municipio_nome` derivados da mesma coluna quando ela nomeia um município (REQ-66), e nulos quando ela é uma UF, uma região ou nacional (REQ-88).
   - Importar nunca publica: o lote validado fica invisível até O02 (ADR-0001).
 - **Requisitos · contrato:**
-  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
+  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
   - REQ-11, REQ-12 · `rastro sincronizar` (`cli:sincronizar`).
 - **Acessibilidade:**
   - Todos os estados com rótulo textual (`OK`, `AVISO`, `ERRO`), nunca só cor.

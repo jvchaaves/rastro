@@ -26,7 +26,7 @@ Requisitos: REQ-07, REQ-10, REQ-76. Teste: `tests/test_store.py::test_lote_inter
 | Ambiente | API em execução, banco com e sem lote publicado |
 | Artefato | `api.py` + `contratos/openapi.yaml` |
 | Resposta | 422 `codigo_malformado`, 422 `parametro_invalido`, 404 `emenda_nao_encontrada`, 503 `sem_lote_publicado`, 429 com `Retry-After` (o IP do navegador chega pelo `X-Forwarded-For` do painel), todos em `application/problem+json`, e 200 com proveniência, `estado_texto` e `traducao_versao` no caso válido |
-| Medida | 100% das respostas de um conjunto de 200 requisições geradas a partir do contrato validam contra `openapi.yaml`, e 0 respostas 5xx. `/openapi.json` é semanticamente igual ao arquivo versionado |
+| Medida | 100% das respostas de um conjunto de 200 requisições geradas a partir do contrato validam contra `openapi.yaml`, e 0 respostas 500 (erro interno); 503 só aparece no caso sem lote publicado, onde é a resposta esperada. `/openapi.json` é semanticamente igual ao arquivo versionado |
 
 Requisitos: REQ-14, REQ-16, REQ-17, REQ-18, REQ-19, REQ-28, REQ-30, REQ-69, REQ-72, REQ-84 (AC-1, AC-4). Testes: `tests/test_api.py`, `tests/test_contrato.py`. Módulos: `consulta` (rotas de leitura e limite de taxa), `saida` (rotas com chave, mesmo formato de erro).
 

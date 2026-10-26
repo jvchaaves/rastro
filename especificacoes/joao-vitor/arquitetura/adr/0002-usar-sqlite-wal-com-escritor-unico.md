@@ -14,12 +14,15 @@
 ## Opções consideradas
 
 1. **PostgreSQL** com MVCC completo.
+   - Prós: concorrência madura, vários escritores. Contras: um servidor a mais para instalar e operar no macOS. **Descartada** pela restrição de execução local sem servidor dedicado (FI-01 §10.3).
 2. **SQLite no modo padrão (rollback journal)**: leitores bloqueiam o escritor, e vice-versa.
+   - Prós: padrão do SQLite, nada a configurar. Contras: leitores e escritor se bloqueiam. **Descartada** porque a API ficaria parada durante cada importação.
 3. **SQLite em WAL**: leitores enxergam um snapshot estável enquanto um único escritor grava.
+   - Prós: leitura em snapshot sem bloquear o escritor, um arquivo só. Contras: um escritor por vez, o que exige trava e escrita serial.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque atende ao gancho de concorrência do brief (leitura durante publicação) sem trazer um servidor de banco para uma execução local.
 
 - `PRAGMA journal_mode=WAL`, `synchronous=NORMAL`, `busy_timeout=5000`, `foreign_keys=ON`.
 - Nas consultas, a API usa conexões só de leitura (`mode=ro`) e executa cada requisição dentro de uma transação de leitura. Com isso, o lote ativo lido no início vale para a requisição inteira (REQ-09).

@@ -13,7 +13,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Função | `Emenda.funcao_codigo`, `funcao_nome` | Área de governo da despesa (Saúde, Educação…), conforme a classificação orçamentária. |
 | Localidade do gasto | `Emenda.localidade_gasto` | Onde a despesa foi programada, segundo a CGU. **Não** é o endereço do favorecido. |
 | UF do gasto | `Emenda.uf_gasto` | UF derivada da localidade do gasto. Fica vazia quando a localidade é nacional ou abrange várias UFs ("Nacional ou múltiplas UFs"). |
-| Município do gasto | `Emenda.municipio_gasto` | Município derivado da localidade do gasto quando ela tem a forma "MUNICÍPIO - UF". Fica vazio quando a localidade é uma UF, uma região ou nacional; essas emendas aparecem na UF, não num município (REQ-66). |
+| Município do gasto | `Emenda.municipio_gasto` | Município derivado da localidade do gasto quando ela tem a forma "MUNICÍPIO - UF". Guarda o identificador (`joao-pessoa`) e o nome como publicado (`municipio_nome`). Fica vazio quando a localidade é uma UF, uma região ou nacional; essas emendas aparecem na UF, não num município (REQ-66, REQ-88). |
 | Etapa | `RegistroExecucao.etapa` | Fase da despesa com valor próprio. As etapas nunca são somadas entre si. |
 | Valor empenhado | `etapa = empenhado` | Valor reservado no orçamento para a despesa (compromisso). Não significa que o dinheiro saiu. |
 | Valor liquidado | `etapa = liquidado` | Valor reconhecido como devido depois de verificada a entrega do bem ou serviço. |
@@ -26,7 +26,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada ou paga (ADR-0006). |
 | Estado em linguagem simples | `estado_texto`; `TabelaTraducao.texto_simples` | Frase para o morador que traduz o estado ("A entrega foi conferida; falta pagar"). Vem da versão vigente da tabela de tradução (ADR-0008). |
 | Tabela de tradução | `TabelaTraducao` | Tabela versionada, só com inserção, com um texto simples e uma explicação por estado. Cada resposta diz a versão usada (`traducao_versao`). |
-| Empenhado e ainda não pago (pendente) | `pendentes=true`; `MunicipioDetalhe.quantidade_pendentes` | Emenda com estado `empenhada` ou `liquidada`. É o recorte que o gestor municipal acompanha (REQ-68). |
+| Empenhado e ainda não pago (pendente) | `pendentes=true`; `MunicipioDetalhe.quantidade_pendentes` | Emenda em que `pago` + `rap_pago` é menor que o `empenhado`, inclusive as pagas em parte. É o recorte que o gestor municipal acompanha (REQ-68). |
 
 ## Dados e proveniência
 

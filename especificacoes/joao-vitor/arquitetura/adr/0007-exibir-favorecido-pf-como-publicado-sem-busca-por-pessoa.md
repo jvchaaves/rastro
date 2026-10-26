@@ -15,13 +15,14 @@ Por outro lado, a transparência é o objetivo do produto, e esconder favorecido
 
 ## Opções consideradas
 
-1. **Nome completo e identificador como na fonte, com busca por nome:** máxima transparência e máxima exposição. Transforma o Rastro num buscador de pessoas.
-2. **Agregar pessoas físicas sem nome** ("Pessoas físicas: N favorecidos, R$ X"): menor exposição, mas perde a verificabilidade contra a fonte.
+1. **Nome completo e identificador como na fonte, com busca por nome:** máxima transparência e máxima exposição. Transforma o Rastro num buscador de pessoas. **Descartada** pela LGPD (minimização) e pelo risco de exposição.
+2. **Agregar pessoas físicas sem nome** ("Pessoas físicas: N favorecidos, R$ X"): menor exposição, mas perde a verificabilidade contra a fonte. **Descartada** porque o jornalista não conseguiria conferir o registro na CGU.
 3. **Exibir como a CGU publica, só no contexto de uma emenda**, sem busca, filtro, ordenação ou página por pessoa física, e com aviso fixo.
+   - Prós: verificável contra a fonte, sem criar um buscador de pessoas. Contras: o nome continua visível no contexto da emenda.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque mantém a verificabilidade contra a fonte e não acrescenta exposição além da que a CGU já publica (LGPD, minimização).
 
 - O favorecido PF aparece apenas na lista de favorecidos de uma emenda (P05), com `nome_publicavel` e `codigo_origem` exatamente como na fonte.
 - O Rastro não reconstrói, não completa e não cruza o CPF.

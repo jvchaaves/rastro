@@ -19,7 +19,7 @@
     - `Emenda.tipo`;
     - `Autor.nome` (link para P07, selo "coletivo" se `Autor.tipo ≠ parlamentar`);
     - o estado em linguagem simples, em destaque (`EmendaDetalhe.estado_texto`, ex. "A entrega foi conferida; falta pagar"), com o termo técnico ao lado (`estado_execucao`, "liquidada") e a marca "tradução v`traducao_versao`" que leva a P09.
-  - Onde: `Emenda.localidade_gasto` (texto original), `Emenda.municipio_gasto` (link para P10) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
+  - Onde: `Emenda.localidade_gasto` (texto original), `Emenda.municipio_nome` (link para P10 pelo identificador `Emenda.municipio_gasto`) e `Emenda.uf_gasto`, com a nota "Localidade do gasto segundo a CGU; não é o endereço de quem recebeu".
   - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
   - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
     - Cada cartão traz `ValorComProveniencia.valor_centavos` e uma definição de uma linha.

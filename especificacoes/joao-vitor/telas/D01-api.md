@@ -29,7 +29,7 @@
   - "Como o Rastro publica" → P09 (`listar_lotes`).
 - **Estados:**
   - **carregando:** esqueleto da tabela de operações enquanto `/openapi.json` carrega (REQ-44).
-  - **vazio:** "Experimente" sem código → botão desabilitado, com a dica do formato (REQ-45).
+  - **vazio:** "Experimente" sem código → botão desabilitado, com a dica do formato (REQ-89).
   - **erro:**
     - contrato indisponível (5xx) → exemplos estáticos continuam visíveis, mensagem com `X-Request-Id` (REQ-46);
     - no "Experimente": 422 / 404 / 503 mostrados como resposta da API, não como erro da página (REQ-17, REQ-18, REQ-19).

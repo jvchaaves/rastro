@@ -13,13 +13,13 @@
 
 ## Opções consideradas
 
-1. **Textos no código do painel** (um dicionário em TypeScript): simples, mas a mudança some no histórico do Git, a API não devolve o texto e um cliente da API pode traduzir de outro jeito.
-2. **Textos num arquivo de configuração da API**, recarregado na inicialização: a API devolve o texto, mas não há registro de qual versão estava valendo quando um alerta ou uma resposta foi produzida.
+1. **Textos no código do painel** (um dicionário em TypeScript): simples, mas a mudança some no histórico do Git, a API não devolve o texto e um cliente da API pode traduzir de outro jeito. **Descartada** porque a tradução ficaria escondida no código, o que o brief proíbe.
+2. **Textos num arquivo de configuração da API**, recarregado na inicialização: a API devolve o texto, mas não há registro de qual versão estava valendo quando um alerta ou uma resposta foi produzida. **Descartada** porque não é auditável.
 3. **Tabela `TabelaTraducao` no banco, só com inserção**, uma linha por (versão, estado), publicada por um comando da CLI, e devolvida pela API com o número da versão.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque é a única em que um texto exibido pode ser conferido depois, pela versão, como o brief exige.
 
 - A versão 1 é carregada na migração inicial (textos em `../contratos/modelo-de-dados.md`).
 - Uma versão nova só entra por `rastro traducao publicar` (`../contratos/cli.md`), que exige os quatro estados (REQ-86) e grava `versao = máxima + 1`.

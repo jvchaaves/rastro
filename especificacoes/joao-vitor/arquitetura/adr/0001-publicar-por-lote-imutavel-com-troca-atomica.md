@@ -14,12 +14,15 @@
 ## Opções consideradas
 
 1. **Upsert linha a linha** na tabela de emendas, guardando a "última versão".
+   - Prós: simples e com pouco espaço em disco. Contras: um leitor vê o lote pela metade durante a gravação e o histórico se perde. **Descartada** porque quebra a linha do tempo (REQ-23) e a consistência sob atualização.
 2. **Duas bases (azul/verde)** com troca de arquivo do SQLite.
+   - Prós: troca atômica do arquivo inteiro. Contras: copia a base a cada lote e invalida conexões abertas da API. **Descartada** porque a troca de arquivo não é atômica para leitores já conectados e não guarda o histórico entre lotes.
 3. **Lote imutável:** cada importação grava as próprias linhas, marcadas com `lote_id`, e um ponteiro `PublicacaoAtiva` por fonte decide o que é visível.
+   - Prós: troca atômica por um único `UPDATE`, histórico completo, reimportação idempotente por hash. Contras: o banco cresce a cada lote.
 
 ## Decisão
 
-Opção 3.
+Opção 3, porque é a única que dá, ao mesmo tempo, publicação atômica para quem está lendo e o histórico de lotes de que a linha do tempo e o "o que mudou" precisam.
 
 - Cada `LoteImportacao` é identificado pelo `hash_sha256` do arquivo e passa pelos estados `importando → validado → publicado → substituido`, ou termina em `recusado`/`falhou`.
 - Publicar é **uma** transação que calcula as mudanças, troca `PublicacaoAtiva.lote_id` e marca o lote anterior como `substituido`.

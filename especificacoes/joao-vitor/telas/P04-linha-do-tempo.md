@@ -42,6 +42,7 @@
   - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
   - REQ-69 · `LinhaDoTempo.estados[].estado_texto` e `traducao_versao`.
   - REQ-74 · ações locais (etapas, CSV).
+  - REQ-48 · faixa "Dados de … · extraídos em … · Lote #n" do cabeçalho (`obter_status`).
 - **Acessibilidade:**
   - O gráfico é uma imagem com resumo textual ("Pago passou de R$ 0 em 13/10 para R$ 450 mil em 20/10/2026"); a tabela é a fonte acessível.
   - As caixas de etapa são `<input type=checkbox>` com rótulo.

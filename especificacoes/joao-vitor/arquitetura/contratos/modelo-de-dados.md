@@ -70,6 +70,7 @@ erDiagram
         TEXT localidade_gasto
         TEXT uf_gasto
         TEXT municipio_gasto
+        TEXT municipio_nome
         TEXT funcao_codigo
         TEXT funcao_nome
         TEXT subfuncao_nome
@@ -224,12 +225,12 @@ Cadastro da emenda **no lote** (PK composta), para que nenhum atributo mude sob 
 | `autor_codigo` | TEXT | FK → Autor | Código do Autor da Emenda |
 | `localidade_gasto` | TEXT | | Localidade do gasto (texto original) |
 | `uf_gasto` | TEXT | NULL = nacional/múltiplas | Derivado de `localidade_gasto` (REQ-21, REQ-78) |
-| `municipio_gasto` | TEXT | NULL quando a localidade é UF, região ou nacional | Derivado de `localidade_gasto` na forma "MUNICÍPIO - UF" (REQ-66). Guardado como identificador sem acento (`joao-pessoa`); o nome exibido vem do texto original |
+| `municipio_gasto` | TEXT | NULL quando a localidade é UF, região ou nacional (REQ-88) | Identificador derivado de `localidade_gasto` na forma "MUNICÍPIO - UF": minúsculo, sem acento, com hífens (`joao-pessoa`) (REQ-66) |
+| `municipio_nome` | TEXT | NULL junto com `municipio_gasto` | Nome do município como publicado ("João Pessoa") (REQ-66) |
 | `funcao_codigo` / `funcao_nome` | TEXT | | Código Função / Nome Função |
 | `subfuncao_nome` | TEXT | | Nome Subfunção |
 | `programa_nome` | TEXT | | Nome Programa |
 | `acao_nome` | TEXT | | Nome Ação |
-
 | `estado_execucao` | — | derivado (view `v_emenda_estado`), não armazenado | ADR-0006 |
 | `estado_texto` / `traducao_versao` | — | derivados na API (junção com a versão vigente de `TabelaTraducao`) | REQ-69 |
 
@@ -283,10 +284,10 @@ Diferença entre dois lotes da mesma fonte, calculada na publicação (REQ-08, A
 | `lote_anterior_id` | INTEGER | FK, NOT NULL | O primeiro lote de uma fonte não gera mudanças (REQ-08) |
 | `lote_novo_id` | INTEGER | FK | |
 | `tipo` | TEXT | `nova_emenda` \| `valor_alterado` \| `estado_alterado` | |
-| `etapa` | TEXT | NULL quando `tipo = estado_alterado` | |
+| `etapa` | TEXT | Preenchida só em `valor_alterado`; NULL em `nova_emenda` (uma linha por emenda nova) e em `estado_alterado` | REQ-63 lê o valor da emenda nova em `RegistroExecucao` |
 | `valor_antes_centavos` / `valor_depois_centavos` | INTEGER | NULL quando não se aplica | |
 | `estado_antes` / `estado_depois` | TEXT | valores de `estado_execucao` | |
-| `autor_nome` / `uf_gasto` / `municipio_gasto` / `estado_depois_texto` | — | derivados na API (junção com `Emenda`, `Autor` e a versão vigente de `TabelaTraducao`), não armazenados | P08, S05; REQ-69 |
+| `autor_nome` / `uf_gasto` / `municipio_gasto` / `municipio_nome` / `estado_antes_texto` / `estado_depois_texto` / `traducao_versao` | — | derivados na API (junção com `Emenda`, `Autor` e a versão vigente de `TabelaTraducao`), não armazenados | P08, S05; REQ-69 |
 
 Índice único de expressão (`lote_novo_id`, `codigo_emenda`, `tipo`, `COALESCE(etapa, '-')`), porque no SQLite valores NULL não colidem num UNIQUE comum.
 
@@ -309,7 +310,7 @@ Identidade anônima (ADR-0005). Sem nenhum dado pessoal (REQ-41).
 | `filtro_codigo_emenda` | TEXT | NULL ou 12 dígitos | |
 | `filtro_autor_codigo` | TEXT | NULL ou FK → Autor | |
 | `filtro_uf_gasto` | TEXT | NULL, sigla de UF ou `NM` | `NM` = nacional ou múltiplas UFs (REQ-78) |
-| `filtro_municipio_gasto` | TEXT | NULL, ou identificador de município com `filtro_uf_gasto` de uma UF (CHECK) | "Acompanhar este município" (P10, REQ-72) |
+| `filtro_municipio_gasto` | TEXT | NULL, ou identificador de município com `filtro_uf_gasto` de uma UF (CHECK) | "Acompanhar este município" (P10, REQ-87) |
 | `filtro_funcao_codigo` | TEXT | NULL ou código | Pelo menos um filtro preenchido (REQ-34) |
 | `condicao` | TEXT | `limiar_valor` \| `mudanca_estado` | |
 | `etapa` | TEXT | obrigatória se `limiar_valor` | |

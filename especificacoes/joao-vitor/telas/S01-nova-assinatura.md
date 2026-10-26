@@ -21,7 +21,7 @@
   - `Assinatura.filtro_codigo_emenda` · texto de 12 dígitos · opcional.
   - `Assinatura.filtro_autor_codigo` · combobox (`listar_opcoes_filtro.autores`) · opcional.
   - `Assinatura.filtro_uf_gasto` · seleção (UFs + `NM`) · opcional.
-  - `Assinatura.filtro_municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`) · opcional; exige uma UF.
+  - `Assinatura.filtro_municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`) · opcional; exige uma UF (REQ-87).
   - `Assinatura.filtro_funcao_codigo` · seleção · opcional.
 
     Pelo menos um dos cinco filtros é obrigatório.
@@ -35,13 +35,14 @@
   - Escolher UF → filtra o seletor de município com os dados já carregados → ação local · sem chamada à API (REQ-74).
   - "Cancelar" → volta à tela de origem sem gravar → ação local · sem chamada à API (REQ-74).
   - "Entrar com outra chave" (estado 401) → S03 → ação local · sem chamada à API (REQ-74).
+  - "Criar sem chave (nova chave)" (estado 401) → (`criar_assinatura`) sem `X-Chave-Assinante`, o que cria um novo assinante (REQ-80) → S02 (ação local: a tela só exibe a resposta recebida).
   - "Minhas assinaturas" (estado `limite_assinaturas`) → S04 (`listar_assinaturas`).
 - **Estados:**
   - **carregando:** botão "Criando…" desabilitado; opções de filtro com esqueleto enquanto `listar_opcoes_filtro` carrega (REQ-44).
   - **vazio:** formulário sem filtro → resumo "Escolha pelo menos um filtro" e botão desabilitado (REQ-34).
   - **erro:**
     - 422 `assinatura_invalida` → erros junto aos campos (`Problema.campos[]`) e resumo no topo (REQ-34, REQ-62);
-    - 422 `parametro_invalido` (município sem UF, vindo de uma URL manipulada) → erro no campo de município (REQ-72);
+    - 422 `assinatura_invalida` com município sem UF (pré-preenchimento manipulado) → erro no campo de município (REQ-87);
     - 422 `limite_assinaturas` → "Você chegou a 20 assinaturas. Exclua uma em Minhas assinaturas." com link para S04 (REQ-42);
     - 5xx → `X-Request-Id` (REQ-46).
   - **sucesso:** redireciona (S02 ou S04) (REQ-33).
@@ -55,7 +56,7 @@
   - Alertas só valem para lotes publicados depois da criação (REQ-37); o texto do lote base explica isso.
   - O canal é sempre o painel (`Assinatura.canal = painel`), e a interface não oferece outro.
 - **Requisitos · contrato:**
-  - REQ-31, REQ-33, REQ-34, REQ-62, REQ-63, REQ-64, REQ-41, REQ-42, REQ-32, REQ-80, REQ-72 · `POST /api/assinaturas` (`criar_assinatura`).
+  - REQ-31, REQ-33, REQ-34, REQ-62, REQ-63, REQ-64, REQ-41, REQ-42, REQ-32, REQ-80, REQ-87 · `POST /api/assinaturas` (`criar_assinatura`).
   - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
   - REQ-74 · ações locais (cancelar, filtrar municípios).
   - REQ-37 · `GET /api/status` (`obter_status`) para o lote base.
