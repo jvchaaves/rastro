@@ -11,8 +11,8 @@ O brief pede que o sistema "avise quem assinou quando alguma coisa muda entre um
 ## Opções consideradas
 
 1. **Esperar um campo oficial de status** (não existe no pacote inspecionado em 24/09/2026).
-   - Prós: nenhuma regra própria. Contras: o campo não existe. **Descartada** porque bloquearia a funcionalidade 7 do FI-01.
-2. **Qualquer variação de valor** conta como mudança de status: gera alertas demais e confunde "valor" com "estado".
+   - Prós: nenhuma regra própria. Contras: o campo não existe. **Descartada** porque bloquearia as funcionalidades 6 e 7 do FI-01 (assinar mudança de estado e receber o alerta).
+2. **Qualquer variação de valor** conta como mudança de status.
    - Prós: simples. Contras: alerta a cada centavo e confunde valor com estado. **Descartada** pelo excesso de alertas.
 3. **Estado derivado:** a etapa mais avançada com valor > 0, na ordem `sem_execucao` < `empenhada` < `liquidada` < `paga`.
    - Prós: testável com dois lotes sintéticos, vocabulário controlado. Contras: cancelamentos podem fazer o estado recuar.
