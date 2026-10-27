@@ -12,7 +12,7 @@ O padrão é o **arc42** (Starke e Hruschka) como índice. Cada seção usa a no
 | §2 Restrições | Stack, execução, dados, prazo | texto | este README |
 | §3 Contexto | Atores, sistemas externos, limites | C4 nível 1 (Mermaid) | [c4-contexto.md](c4-contexto.md) |
 | §5 Blocos de construção | Contêineres e os quatro módulos do grupo | C4 nível 2 (Mermaid) + mapa de módulos | [c4-conteineres.md](c4-conteineres.md) e [abaixo](#mapa-para-os-quatro-módulos-do-grupo) |
-| §9 Decisões | 9 decisões com o porquê | ADR (MADR) | [adr/](adr/) |
+| §9 Decisões | 10 decisões com o porquê | ADR (MADR) | [adr/](adr/) |
 | §10 Qualidade | 5 cenários, um por item do envelope | Bass, Clements e Kazman (6 partes) | [qualidade.md](qualidade.md) |
 | §12 Glossário | Vocabulário do domínio e do sistema | texto | [glossario.md](glossario.md) |
 | — Requisitos | 112 requisitos testáveis, cada um com módulo e telas | EARS | [requisitos.md](requisitos.md) |

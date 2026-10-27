@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Rastro API
-  version: 0.2.0
+  version: 0.3.0
   summary: Emendas parlamentares federais com valores por etapa e proveniência de cada dado.
   description: |
     API pública do Rastro (FastAPI). Todas as operações de leitura são públicas e limitadas a
@@ -749,7 +749,7 @@ components:
     EstadoExecucao:
       type: string
       enum: [sem_execucao, empenhada, liquidada, paga_em_parte, paga]
-      description: Derivado da etapa mais avançada com valor > 0 (ADR-0006).
+      description: Derivado da etapa mais avançada com valor > 0 e, havendo pagamento, de ele alcançar ou não `empenhado` − `rap_cancelado` (REQ-105, ADR-0006).
 
     EstadoComTexto:
       type: object
@@ -932,7 +932,7 @@ components:
         autor: { $ref: '#/components/schemas/AutorResumo' }
         uf_gasto: { $ref: '#/components/schemas/UfGasto' }
         municipio_gasto: { type: [string, 'null'], description: 'Identificador do município do gasto, o mesmo de `obter_municipio` (ex. joao-pessoa); null se a localidade não é um município (REQ-66, REQ-88)' }
-        municipio_nome: { type: [string, 'null'], description: Nome como publicado (ex. João Pessoa) }
+        municipio_nome: { type: [string, 'null'], description: 'Nome como publicado pela CGU (ex. "JOÃO PESSOA"); o painel exibe em caixa de título' }
         funcao_nome: { type: string }
         estado_execucao: { $ref: '#/components/schemas/EstadoExecucao' }
         estado_texto: { type: string, description: Tradução vigente do estado (REQ-69) }
@@ -1021,7 +1021,7 @@ components:
 
     Favorecido:
       type: object
-      required: [id, codigo_origem, tipo, nome_publicavel]
+      required: [id, codigo_origem, tipo, nome_publicavel, orgao_municipal]
       properties:
         id: { type: integer }
         codigo_origem: { type: string, description: CNPJ ou código do ente como publicado pela CGU }
@@ -1030,6 +1030,8 @@ components:
         natureza_juridica: { type: [string, 'null'] }
         uf: { type: [string, 'null'] }
         municipio: { type: [string, 'null'] }
+        municipio_sede: { type: [string, 'null'], description: 'Identificador do município da sede, no formato de `municipio_gasto`; null sem UF válida ou com "Sem informação" (REQ-107, REQ-108). Não é o local do gasto (REQ-21)' }
+        orgao_municipal: { type: boolean, description: 'Prefeitura, fundo, autarquia ou fundação municipal (REQ-109)' }
 
     FavorecidosPagina:
       type: object
@@ -1289,11 +1291,11 @@ components:
             Recebimentos do arquivo por favorecido, no lote ativo, de favorecidos sediados no município (REQ-110, ADR-0010).
             É outra grandeza: inclui emendas de vários municípios, da UF ou nacionais, e nunca é somada aos valores do gasto previsto (REQ-111).
             Pessoas físicas não entram, porque o agregado delas não guarda a cidade (ADR-0007).
-          required: [valor_recebido_centavos, orgaos_municipais_centavos, quantidade_emendas, quantidade_favorecidos]
+          required: [valor_recebido_centavos, orgaos_municipais_centavos, quantidade_emendas_com_recebimento, quantidade_favorecidos]
           properties:
             valor_recebido_centavos: { type: integer, description: Soma com sinal (estornos inclusos, REQ-103) }
             orgaos_municipais_centavos: { type: integer, description: 'Parte recebida por favorecidos com `orgao_municipal` (prefeitura, fundos e autarquias municipais, REQ-109)' }
-            quantidade_emendas: { type: integer, minimum: 0, description: Emendas distintas com algum recebimento na cidade }
+            quantidade_emendas_com_recebimento: { type: integer, minimum: 0, description: Emendas distintas com algum recebimento na cidade }
             quantidade_favorecidos: { type: integer, minimum: 0 }
         traducao_versao: { type: integer }
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }

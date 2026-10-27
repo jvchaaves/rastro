@@ -258,7 +258,7 @@ Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes fo
 | `valor_centavos` | INTEGER | ≥ 0 | Convertido de `250000,00` (REQ-03) |
 | `data_referencia` | DATE | = `LoteImportacao.data_referencia` | |
 
-**Estado de execução** (derivado, ADR-0006, REQ-105): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga_em_parte` < `paga`. Há pagamento quando `pago` + `rap_pago` > 0; ele é total (`paga`) quando alcança `empenhado` − `rap_cancelado` e parcial (`paga_em_parte`) quando fica abaixo.
+**Estado de execução** (derivado, ADR-0006, REQ-105): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0 e, havendo pagamento, de ele alcançar ou não o valor devido. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga_em_parte` < `paga`. Há pagamento quando `pago` + `rap_pago` > 0; ele é total (`paga`) quando alcança `empenhado` − `rap_cancelado` e parcial (`paga_em_parte`) quando fica abaixo.
 
 ### Favorecido
 Dimensão em que só se insere, **só com pessoas jurídicas, entes públicos e outros**. Pessoa física nunca é gravada aqui: o importador agrega os recebimentos de pessoas físicas por emenda e mês (`RegistroFavorecido` com `favorecido_id` nulo, REQ-25, ADR-0007), e o nome e o CPF delas não entram no banco. UNIQUE (`codigo_origem`, `nome_publicavel`).
@@ -374,8 +374,8 @@ Versão 1, carregada na migração inicial:
 | `sem_execucao` | Ainda sem dinheiro reservado | Nenhum valor foi empenhado para esta emenda até a data dos dados. |
 | `empenhada` | O dinheiro foi reservado | Houve empenho: o orçamento separou o valor, mas a entrega ainda não foi conferida. |
 | `liquidada` | A entrega foi conferida; falta pagar | Houve liquidação: o governo reconheceu que o bem ou serviço foi entregue. |
-| `paga_em_parte` | Parte do dinheiro já foi paga | Houve pagamento registrado, mas menor que o valor empenhado. Isso não comprova a aplicação final do recurso. |
-| `paga` | Todo o valor empenhado foi pago | O pagamento registrado alcançou o valor empenhado. Isso não comprova a aplicação final do recurso. |
+| `paga_em_parte` | Parte do dinheiro já foi paga | Houve pagamento registrado, mas menor que o valor devido (empenhado menos cancelado). Isso não comprova a aplicação final do recurso. |
+| `paga` | Todo o valor devido foi pago | O pagamento registrado alcançou o valor empenhado, descontados os cancelamentos. Isso não comprova a aplicação final do recurso. |
 
 Gatilho `BEFORE UPDATE` e `BEFORE DELETE` em `TabelaTraducao` que aborta a operação: versões publicadas são imutáveis no próprio schema.
 

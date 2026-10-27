@@ -21,11 +21,11 @@
 
     São cinco linhas, de `sem_execucao` a `paga` (REQ-105). A trilha da identidade visual mostra a proporção de emendas em cada estado, sem valores somados.
   - Valores por etapa, em cartões separados e sem total (`MunicipioDetalhe.valores[]`): `empenhado`, `liquidado`, `pago`, cada um com o rótulo e o link "o que é?".
-  - Destaque para o gestor: "N emendas com valor empenhado ainda não pago" (`MunicipioDetalhe.quantidade_pendentes`, o recorte do REQ-68: as empenhadas, as liquidadas e as pagas em parte), com o botão "Ver as pendentes".
+  - Destaque para o gestor: "N emendas com valor empenhado ainda não pago" (`MunicipioDetalhe.quantidade_pendentes`, o recorte do REQ-68: `pago` + `rap_pago` menor que `empenhado` − `rap_cancelado`; na prática, as empenhadas, as liquidadas e as pagas em parte), com o botão "Ver as pendentes".
   - Lista das emendas do município (`listar_emendas?uf_gasto=&municipio_gasto=&ordenar=codigo&por_pagina=10`): `Emenda.codigo`, `Autor.nome`, `Emenda.funcao_nome`, o estado (`EmendaResumo.estado_texto` e `estado_execucao`) e os valores por etapa.
   - Marca "Tradução v`MunicipioDetalhe.traducao_versao`" com link para P11.
   - Bloco separado "Recebido por favorecidos sediados em <cidade>", com a etiqueta "Outra conta · não se soma às emendas acima" (`MunicipioDetalhe.recebido_na_cidade`, REQ-110, ADR-0010):
-    - "Recebido na cidade" (`valor_recebido_centavos`), com "de N emendas, por M favorecidos" (`quantidade_emendas`, `quantidade_favorecidos`);
+    - "Recebido na cidade" (`valor_recebido_centavos`), com "de N emendas, por M favorecidos" (`quantidade_emendas_com_recebimento`, `quantidade_favorecidos`); um total negativo, possível quando estornos superam os recebimentos (REQ-103), aparece com o sinal de menos e a nota "estornos maiores que os recebimentos";
     - "Desse valor, para a prefeitura e órgãos municipais" (`orgaos_municipais_centavos`);
     - a explicação "Pagamentos de emendas de 2025 a prefeitura, fundos, entidades e empresas com sede na cidade, segundo o arquivo por favorecido da CGU. Inclui emendas de várias cidades, da UF e nacionais." e a nota "Uma empresa sediada aqui pode ter recebido por uma obra em outra cidade. Pessoas físicas não entram nesta conta."
   - Nota fixa: "Gasto previsto: local de aplicação do recurso, segundo a CGU. Emendas para vários municípios, para a UF inteira ou nacionais não aparecem na lista; veja a UF em Emendas." e "Pagamento registrado não comprova a aplicação final."
@@ -39,7 +39,7 @@
   - "Ver as pendentes" → P02 com `?uf_gasto=PB&municipio_gasto=joao-pessoa&pendentes=true` (`listar_emendas`).
   - "Ver as N emendas" → P02 com `?uf_gasto=PB&municipio_gasto=joao-pessoa` (`listar_emendas`).
   - Emenda da lista → P03 (`obter_emenda`).
-  - "Acompanhar este município" → S01 (`listar_opcoes_filtro`) com `filtro_uf_gasto`, `filtro_municipio_gasto` e `condicao = mudanca_estado` pré-preenchidos.
+  - "Acompanhar este município" → S01 (`listar_opcoes_filtro`) com `filtro_uf_gasto`, `filtro_municipio_gasto` e `condicao = mudanca_estado` pré-preenchidos. O botão só aparece quando `MunicipioDetalhe.quantidade_emendas` > 0, porque a assinatura olha só o local do gasto (ADR-0010).
   - "Tradução v`traducao_versao`" → P11 (`listar_traducoes`).
   - "Escolher outra cidade" (estado vazio) → P01 (`obter_status`).
   - Faixa de proveniência → P09 (`listar_lotes`).
@@ -47,7 +47,7 @@
   - "Baixar CSV das emendas" → gera, no navegador, um CSV dos itens já carregados, com colunas de proveniência e de tradução → ação local · sem chamada à API (REQ-74).
 - **Estados:**
   - **carregando:** esqueleto dos estados, dos cartões e da lista; o título com o nome da rota já aparece (REQ-44).
-  - **vazio:** município fora de `OpcoesFiltro.municipios` (404 `nao_encontrado` de `obter_municipio`) → "Nenhuma emenda de 2025 com gasto previsto ou recebimento em <cidade> (UF) nos dados de dd/mm/aaaa", com os links "Ver emendas da UF" (P02) e "Escolher outra cidade" (P01) (REQ-55, REQ-45). Município só com recebimentos (`quantidade_emendas` = 0, caso de 91% dos municípios no arquivo conferido) → no lugar dos estados, dos cartões e da lista, o aviso "Nenhuma emenda de 2025 tem esta cidade como local de aplicação. As emendas que chegaram aqui foram para várias cidades, para a UF ou são nacionais.", com "Ver emendas da UF" (P02); o bloco de recebidos aparece logo abaixo (REQ-112, ADR-0010). Lista de pendentes vazia → "Nenhuma emenda empenhada e ainda não paga nesta cidade" (REQ-45).
+  - **vazio:** município fora de `OpcoesFiltro.municipios` (404 `nao_encontrado` de `obter_municipio`) → "Nenhuma emenda de 2025 com gasto previsto ou recebimento em <cidade> (UF) nos dados de dd/mm/aaaa", com os links "Ver emendas da UF" (P02) e "Escolher outra cidade" (P01) (REQ-55, REQ-45). Município só com recebimentos (`MunicipioDetalhe.quantidade_emendas` = 0, caso de 91% dos municípios no arquivo conferido) → o título diz "Nenhuma emenda de 2025 com gasto previsto nesta cidade"; no lugar dos estados, do destaque do gestor, dos cartões e da lista, e sem o botão "Acompanhar este município", o aviso "Nenhuma emenda de 2025 tem esta cidade como local de aplicação. As emendas que chegaram aqui foram para várias cidades, para a UF ou são nacionais.", com "Ver emendas da UF" (P02); o bloco de recebidos aparece logo abaixo (REQ-112, ADR-0010). Lista de pendentes vazia → "Nenhuma emenda empenhada e ainda não paga nesta cidade" (REQ-45).
   - **erro:** 422 `parametro_invalido` (UF ou identificador de município fora do formato na URL) → "Endereço de cidade inválido", com "Escolher cidade" (REQ-72); 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
   - **sucesso:** estados com texto simples, valores por etapa, pendentes, lista e bloco de recebidos (REQ-67, REQ-68, REQ-69, REQ-110).
   - **offline:** "Sem conexão"; nenhum valor anterior exibido como atual (REQ-47).

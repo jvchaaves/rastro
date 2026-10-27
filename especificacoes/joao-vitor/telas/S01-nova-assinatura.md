@@ -23,7 +23,7 @@
   - `Assinatura.filtro_codigo_emenda` · texto de 12 dígitos · opcional.
   - `Assinatura.filtro_autor_codigo` · combobox (`listar_opcoes_filtro.autores`) · opcional.
   - `Assinatura.filtro_uf_gasto` · seleção (UFs + `NM`) · opcional.
-  - `Assinatura.filtro_municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`) · opcional; exige uma UF (REQ-87).
+  - `Assinatura.filtro_municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0, porque a assinatura olha o local do gasto; ADR-0010) · opcional; exige uma UF (REQ-87).
   - `Assinatura.filtro_funcao_codigo` · seleção · opcional.
 
     Pelo menos um dos cinco filtros é obrigatório.

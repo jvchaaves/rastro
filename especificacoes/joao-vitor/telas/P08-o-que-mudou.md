@@ -21,7 +21,7 @@
 - **Coleta:**
   - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
   - `uf_gasto` · seleção · opcional.
-  - `municipio_gasto` · seleção dependente da UF · opcional.
+  - `municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0) · opcional.
   - `autor_codigo` · combobox · opcional.
   - `lote_novo_id` · seleção de lotes publicados (`listar_lotes`) · opcional, padrão o lote ativo.
   - `pagina` · inteiro ≥ 1.

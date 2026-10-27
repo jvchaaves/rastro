@@ -15,7 +15,7 @@ O brief pede que o sistema "avise quem assinou quando alguma coisa muda entre um
    - Prós: nenhuma regra própria. Contras: o campo não existe. **Descartada** porque bloquearia as funcionalidades 6 e 7 do FI-01 (assinar mudança de estado e receber o alerta).
 2. **Qualquer variação de valor** conta como mudança de status.
    - Prós: simples. Contras: alerta a cada centavo e confunde valor com estado. **Descartada** pelo excesso de alertas.
-3. **Estado derivado:** a etapa mais avançada com valor > 0, na ordem `sem_execucao` < `empenhada` < `liquidada` < `paga_em_parte` < `paga`.
+3. **Estado derivado:** a etapa mais avançada com valor > 0 e, havendo pagamento, se ele alcança o valor devido, na ordem `sem_execucao` < `empenhada` < `liquidada` < `paga_em_parte` < `paga`.
    - Prós: testável com dois lotes sintéticos, vocabulário controlado. Contras: cancelamentos e empenhos novos podem fazer o estado recuar.
 
 ## Decisão
@@ -51,9 +51,9 @@ Distribuição do estado derivado no lote conferido, já com a revisão abaixo: 
 
 Na primeira versão desta ADR havia quatro estados, e qualquer pagamento tornava a emenda `paga`. No arquivo real, isso pôs 94% das emendas de 2025 em `paga`, inclusive 2 349 (37%) que receberam só parte do empenhado. O morador leria "Já houve pagamento registrado" sem saber que falta dinheiro.
 
-- **Mudança:** o estado `paga` foi dividido em `paga_em_parte` ("Parte do dinheiro já foi paga") e `paga` ("Todo o valor empenhado foi pago"). A tabela de tradução v1 já nasce com os cinco textos (`../contratos/modelo-de-dados.md`, ADR-0008).
+- **Mudança:** o estado `paga` foi dividido em `paga_em_parte` ("Parte do dinheiro já foi paga") e `paga` ("Todo o valor devido foi pago"; devido = empenhado menos cancelado). A tabela de tradução v1 já nasce com os cinco textos (`../contratos/modelo-de-dados.md`, ADR-0008).
 - **Coerência com o recorte do gestor:** toda emenda `paga_em_parte` está em "empenhado e ainda não pago" (REQ-68), e nenhuma `paga` está. No arquivo conferido, o recorte tem 2 750 emendas: 2 349 `paga_em_parte`, 400 `empenhada` e 1 `liquidada`; a única `empenhada` fora dele teve o empenho todo cancelado.
-- **Efeito nas assinaturas:** a passagem de `paga_em_parte` para `paga` é uma mudança de estado e gera alerta para a condição `mudanca_estado` (REQ-64). É a notícia que o gestor municipal espera: o dinheiro terminou de chegar.
+- **Efeito nas assinaturas:** a passagem de `paga_em_parte` para `paga` é uma mudança de estado e gera alerta para a condição `mudanca_estado` (REQ-64). Ela acontece quando um pagamento novo alcança o valor devido ou quando um cancelamento de restos a pagar reduz o valor devido até o já pago (267 emendas de 2025 têm cancelamento). O Rastro mostra a mudança e os valores por etapa, sem dizer qual das duas causas houve (P08).
 - **Recuo novo:** um empenho a mais numa emenda `paga` a faz voltar a `paga_em_parte`. Esse recuo é mostrado como mudança, como os demais (P08), e conta no critério de 1% acima.
 
 ## Consequências

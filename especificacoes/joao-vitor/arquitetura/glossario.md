@@ -26,7 +26,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Favorecido | `Favorecido` | Pessoa jurídica, ente público ou outro recebedor identificado de pagamento ligado à emenda. Pessoas físicas não são identificadas: ver "Pessoas físicas (favorecidos)". |
 | Pessoas físicas (favorecidos) | `RegistroFavorecido` com `favorecido_id` nulo | Recebimentos de pessoas físicas somados por emenda e mês, com a quantidade de pessoas e sem nome nem CPF (REQ-25, ADR-0007). |
 | Aplicação final | — | Uso concreto do recurso (obra, compra, serviço). **O Rastro não tem esse dado e não afirma nada sobre ele.** |
-| Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada, paga em parte ou paga (ADR-0006, REQ-105). |
+| Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo e, havendo pagamento, se ele alcança o valor devido (empenhado menos cancelado): sem execução, empenhada, liquidada, paga em parte ou paga (ADR-0006, REQ-105). |
 | Paga em parte | `paga_em_parte` | Emenda com pagamento registrado menor que `empenhado` − `rap_cancelado`. Está sempre no recorte "empenhado e ainda não pago" (REQ-68). |
 | Estado em linguagem simples | `estado_texto`; `TabelaTraducao.texto_simples` | Frase para o morador que traduz o estado ("A entrega foi conferida; falta pagar"). Vem da versão vigente da tabela de tradução (ADR-0008). |
 | Tabela de tradução | `TabelaTraducao` | Tabela versionada, só com inserção, com um texto simples e uma explicação por estado. Cada resposta diz a versão usada (`traducao_versao`). |
