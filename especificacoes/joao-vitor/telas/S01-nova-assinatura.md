@@ -59,7 +59,7 @@
   - O canal é sempre o painel (`Assinatura.canal = painel`), e a interface não oferece outro.
 - **Requisitos · contrato:**
   - REQ-31, REQ-33, REQ-34, REQ-62, REQ-63, REQ-64, REQ-41, REQ-42, REQ-32, REQ-80, REQ-87 · `POST /api/assinaturas` (`criar_assinatura`).
-  - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
+  - REQ-20, REQ-66, REQ-112 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
   - REQ-74 · ações locais (cancelar, filtrar municípios).
   - REQ-37 · `GET /api/status` (`obter_status`) para o lote base.
   - REQ-42 · `GET /api/assinaturas` (`listar_assinaturas`) para a contagem, quando há chave.

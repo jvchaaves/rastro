@@ -93,6 +93,8 @@ erDiagram
         TEXT natureza_juridica
         TEXT uf
         TEXT municipio
+        TEXT municipio_sede
+        INTEGER orgao_municipal
     }
     RegistroFavorecido {
         INTEGER id PK
@@ -256,7 +258,7 @@ Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes fo
 | `valor_centavos` | INTEGER | ≥ 0 | Convertido de `250000,00` (REQ-03) |
 | `data_referencia` | DATE | = `LoteImportacao.data_referencia` | |
 
-**Estado de execução** (derivado, ADR-0006): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga` (`pago` + `rap_pago` > 0).
+**Estado de execução** (derivado, ADR-0006, REQ-105): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga_em_parte` < `paga`. Há pagamento quando `pago` + `rap_pago` > 0; ele é total (`paga`) quando alcança `empenhado` − `rap_cancelado` e parcial (`paga_em_parte`) quando fica abaixo.
 
 ### Favorecido
 Dimensão em que só se insere, **só com pessoas jurídicas, entes públicos e outros**. Pessoa física nunca é gravada aqui: o importador agrega os recebimentos de pessoas físicas por emenda e mês (`RegistroFavorecido` com `favorecido_id` nulo, REQ-25, ADR-0007), e o nome e o CPF delas não entram no banco. UNIQUE (`codigo_origem`, `nome_publicavel`).
@@ -269,6 +271,10 @@ Dimensão em que só se insere, **só com pessoas jurídicas, entes públicos e 
 | `nome_publicavel` | TEXT | NOT NULL | Favorecido, como publicado |
 | `natureza_juridica` | TEXT | | Natureza Jurídica |
 | `uf` / `municipio` | TEXT | | UF Favorecido / Município Favorecido. **Não** é o local do gasto (REQ-21) |
+| `municipio_sede` | TEXT | NULL quando a UF não é uma sigla válida (`-1`) ou o município é "Sem informação" (REQ-108) | Identificador derivado de Município Favorecido pela regra de `Emenda.municipio_gasto` (`joao-pessoa`, REQ-107). Liga o favorecido à página do município (ADR-0010), sem virar local do gasto |
+| `orgao_municipal` | INTEGER | 0 ou 1 | 1 quando a Natureza Jurídica é "Município" ou termina em "Municipal" (REQ-109) |
+
+Índice: (`uf`, `municipio_sede`), usado por `obter_municipio` (REQ-110).
 
 ### RegistroFavorecido
 Valor recebido por um favorecido num mês, num lote; ou, com `favorecido_id` nulo, a soma recebida por pessoas físicas naquele mês (REQ-25).
@@ -355,7 +361,7 @@ Tradução do estado de execução para linguagem simples, **versionada e audit�
 | Campo | Tipo | Restrição | Nota |
 | :-- | :-- | :-- | :-- |
 | `versao` | INTEGER | PK, ≥ 1 | A maior versão é a vigente |
-| `estado_execucao` | TEXT | PK, `sem_execucao` \| `empenhada` \| `liquidada` \| `paga` | Uma linha por estado em cada versão (REQ-86) |
+| `estado_execucao` | TEXT | PK, `sem_execucao` \| `empenhada` \| `liquidada` \| `paga_em_parte` \| `paga` | Uma linha por estado em cada versão (REQ-86) |
 | `texto_simples` | TEXT | NOT NULL, ≤ 60 caracteres | O que o morador lê no lugar do termo técnico |
 | `explicacao` | TEXT | NOT NULL, ≤ 280 caracteres | Uma frase que liga o texto ao termo técnico |
 | `vigente_desde` | DATETIME | NOT NULL | Momento de `rastro traducao publicar` |
@@ -368,7 +374,8 @@ Versão 1, carregada na migração inicial:
 | `sem_execucao` | Ainda sem dinheiro reservado | Nenhum valor foi empenhado para esta emenda até a data dos dados. |
 | `empenhada` | O dinheiro foi reservado | Houve empenho: o orçamento separou o valor, mas a entrega ainda não foi conferida. |
 | `liquidada` | A entrega foi conferida; falta pagar | Houve liquidação: o governo reconheceu que o bem ou serviço foi entregue. |
-| `paga` | Já houve pagamento registrado | Houve pagamento registrado. Isso não comprova a aplicação final do recurso. |
+| `paga_em_parte` | Parte do dinheiro já foi paga | Houve pagamento registrado, mas menor que o valor empenhado. Isso não comprova a aplicação final do recurso. |
+| `paga` | Todo o valor empenhado foi pago | O pagamento registrado alcançou o valor empenhado. Isso não comprova a aplicação final do recurso. |
 
 Gatilho `BEFORE UPDATE` e `BEFORE DELETE` em `TabelaTraducao` que aborta a operação: versões publicadas são imutáveis no próprio schema.
 

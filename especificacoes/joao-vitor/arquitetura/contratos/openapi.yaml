@@ -223,10 +223,12 @@ paths:
       operationId: obter_municipio
       x-modulo: consulta
       tags: [municipios]
-      summary: Resumo das emendas com gasto num município
+      summary: Resumo de um município, com o gasto previsto e o recebido na cidade em blocos separados
       description: |
-        REQ-66, REQ-67, REQ-69, REQ-55. Tela P10 (morador e gestor municipal). A lista de emendas do
-        município vem de `listar_emendas?uf_gasto=&municipio_gasto=` (e `pendentes=true` para o gestor).
+        REQ-66, REQ-67, REQ-69, REQ-55, REQ-110, REQ-111, ADR-0010. Tela P10 (morador e gestor municipal).
+        Vale para todo município de `OpcoesFiltro.municipios` (REQ-112): local do gasto de alguma emenda,
+        sede de algum favorecido, ou os dois. A lista de emendas com gasto previsto vem de
+        `listar_emendas?uf_gasto=&municipio_gasto=` (e `pendentes=true` para o gestor).
       parameters:
         - name: uf_gasto
           in: path
@@ -241,7 +243,7 @@ paths:
           schema: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$', maxLength: 60 }
       responses:
         '200':
-          description: Município com emendas no lote ativo
+          description: Município presente em `OpcoesFiltro.municipios` no lote ativo
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MunicipioDetalhe' }
@@ -746,7 +748,7 @@ components:
 
     EstadoExecucao:
       type: string
-      enum: [sem_execucao, empenhada, liquidada, paga]
+      enum: [sem_execucao, empenhada, liquidada, paga_em_parte, paga]
       description: Derivado da etapa mais avançada com valor > 0 (ADR-0006).
 
     EstadoComTexto:
@@ -898,14 +900,15 @@ components:
           items: { $ref: '#/components/schemas/UfGasto' }
         municipios:
           type: array
-          description: Municípios com ao menos uma emenda no lote ativo (REQ-66), em ordem alfabética
+          description: Municípios que, no lote ativo, são local do gasto de alguma emenda ou sede de algum favorecido (REQ-112), em ordem alfabética
           items:
             type: object
-            required: [uf_gasto, municipio_gasto, municipio_nome]
+            required: [uf_gasto, municipio_gasto, municipio_nome, quantidade_emendas_gasto]
             properties:
               uf_gasto: { $ref: '#/components/schemas/SiglaUf' }
-              municipio_gasto: { type: string, description: 'Identificador usado em `obter_municipio` e no parâmetro `municipio_gasto`' }
-              municipio_nome: { type: string, description: Nome como publicado na localidade do gasto, ex. "João Pessoa" }
+              municipio_gasto: { type: string, description: 'Identificador usado em `obter_municipio` e no parâmetro `municipio_gasto`; o mesmo para o local do gasto e para a sede do favorecido (REQ-66, REQ-107)' }
+              municipio_nome: { type: string, description: 'Nome como publicado pela CGU, ex. "JOÃO PESSOA"' }
+              quantidade_emendas_gasto: { type: integer, minimum: 0, description: 'Emendas com gasto previsto no município; 0 quando ele só aparece como sede de favorecidos' }
         funcoes:
           type: array
           items:
@@ -1257,19 +1260,19 @@ components:
 
     MunicipioDetalhe:
       type: object
-      description: Resumo de um município do gasto no lote ativo (REQ-67). Etapas nunca somadas (REQ-77).
-      required: [uf_gasto, municipio_gasto, municipio_nome, quantidade_emendas, valores, por_estado, quantidade_pendentes, traducao_versao, proveniencia]
+      description: Resumo de um município no lote ativo (REQ-67, REQ-110). Etapas nunca somadas (REQ-77); o recebido na cidade nunca é somado ao gasto previsto (REQ-111).
+      required: [uf_gasto, municipio_gasto, municipio_nome, quantidade_emendas, valores, por_estado, quantidade_pendentes, recebido_na_cidade, traducao_versao, proveniencia]
       properties:
         uf_gasto: { $ref: '#/components/schemas/SiglaUf' }
         municipio_gasto: { type: string }
         municipio_nome: { type: string }
-        quantidade_emendas: { type: integer, minimum: 1 }
+        quantidade_emendas: { type: integer, minimum: 0, description: 'Emendas com gasto previsto no município; 0 quando ele só aparece como sede de favorecidos (então `valores` vêm com 0 e `por_estado` com quantidades 0)' }
         valores:
           type: array
           items: { $ref: '#/components/schemas/ValorEtapa' }
         por_estado:
           type: array
-          description: Uma linha por estado, na ordem sem_execucao → paga, mesmo com quantidade 0
+          description: Uma linha por estado, na ordem sem_execucao → empenhada → liquidada → paga_em_parte → paga, mesmo com quantidade 0
           items:
             allOf:
               - $ref: '#/components/schemas/EstadoComTexto'
@@ -1280,6 +1283,18 @@ components:
         quantidade_pendentes:
           type: integer
           description: Emendas com `pago` + `rap_pago` menor que `empenhado` − `rap_cancelado`, o mesmo recorte de `pendentes=true` (REQ-68)
+        recebido_na_cidade:
+          type: object
+          description: |
+            Recebimentos do arquivo por favorecido, no lote ativo, de favorecidos sediados no município (REQ-110, ADR-0010).
+            É outra grandeza: inclui emendas de vários municípios, da UF ou nacionais, e nunca é somada aos valores do gasto previsto (REQ-111).
+            Pessoas físicas não entram, porque o agregado delas não guarda a cidade (ADR-0007).
+          required: [valor_recebido_centavos, orgaos_municipais_centavos, quantidade_emendas, quantidade_favorecidos]
+          properties:
+            valor_recebido_centavos: { type: integer, description: Soma com sinal (estornos inclusos, REQ-103) }
+            orgaos_municipais_centavos: { type: integer, description: 'Parte recebida por favorecidos com `orgao_municipal` (prefeitura, fundos e autarquias municipais, REQ-109)' }
+            quantidade_emendas: { type: integer, minimum: 0, description: Emendas distintas com algum recebimento na cidade }
+            quantidade_favorecidos: { type: integer, minimum: 0 }
         traducao_versao: { type: integer }
         proveniencia: { $ref: '#/components/schemas/Proveniencia' }
 

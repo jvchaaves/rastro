@@ -16,7 +16,7 @@
     - `codigo_emenda`, `autor_nome`, `uf_gasto`, `MudancaLote.municipio_nome`;
     - `tipo` em texto;
     - para `valor_alterado`: `etapa`, `valor_antes_centavos` → `valor_depois_centavos` e a diferença com sinal e texto ("aumentou R$ 120.000,00");
-    - para `estado_alterado`: o texto simples antes e depois (`MudancaLote.estado_antes_texto` → `MudancaLote.estado_depois_texto`, ex. "A entrega foi conferida; falta pagar → Já houve pagamento registrado"), com os termos técnicos `estado_antes` → `estado_depois` abaixo e a versão `MudancaLote.traducao_versao`;
+    - para `estado_alterado`: o texto simples antes e depois (`MudancaLote.estado_antes_texto` → `MudancaLote.estado_depois_texto`, ex. "A entrega foi conferida; falta pagar → Parte do dinheiro já foi paga"), com os termos técnicos `estado_antes` → `estado_depois` abaixo e a versão `MudancaLote.traducao_versao`;
     - para `nova_emenda` (uma linha por emenda, sem etapa): "apareceu neste lote".
 - **Coleta:**
   - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
@@ -45,9 +45,9 @@
 - **Regras:**
   - Só aparecem mudanças entre lotes publicados da mesma fonte (REQ-24, REQ-08).
   - O verbo é neutro ("aumentou", "diminuiu", "passou de … para …"). Diminuição não é marcada em vermelho.
-  - Uma redução de estado (por exemplo, `paga` → `liquidada`) é mostrada como mudança, com a nota "valor reduzido na fonte entre os dois lotes", sem interpretar o motivo (ADR-0006).
+  - Um recuo de estado (por exemplo, `paga` → `paga_em_parte`, quando um empenho novo aumenta o valor devido, ou `liquidada` → `empenhada`, quando um valor é cancelado) é mostrado como mudança, com a nota "o estado recuou entre os dois lotes; veja os valores por etapa", sem interpretar o motivo (ADR-0006, REQ-106).
 - **Requisitos · contrato:**
-  - REQ-24, REQ-61, REQ-08, REQ-75, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
+  - REQ-24, REQ-61, REQ-08, REQ-75, REQ-106, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
   - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
   - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF, município e autor.
 - **Acessibilidade:**

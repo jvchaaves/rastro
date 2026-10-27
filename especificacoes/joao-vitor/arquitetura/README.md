@@ -15,7 +15,7 @@ O padrão é o **arc42** (Starke e Hruschka) como índice. Cada seção usa a no
 | §9 Decisões | 9 decisões com o porquê | ADR (MADR) | [adr/](adr/) |
 | §10 Qualidade | 5 cenários, um por item do envelope | Bass, Clements e Kazman (6 partes) | [qualidade.md](qualidade.md) |
 | §12 Glossário | Vocabulário do domínio e do sistema | texto | [glossario.md](glossario.md) |
-| — Requisitos | 104 requisitos testáveis, cada um com módulo e telas | EARS | [requisitos.md](requisitos.md) |
+| — Requisitos | 112 requisitos testáveis, cada um com módulo e telas | EARS | [requisitos.md](requisitos.md) |
 | — Contratos | API HTTP, eventos internos, CLI e modelo de dados | OpenAPI 3.1, AsyncAPI 3.0, Markdown, Mermaid ER | [contratos/](contratos/) |
 | — Rastreabilidade | Tela ↔ requisito ↔ contrato | matriz gerada por script | [rastreabilidade.md](rastreabilidade.md) |
 
@@ -31,9 +31,9 @@ As seções §4 (estratégia de solução), §6 (visão de execução), §7 (imp
 | O PAUL precisa de | Onde está nesta especificação | Como vira entrada do PAUL |
 | :-- | :-- | :-- |
 | **Limites e vizinhos** | `c4-contexto.md` (atores, CGU, Siga, agendador; seção "Limites"), `c4-conteineres.md` (quem escreve no banco) e o mapa de módulos abaixo (o que cada módulo possui e consome) | Escopo do `PROJECT.md` e *boundaries* de cada plano. Exemplo: "a API não escreve dados de fonte", "nenhum canal externo de alerta" |
-| **Decisões e porquês** | `adr/0001`–`0009`, com opções descartadas e consequências | Decisões que o agente não reabre a cada sessão (lote imutável, SQLite WAL, chave anônima…) |
+| **Decisões e porquês** | `adr/0001`–`0010`, com opções descartadas e consequências | Decisões que o agente não reabre a cada sessão (lote imutável, SQLite WAL, chave anônima…) |
 | **Contratos** | `contratos/openapi.yaml` (20 operações, cada uma com o módulo dono em `x-modulo`), `contratos/eventos.asyncapi.yaml`, `contratos/cli.md`, `contratos/modelo-de-dados.md` | Tasks com `files` e `verify` precisos. Exemplo: "`obter_emenda` responde 422/404/503 conforme o contrato" |
-| **Requisitos testáveis** | `requisitos.md`: 104 REQ em EARS, cada um com o teste que o verifica, a origem (FI-01 ou brief), o módulo e as telas | Critérios de aceite Given/When/Then, um por molde: U → *Then* válido em qualquer cenário; E (QUANDO) → *When*; S (ENQUANTO) → *Given* um estado; I (SE … ENTÃO) → *Given* a condição indesejada + *When* a operação; O (ONDE) → *Given* a característica habilitada. A resposta (O SISTEMA DEVE …) é sempre o *Then*. A tabela final liga AC-1…AC-4 do FI-01 aos REQ |
+| **Requisitos testáveis** | `requisitos.md`: 112 REQ em EARS, cada um com o teste que o verifica, a origem (FI-01 ou brief), o módulo e as telas | Critérios de aceite Given/When/Then, um por molde: U → *Then* válido em qualquer cenário; E (QUANDO) → *When*; S (ENQUANTO) → *Given* um estado; I (SE … ENTÃO) → *Given* a condição indesejada + *When* a operação; O (ONDE) → *Given* a característica habilitada. A resposta (O SISTEMA DEVE …) é sempre o *Then*. A tabela final liga AC-1…AC-4 do FI-01 aos REQ |
 | **Qualidade com medida** | `qualidade.md`: QA-01 persistência, QA-02 API, QA-03 concorrência, QA-04 desempenho medido, QA-05 testes | ACs do envelope com número e ferramenta de medida (0 mistura de lotes em 100 execuções, p95 < 100 ms, cobertura ≥ 80%) |
 | **Restrições** | §2 abaixo, ADR-0002 (execução local), ADR-0005 e ADR-0007 (dados pessoais) | Stack, hospedagem e LGPD que o *audit* cobra |
 
@@ -105,10 +105,11 @@ Lacunas que continuam abertas:
 | [0003](adr/0003-separar-api-fastapi-e-painel-next-com-tipos-gerados.md) | API FastAPI separada do painel Next, tipos gerados do OpenAPI | aceita |
 | [0004](adr/0004-calcular-mudancas-na-publicacao-e-gerar-alertas-idempotentes.md) | MudancaLote na publicação; alertas idempotentes por (assinatura, mudança) | aceita |
 | [0005](adr/0005-identificar-assinantes-por-chave-anonima.md) | Assinante identificado por chave anônima | aceita |
-| [0006](adr/0006-derivar-estado-de-execucao-da-etapa-mais-avancada.md) | Estado de execução derivado da etapa mais avançada | proposta |
+| [0006](adr/0006-derivar-estado-de-execucao-da-etapa-mais-avancada.md) | Estado de execução derivado da etapa mais avançada (cinco estados desde a revisão de 27/10/2026) | proposta |
 | [0007](adr/0007-agregar-favorecidos-pessoa-fisica-sem-identificar.md) | Favorecidos pessoa física agregados por emenda e mês, sem identificação | aceita |
 | [0008](adr/0008-traduzir-estado-por-tabela-versionada.md) | Estado traduzido por tabela versionada no banco, nunca por regra no código | aceita |
 | [0009](adr/0009-dividir-em-quatro-modulos-com-o-lote-publicado-como-contrato.md) | Quatro módulos do grupo, com o lote publicado como contrato central | aceita |
+| [0010](adr/0010-mostrar-no-municipio-o-gasto-previsto-e-o-recebido-sem-somar.md) | Página do município com o gasto previsto e o recebido na cidade, em blocos separados e sem somar | aceita |
 
 ## Mapa para os quatro módulos do grupo
 
@@ -116,9 +117,9 @@ O brief do grupo divide o Rastro em quatro módulos, e o contrato principal é *
 
 | Módulo | O que faz (brief) | Contêineres | Requisitos | Contratos | Telas |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| `ingestao` | Baixa, valida e normaliza os lotes; guarda proveniência; publica de forma atômica | CLI de dados, Arquivos brutos, Banco | REQ-01–07, 10–13, 21, 27, 50, 52–54, 56, 57, 59, 66, 73, 78, 82, 88, 90, 95, 97, 98, 100, 102–104 | `cli:importar`, `cli:publicar`, `cli:sincronizar`, `cli:lotes`; `listar_lotes`, `obter_lote`; evento `lote.publicado` | O01, O02, P09 (lotes) |
-| `nucleo` | Diferença entre lotes e estado de execução consolidado | CLI (dentro da publicação), API, Banco | REQ-08, 24, 61, 69, 70, 75, 86, 93 | porta `calcular_mudancas`; `listar_mudancas`, `listar_traducoes`; `cli:traducao`; view `v_emenda_estado` | P08, P11 |
-| `consulta` | API e busca por município, parlamentar e função; agregações; contrato versionado | API, Painel | REQ-09, 14–18, 20, 22, 23, 25, 26, 28–30, 49, 65, 67, 68, 71, 72, 76, 77, 79, 84, 85, 91, 92, 99, 101 | `obter_status`, `listar_opcoes_filtro`, `listar_emendas`, `obter_emenda`, `obter_linha_do_tempo`, `listar_favorecidos`, `obter_agregacoes`, `obter_autor`, `obter_municipio`, `obter_contrato` | P01–P07, P10, D01 |
+| `ingestao` | Baixa, valida e normaliza os lotes; guarda proveniência; publica de forma atômica | CLI de dados, Arquivos brutos, Banco | REQ-01–07, 10–13, 21, 27, 50, 52–54, 56, 57, 59, 66, 73, 78, 82, 88, 90, 95, 97, 98, 100, 102–104, 107–109 | `cli:importar`, `cli:publicar`, `cli:sincronizar`, `cli:lotes`; `listar_lotes`, `obter_lote`; evento `lote.publicado` | O01, O02, P09 (lotes) |
+| `nucleo` | Diferença entre lotes e estado de execução consolidado | CLI (dentro da publicação), API, Banco | REQ-08, 24, 61, 69, 70, 75, 86, 93, 105, 106 | porta `calcular_mudancas`; `listar_mudancas`, `listar_traducoes`; `cli:traducao`; view `v_emenda_estado` | P08, P11 |
+| `consulta` | API e busca por município, parlamentar e função; agregações; contrato versionado | API, Painel | REQ-09, 14–18, 20, 22, 23, 25, 26, 28–30, 49, 65, 67, 68, 71, 72, 76, 77, 79, 84, 85, 91, 92, 99, 101, 110–112 | `obter_status`, `listar_opcoes_filtro`, `listar_emendas`, `obter_emenda`, `obter_linha_do_tempo`, `listar_favorecidos`, `obter_agregacoes`, `obter_autor`, `obter_municipio`, `obter_contrato` | P01–P07, P10, D01 |
 | `saida` | Assinaturas por filtro e limiar; alerta com entrega única por assinante | API, CLI (despachante), Painel | REQ-31–42, 58, 62–64, 80, 81, 87, 94, 96 | `criar_assinatura`, `listar_assinaturas`, `atualizar_assinatura`, `excluir_assinatura`, `listar_alertas`, `atualizar_alerta`; consome `lote.publicado`, emite `alertas.gerados` | S01–S05 |
 | todos | Requisitos transversais do painel e da engenharia | — | REQ-19, 43–48, 51, 55, 60, 74, 83, 89 | — | todas as telas do painel |
 
@@ -129,7 +130,7 @@ O brief exige os cinco itens em cada módulo, sozinho. Os cenários de [qualidad
 | Módulo | Persistência (tabelas que só ele escreve) | API | Componente concorrente | Desempenho medido | Testes |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | `ingestao` | `Fonte`, `LoteImportacao`, `RejeicaoLote`, `PublicacaoAtiva`, `Autor`, `Emenda`, `RegistroExecucao`, `Favorecido`, `RegistroFavorecido` | CLI (`contratos/cli.md`) + `listar_lotes`, `obter_lote` | Downloads em paralelo com publicação serial e trava de escritor único (REQ-11, REQ-56; QA-03) | ETL ≤ 10 min, por etapa em `duracao_etl_ms` (REQ-50, REQ-82; QA-04) | `test_cgu.py`, `test_store.py`, `test_sincronizar.py`, `test_cli.py`; QA-01 |
-| `nucleo` | `MudancaLote`, `TabelaTraducao` | porta `calcular_mudancas`, `listar_mudancas`, `listar_traducoes`, `cli:traducao` | Cálculo das mudanças dentro da transação `BEGIN IMMEDIATE`, com leitores em snapshot durante a troca (REQ-08, REQ-09; QA-03) | Cálculo das mudanças da base 2025 completa ≤ 5 s, em `duracao_etl_ms.publicacao` (REQ-93; QA-03) | `test_mudancas.py`, `test_traducao.py` |
+| `nucleo` | `MudancaLote`, `TabelaTraducao` | porta `calcular_mudancas`, `listar_mudancas`, `listar_traducoes`, `cli:traducao` | Cálculo das mudanças dentro da transação `BEGIN IMMEDIATE`, com leitores em snapshot durante a troca (REQ-08, REQ-09; QA-03) | Cálculo das mudanças da base 2025 completa ≤ 5 s, em `duracao_etl_ms.publicacao` (REQ-93; QA-03) | `test_estado.py`, `test_mudancas.py`, `test_traducao.py` |
 | `consulta` | `CacheConsulta` (respostas de agregação por lote, REQ-91); lê as tabelas do lote sem escrevê-las | 10 operações HTTP de leitura, com cache por lote | Leituras simultâneas em WAL durante a publicação; limite de taxa por IP de cliente (REQ-09, REQ-28; QA-03) | `obter_emenda` p95 < 100 ms (REQ-49), `obter_agregacoes` p95 < 300 ms (REQ-101); QA-04; p95 < 150 ms durante publicação (REQ-92; QA-03) | `test_api.py`, `test_contrato.py`, e2e das telas P/D; QA-02 |
 | `saida` | `Assinante`, `Assinatura`, `Alerta` | 6 operações HTTP com `X-Chave-Assinante` + evento `alertas.gerados` | Despachante com `ThreadPoolExecutor` e `INSERT … ON CONFLICT DO NOTHING` (REQ-35, REQ-36; QA-03) | Fan-out de 500 assinaturas × 300 mudanças ≤ 2 s, em `alertas.gerados.duracao_ms` (REQ-94; QA-03) | `test_assinaturas.py`, `test_alertas.py`, e2e das telas S |
 

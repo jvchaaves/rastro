@@ -20,7 +20,7 @@
   - "Mudanças no último lote": `resumo.quantidade_mudancas` → P08.
   - Faixa com as mudanças mais recentes (primeiros itens de `listar_mudancas`): `MudancaLote.codigo_emenda` e o texto da mudança, conforme `MudancaLote.tipo`.
   - "O caminho do dinheiro": a trilha das etapas para o recorte escolhido (Brasil, uma UF ou uma função), com os valores de `empenhado`, `liquidado` e `pago` do recorte.
-  - Bloco "O que chegou à sua cidade": seletores de UF e de município (`OpcoesFiltro.municipios`, só municípios com emendas no lote ativo) e o botão "Ver minha cidade".
+  - Bloco "O que chegou à sua cidade": seletores de UF e de município (`OpcoesFiltro.municipios`: municípios que são local do gasto de alguma emenda ou sede de algum favorecido no lote ativo, REQ-112) e o botão "Ver minha cidade".
   - Atalhos de recorte: seletor de UF do gasto (`Emenda.uf_gasto`, de `listar_opcoes_filtro.ufs_gasto`) e "Ver por função" / "Ver por autor" (→ P06).
   - Bloco "Como ler estes números": três frases sobre empenhado, liquidado e pago, mais o aviso de que pagamento não comprova aplicação final.
 - **Coleta:**
@@ -51,7 +51,7 @@
   - Texto com dígitos mas sem 12 caracteres vai para P02 como busca textual (sem 422 na tela inicial).
 - **Requisitos · contrato:**
   - REQ-14, REQ-15, REQ-19, REQ-48 · `GET /api/status` (`obter_status`).
-  - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
+  - REQ-20, REQ-66, REQ-112 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
   - REQ-67 · `GET /api/municipios/{uf}/{municipio}` (`obter_municipio`) ao escolher a cidade.
   - REQ-22 · `GET /api/agregacoes` (`obter_agregacoes`) para os recortes por UF e função.
   - REQ-24 · `GET /api/mudancas` (`listar_mudancas`) para a faixa de mudanças.

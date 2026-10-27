@@ -49,7 +49,7 @@ Formatos observados: valores como `250000,00` (sem separador de milhar; negativo
 
 1. Calcula `hash_sha256` sobre o conteúdo dos dois CSVs importados, descompactados e lidos em ordem de nome (não sobre o ZIP, que a CGU regera a cada atualização mesmo sem mudança de dados). Se já existir lote `validado`/`publicado`/`substituido` com esse hash → "lote já importado (Lote #n)" e código 0 (REQ-05). Se existir lote `recusado` → "lote já recusado" e código 2 (REQ-52). Lotes `falhou` não contam e o arquivo é importado de novo (REQ-53).
 2. Define `data_referencia` como a data de modificação das entradas do ZIP (a mesma nos três arquivos; 26/10/2026 no arquivo conferido).
-3. Cria `LoteImportacao` (`estado = importando`) e lê os CSVs em fluxo. Cada linha recebe um destino: aceita; `codigo_ausente` (REQ-102) ou `ano_fora_do_recorte` (REQ-59), fora da taxa; ou `codigo_invalido`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro` (REQ-02, REQ-03, REQ-97, REQ-98), dentro da taxa. Deriva UF e município do local de aplicação (REQ-21, REQ-66, REQ-78, REQ-88), classifica o favorecido (REQ-104), agrega os recebimentos de pessoas físicas por emenda e mês sem guardar nome nem CPF (REQ-25) e grava as linhas aceitas em blocos de 5 000.
+3. Cria `LoteImportacao` (`estado = importando`) e lê os CSVs em fluxo. Cada linha recebe um destino: aceita; `codigo_ausente` (REQ-102) ou `ano_fora_do_recorte` (REQ-59), fora da taxa; ou `codigo_invalido`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro` (REQ-02, REQ-03, REQ-97, REQ-98), dentro da taxa. Deriva UF e município do local de aplicação (REQ-21, REQ-66, REQ-78, REQ-88), classifica o favorecido (REQ-104), deriva a sede e a marca de órgão municipal do favorecido (REQ-107, REQ-108, REQ-109), agrega os recebimentos de pessoas físicas por emenda e mês sem guardar nome nem CPF (REQ-25) e grava as linhas aceitas em blocos de 5 000.
 4. Ao terminar: `estado = validado`, ou `recusado` (REQ-06; ou REQ-73 quando nenhuma linha está no recorte), ou `falhou` (REQ-04). Grava `duracao_etl_ms` (REQ-82).
 5. Ao iniciar, qualquer lote em `importando` sem trava ativa vira `falhou` com `motivo_falha = interrompido` (REQ-10).
 
@@ -129,15 +129,15 @@ rastro traducao publicar --arquivo traducoes/v2.yaml --nota "motivo da mudança"
 Publica uma versão nova da tabela que traduz `estado_execucao` para linguagem simples (ADR-0008).
 
 1. Lê o arquivo YAML com uma entrada por estado: `estado_execucao`, `texto_simples` (≤ 60 caracteres) e `explicacao` (≤ 280).
-2. Exige exatamente os quatro estados (`sem_execucao`, `empenhada`, `liquidada`, `paga`); com falta ou sobra, sai com código 7 sem gravar nada (REQ-86).
-3. Exige `--nota` (sem ela, código 1). Numa transação, insere as quatro linhas com `versao = máxima + 1`, `vigente_desde = agora` e a nota. As versões anteriores não mudam (REQ-70); o schema tem gatilhos que impedem `UPDATE` e `DELETE`.
+2. Exige exatamente os cinco estados (`sem_execucao`, `empenhada`, `liquidada`, `paga_em_parte`, `paga`); com falta ou sobra, sai com código 7 sem gravar nada (REQ-86).
+3. Exige `--nota` (sem ela, código 1). Numa transação, insere as cinco linhas com `versao = máxima + 1`, `vigente_desde = agora` e a nota. As versões anteriores não mudam (REQ-70); o schema tem gatilhos que impedem `UPDATE` e `DELETE`.
 4. A API passa a usar a versão nova na próxima requisição (REQ-69). A tela P11 mostra todas as versões (`listar_traducoes`).
 
 Saída humana (resumo):
 
 ```
 Rastro · traducao publicar · versão 2
-OK  4 estados · vigente desde 26/10/2026 21:10
+OK  5 estados · vigente desde 26/10/2026 21:10
     liquidada  "A entrega foi conferida; falta pagar" → "Entrega conferida, pagamento pendente"
 Versão 1 preservada (consulte em /dados/traducao?versao=1)
 ```

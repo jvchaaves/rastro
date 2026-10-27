@@ -14,6 +14,9 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Localidade do gasto | `Emenda.localidade_gasto` | A "Localidade de aplicação do recurso" publicada pela CGU: um município ("JOÃO PESSOA - PB"), uma UF ("PARAÍBA (UF)"), vários municípios de uma UF ("MÚLTIPLO"), uma região ou "Nacional". **Não** é o endereço do favorecido. |
 | UF do gasto | `Emenda.uf_gasto` | UF derivada da localidade do gasto. Fica vazia quando a localidade é nacional ou abrange várias UFs; na API e nos filtros essas emendas aparecem com a sigla reservada `NM` ("Nacional ou múltiplas UFs") (REQ-78). |
 | Município do gasto | `Emenda.municipio_ibge`, `municipio_gasto`, `municipio_nome` | Município da coluna "Código Município IBGE" do arquivo de emendas. Fica vazio quando o recurso vai para vários municípios ("Múltiplo"), para a UF inteira ou é nacional; essas emendas aparecem na UF, não num município (REQ-66, REQ-88). No arquivo de 26/10/2026, 759 das 6 310 emendas de 2025 têm um município. |
+| Sede do favorecido | `Favorecido.uf`, `municipio_sede` | Município do endereço do favorecido no arquivo por favorecido. Usa o mesmo identificador do município do gasto (`joao-pessoa`), mas **não** é local do gasto (REQ-21, REQ-107). |
+| Recebido na cidade | `MunicipioDetalhe.recebido_na_cidade` | Soma do que favorecidos sediados no município receberam de emendas de 2025, de qualquer localidade do gasto. Aparece na P10 num bloco próprio e nunca é somado ao gasto previsto (REQ-110, REQ-111, ADR-0010). |
+| Órgão municipal | `Favorecido.orgao_municipal` | Favorecido com Natureza Jurídica "Município" ou terminada em "Municipal": prefeitura, fundos municipais, autarquias e fundações municipais (REQ-109). |
 | Etapa | `RegistroExecucao.etapa` | Fase da despesa com valor próprio. As etapas nunca são somadas entre si. |
 | Valor empenhado | `etapa = empenhado` | Valor reservado no orçamento para a despesa (compromisso). Não significa que o dinheiro saiu. |
 | Valor liquidado | `etapa = liquidado` | Valor reconhecido como devido depois de verificada a entrega do bem ou serviço. |
@@ -23,7 +26,8 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Favorecido | `Favorecido` | Pessoa jurídica, ente público ou outro recebedor identificado de pagamento ligado à emenda. Pessoas físicas não são identificadas: ver "Pessoas físicas (favorecidos)". |
 | Pessoas físicas (favorecidos) | `RegistroFavorecido` com `favorecido_id` nulo | Recebimentos de pessoas físicas somados por emenda e mês, com a quantidade de pessoas e sem nome nem CPF (REQ-25, ADR-0007). |
 | Aplicação final | — | Uso concreto do recurso (obra, compra, serviço). **O Rastro não tem esse dado e não afirma nada sobre ele.** |
-| Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada ou paga (ADR-0006). |
+| Estado de execução | `estado_execucao` | Etapa mais avançada com valor positivo: sem execução, empenhada, liquidada, paga em parte ou paga (ADR-0006, REQ-105). |
+| Paga em parte | `paga_em_parte` | Emenda com pagamento registrado menor que `empenhado` − `rap_cancelado`. Está sempre no recorte "empenhado e ainda não pago" (REQ-68). |
 | Estado em linguagem simples | `estado_texto`; `TabelaTraducao.texto_simples` | Frase para o morador que traduz o estado ("A entrega foi conferida; falta pagar"). Vem da versão vigente da tabela de tradução (ADR-0008). |
 | Tabela de tradução | `TabelaTraducao` | Tabela versionada, só com inserção, com um texto simples e uma explicação por estado. Cada resposta diz a versão usada (`traducao_versao`). |
 | Empenhado e ainda não pago (pendente) | `pendentes=true`; `MunicipioDetalhe.quantidade_pendentes` | Emenda em que `pago` + `rap_pago` é menor que `empenhado` − `rap_cancelado`, inclusive as pagas em parte. É o recorte que o gestor municipal acompanha (REQ-68). |

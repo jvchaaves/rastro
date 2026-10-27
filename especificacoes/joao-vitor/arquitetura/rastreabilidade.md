@@ -6,19 +6,19 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 
 | Tela | Requisitos | Operações (contrato) |
 | :-- | :-- | :-- |
-| P01 | REQ-14, REQ-15, REQ-16, REQ-19, REQ-20, REQ-22, REQ-24, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-66, REQ-67, REQ-74 | `listar_emendas`, `listar_lotes`, `listar_mudancas`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_emenda`, `obter_municipio`, `obter_status` |
-| P02 | REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-65, REQ-66, REQ-68, REQ-69, REQ-72, REQ-74 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_emenda`, `obter_municipio` |
+| P01 | REQ-112, REQ-14, REQ-15, REQ-16, REQ-19, REQ-20, REQ-22, REQ-24, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-66, REQ-67, REQ-74 | `listar_emendas`, `listar_lotes`, `listar_mudancas`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_emenda`, `obter_municipio`, `obter_status` |
+| P02 | REQ-112, REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-65, REQ-66, REQ-68, REQ-69, REQ-72, REQ-74 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_emenda`, `obter_municipio` |
 | P03 | REQ-13, REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-60, REQ-66, REQ-69, REQ-74, REQ-77 | `listar_emendas`, `listar_favorecidos`, `listar_opcoes_filtro`, `listar_traducoes`, `obter_autor`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote`, `obter_municipio`, `obter_status` |
 | P04 | REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-23, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-69, REQ-74, REQ-76 | `listar_opcoes_filtro`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote` |
 | P05 | REQ-14, REQ-15, REQ-17, REQ-18, REQ-19, REQ-25, REQ-26, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-65, REQ-74 | `listar_favorecidos`, `listar_lotes`, `obter_emenda` |
 | P06 | REQ-101, REQ-14, REQ-15, REQ-19, REQ-20, REQ-21, REQ-22, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-60, REQ-71, REQ-72, REQ-74, REQ-79, REQ-91, REQ-99 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_autor` |
 | P07 | REQ-14, REQ-15, REQ-19, REQ-22, REQ-28, REQ-29, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-60, REQ-69, REQ-71, REQ-72, REQ-79 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `obter_agregacoes`, `obter_autor`, `obter_emenda` |
-| P08 | REQ-08, REQ-14, REQ-19, REQ-20, REQ-24, REQ-27, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-60, REQ-61, REQ-66, REQ-69, REQ-72, REQ-75 | `listar_lotes`, `listar_mudancas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote` |
+| P08 | REQ-08, REQ-106, REQ-14, REQ-19, REQ-20, REQ-24, REQ-27, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-60, REQ-61, REQ-66, REQ-69, REQ-72, REQ-75 | `listar_lotes`, `listar_mudancas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_linha_do_tempo`, `obter_lote` |
 | P09 | REQ-06, REQ-10, REQ-12, REQ-13, REQ-14, REQ-19, REQ-27, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-50, REQ-55, REQ-60, REQ-73, REQ-74, REQ-82 | `listar_lotes`, `listar_mudancas`, `listar_traducoes`, `obter_lote`, `obter_status` |
-| P10 | REQ-14, REQ-19, REQ-20, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-55, REQ-60, REQ-66, REQ-67, REQ-68, REQ-69, REQ-70, REQ-71, REQ-72, REQ-74, REQ-77, REQ-88 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `listar_traducoes`, `obter_emenda`, `obter_municipio`, `obter_status` |
-| P11 | REQ-19, REQ-28, REQ-44, REQ-46, REQ-47, REQ-55, REQ-69, REQ-70, REQ-72, REQ-74, REQ-86 | `cli:traducao`, `listar_lotes`, `listar_traducoes`, `obter_municipio` |
+| P10 | REQ-105, REQ-107, REQ-109, REQ-110, REQ-111, REQ-112, REQ-14, REQ-19, REQ-20, REQ-21, REQ-28, REQ-44, REQ-45, REQ-46, REQ-47, REQ-48, REQ-55, REQ-60, REQ-66, REQ-67, REQ-68, REQ-69, REQ-70, REQ-71, REQ-72, REQ-74, REQ-77, REQ-88 | `listar_emendas`, `listar_lotes`, `listar_opcoes_filtro`, `listar_traducoes`, `obter_emenda`, `obter_municipio`, `obter_status` |
+| P11 | REQ-105, REQ-19, REQ-28, REQ-44, REQ-46, REQ-47, REQ-55, REQ-69, REQ-70, REQ-72, REQ-74, REQ-86 | `cli:traducao`, `listar_lotes`, `listar_traducoes`, `obter_municipio` |
 | D01 | REQ-14, REQ-16, REQ-17, REQ-18, REQ-19, REQ-25, REQ-28, REQ-30, REQ-44, REQ-46, REQ-47, REQ-65, REQ-69, REQ-72, REQ-74, REQ-84, REQ-89 | `listar_lotes`, `listar_traducoes`, `obter_contrato`, `obter_emenda`, `obter_municipio` |
-| S01 | REQ-19, REQ-20, REQ-31, REQ-32, REQ-33, REQ-34, REQ-37, REQ-41, REQ-42, REQ-44, REQ-46, REQ-47, REQ-60, REQ-62, REQ-63, REQ-64, REQ-66, REQ-74, REQ-80, REQ-87, REQ-89 | `criar_assinatura`, `listar_assinaturas`, `listar_opcoes_filtro`, `obter_status` |
+| S01 | REQ-112, REQ-19, REQ-20, REQ-31, REQ-32, REQ-33, REQ-34, REQ-37, REQ-41, REQ-42, REQ-44, REQ-46, REQ-47, REQ-60, REQ-62, REQ-63, REQ-64, REQ-66, REQ-74, REQ-80, REQ-87, REQ-89 | `criar_assinatura`, `listar_assinaturas`, `listar_opcoes_filtro`, `obter_status` |
 | S02 | REQ-31, REQ-41, REQ-47, REQ-58, REQ-74 | `criar_assinatura`, `listar_assinaturas` |
 | S03 | REQ-28, REQ-32, REQ-44, REQ-46, REQ-47, REQ-74, REQ-84, REQ-89 | `listar_alertas`, `listar_assinaturas`, `listar_opcoes_filtro` |
 | S04 | REQ-32, REQ-38, REQ-40, REQ-42, REQ-44, REQ-45, REQ-46, REQ-47, REQ-55, REQ-74 | `atualizar_assinatura`, `excluir_assinatura`, `listar_alertas`, `listar_assinaturas`, `listar_opcoes_filtro`, `obter_emenda`, `obter_municipio` |
@@ -45,7 +45,15 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-102 | ingestao | O01 | — |
 | REQ-103 | ingestao | O01 | — |
 | REQ-104 | ingestao | O01 | — |
+| REQ-105 | nucleo | P10, P11 | ADR-0006, ADR-0008 |
+| REQ-106 | nucleo | P08 | ADR-0006 |
+| REQ-107 | ingestao | P10 | ADR-0010 |
+| REQ-108 | ingestao | — | ADR-0010 |
+| REQ-109 | ingestao | P10 | ADR-0010 |
 | REQ-11 | ingestao | O01 | ADR-0002, qualidade |
+| REQ-110 | consulta | P10 | ADR-0010 |
+| REQ-111 | consulta | P10 | ADR-0010 |
+| REQ-112 | consulta | P01, P02, P10, S01 | ADR-0010 |
 | REQ-12 | ingestao | P09, O01, O02 | — |
 | REQ-13 | ingestao | P03, P09 | qualidade |
 | REQ-14 | consulta | P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, D01, S05 | ADR-0001, ADR-0003, qualidade |
@@ -55,9 +63,9 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-18 | consulta | P03, P04, P05, D01 | qualidade |
 | REQ-19 | todos | P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, D01, S01, S02, S03, S04, S05 | qualidade |
 | REQ-20 | consulta | P01, P02, P06, P08, P10, S01 | — |
-| REQ-21 | ingestao | P02, P03, P06, P10, O01 | — |
+| REQ-21 | ingestao | P02, P03, P06, P10, O01 | ADR-0010 |
 | REQ-22 | consulta | P01, P06, P07 | — |
-| REQ-23 | consulta | P04 | ADR-0001, ADR-0006 |
+| REQ-23 | consulta | P04 | ADR-0001 |
 | REQ-24 | nucleo | P01, P08 | ADR-0004 |
 | REQ-25 | consulta | P05, D01, O01 | ADR-0007 |
 | REQ-26 | consulta | P05 | ADR-0007 |
@@ -89,7 +97,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-52 | ingestao | O01 | — |
 | REQ-53 | ingestao | O01 | — |
 | REQ-54 | ingestao | O01 | — |
-| REQ-55 | todos | P07, P08, P09, P10, P11, S04, S05 | — |
+| REQ-55 | todos | P07, P08, P09, P10, P11, S04, S05 | ADR-0010 |
 | REQ-56 | ingestao | O01, O02 | ADR-0002, qualidade |
 | REQ-57 | ingestao | O02 | — |
 | REQ-58 | saida | S02 | — |
@@ -100,8 +108,8 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-63 | saida | S01, S05, O02 | ADR-0006 |
 | REQ-64 | saida | S01, S05, O02 | ADR-0006 |
 | REQ-65 | consulta | P02, P05, D01 | ADR-0007 |
-| REQ-66 | ingestao | P01, P02, P03, P08, P10, S01, O01 | — |
-| REQ-67 | consulta | P01, P10 | ADR-0008 |
+| REQ-66 | ingestao | P01, P02, P03, P08, P10, S01, O01 | ADR-0010 |
+| REQ-67 | consulta | P01, P10 | ADR-0008, ADR-0010 |
 | REQ-68 | consulta | P02, P10 | ADR-0006 |
 | REQ-69 | nucleo | P02, P03, P04, P07, P08, P10, P11, D01, S05 | ADR-0006, ADR-0008, qualidade |
 | REQ-70 | nucleo | P10, P11 | ADR-0008 |
@@ -111,7 +119,7 @@ Gerada por `verificar.py` a partir das fichas em `../telas/`, de `requisitos.md`
 | REQ-74 | todos | P01, P02, P03, P04, P05, P06, P09, P10, P11, D01, S01, S02, S03, S04, S05 | — |
 | REQ-75 | nucleo | P08, O02 | ADR-0009 |
 | REQ-76 | consulta | P04 | ADR-0009, qualidade |
-| REQ-77 | consulta | P03, P10 | — |
+| REQ-77 | consulta | P03, P10 | ADR-0010 |
 | REQ-78 | ingestao | O01 | — |
 | REQ-79 | consulta | P06, P07 | — |
 | REQ-80 | saida | S01 | — |

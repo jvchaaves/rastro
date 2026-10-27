@@ -5,7 +5,7 @@ Especificação individual do sistema completo **Rastro**, feita a partir do FI-
 | Parte | Comece por | Conteúdo |
 | :-- | :-- | :-- |
 | (a) Interface | [telas/diretrizes.md](telas/diretrizes.md) → [telas/inventario.md](telas/inventario.md) | 19 telas (P01–P11, D01, S01–S05, O01–O02), 5 atores, 3 superfícies, mapa de navegação e 10 fluxos |
-| (b) Arquitetura | [arquitetura/README.md](arquitetura/README.md) | arc42 enxuto: C4 1 e 2, mapa dos 4 módulos do grupo, 9 ADRs, 104 REQ em EARS (com módulo e telas), OpenAPI 3.1 (20 operações) + AsyncAPI 3.0 + CLI + modelo de dados, 5 cenários de qualidade, glossário |
+| (b) Arquitetura | [arquitetura/README.md](arquitetura/README.md) | arc42 enxuto: C4 1 e 2, mapa dos 4 módulos do grupo, 10 ADRs, 112 REQ em EARS (com módulo e telas), OpenAPI 3.1 (20 operações) + AsyncAPI 3.0 + CLI + modelo de dados, 5 cenários de qualidade, glossário |
 | Rastreabilidade | [arquitetura/rastreabilidade.md](arquitetura/rastreabilidade.md) | Tela ↔ requisito ↔ contrato, gerada por [`verificar.py`](verificar.py) |
 
 Mockups de referência (anexo opcional): [`telas/anexos/`](telas/anexos/), exportados do canvas "Rastro — telas" no Claude Design, com um arquivo por id de tela.
@@ -35,8 +35,8 @@ Mockups de referência (anexo opcional): [`telas/anexos/`](telas/anexos/), expor
 
 - [x] `README.md`: padrão, referência e justificativa pelas 6 informações da seção 3.1.
 - [x] `c4-contexto.md` e `c4-conteineres.md`.
-- [x] `adr/`: 9 ADRs (≥ 3) no formato MADR.
-- [x] `requisitos.md`: REQ-01…REQ-104 em EARS, usando os cinco moldes, todos com o sujeito "O SISTEMA", uma obrigação, verificação, módulo e telas.
+- [x] `adr/`: 10 ADRs (≥ 3) no formato MADR.
+- [x] `requisitos.md`: REQ-01…REQ-112 em EARS, usando os cinco moldes, todos com o sujeito "O SISTEMA", uma obrigação, verificação, módulo e telas.
 - [x] `contratos/`: `openapi.yaml` (20 operações, todas usadas por telas), `eventos.asyncapi.yaml`, `cli.md`, `modelo-de-dados.md`.
 - [x] `qualidade.md`: 5 cenários de 6 partes (persistência, API, concorrência, desempenho medido, testes).
 - [x] `glossario.md`.
@@ -48,4 +48,4 @@ pip install pyyaml openapi-spec-validator
 python3 especificacoes/joao-vitor/verificar.py
 ```
 
-Saída esperada: `OK · 19 telas · 119 ações com contrato · 104 requisitos · 20 operações HTTP · 5 comandos CLI · 9 ADRs · matriz gerada`.
+Saída esperada: `OK · 19 telas · 119 ações com contrato · 112 requisitos · 20 operações HTTP · 5 comandos CLI · 10 ADRs · matriz gerada`.

@@ -7,7 +7,7 @@
   - Vai para: P09 ("Lotes e fontes"), P10 (exemplo de cidade).
 - **Mostra:**
   - Versão vigente (`Traducoes.vigente`) e o `vigente_desde` dela.
-  - Tabela da versão vigente, uma linha por estado (`Traducoes.versoes[].itens[]`): termo técnico (`estado_execucao`), `texto_simples` e `explicacao`.
+  - Tabela da versão vigente, uma linha para cada um dos cinco estados (`Traducoes.versoes[].itens[]`, REQ-86, REQ-105): termo técnico (`estado_execucao`), `texto_simples` e `explicacao`.
   - Versões anteriores recolhidas, cada uma com `versao`, `vigente_desde` e `nota`, e a mesma tabela.
   - Frase fixa: "A tradução é uma tabela pública e versionada. Toda resposta da API diz qual versão usou, e versões antigas nunca são editadas."
   - Como uma versão nova entra: só pelo comando `rastro traducao publicar`, com nota de motivo.

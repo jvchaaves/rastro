@@ -64,9 +64,9 @@ Prefixos: **P** = painel público · **D** = desenvolvedores (API) · **S** = as
 
 | Exigência do brief (`ddea-ufpb/rastro`) | Telas | Requisitos |
 | :-- | :-- | :-- |
-| Consulta por município ("o que foi destinado à cidade dele") | P01, P10, P02, S01 | REQ-66, REQ-67 |
+| Consulta por município ("o que foi destinado à cidade dele"), com o gasto previsto e o recebido na cidade em blocos separados | P01, P10, P02, S01 | REQ-66, REQ-67, REQ-110, REQ-111, REQ-112, ADR-0010 |
 | Estado traduzido para linguagem simples, por tabela versionada e auditável | P02, P03, P04, P10, S05, P11 (tabela) | REQ-69, REQ-70, ADR-0008 |
-| Gestor municipal: "o que está empenhado mas não executado" | P10, P02 (`pendentes`) | REQ-68 |
+| Gestor municipal: "o que está empenhado mas não executado" | P10, P02 (`pendentes`), estado "paga em parte" | REQ-68, REQ-105 |
 | Toda informação com fonte, lote e data de extração | todas as telas do painel (cabeçalho) | REQ-14, REQ-48 |
 | Dado agregado, sem titular identificado | P05 (pessoas físicas agregadas) | REQ-25, ADR-0007 |
 | Não classifica, não pontua, não ranqueia parlamentares | P06, P07, P10 | REQ-71 |

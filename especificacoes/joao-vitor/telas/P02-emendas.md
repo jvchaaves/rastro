@@ -23,7 +23,7 @@
   - `ano` · seleção (2025) · opcional, padrão 2025.
   - `autor_codigo` · combobox com busca sobre `listar_opcoes_filtro.autores` · opcional.
   - `uf_gasto` · seleção (UFs + "Nacional ou múltiplas UFs" = `NM`) · opcional.
-  - `municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`) · opcional; desabilitado sem UF ou com `NM`.
+  - `municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0) · opcional; desabilitado sem UF ou com `NM`.
   - `pendentes` · caixa "Só empenhado e ainda não pago" · opcional, padrão desligada.
   - `funcao_codigo` · seleção · opcional.
   - `tipo` · seleção · opcional.
@@ -56,7 +56,7 @@
   - O texto do estado vem da API (`estado_texto`), nunca do código do painel (REQ-69).
 - **Requisitos · contrato:**
   - REQ-20, REQ-21, REQ-65, REQ-15, REQ-66, REQ-68, REQ-69, REQ-72 · `GET /api/emendas` (`listar_emendas`).
-  - REQ-20 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`).
+  - REQ-20, REQ-112 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), com `municipios[].quantidade_emendas_gasto`.
   - REQ-14, REQ-48 · `EmendaPagina.proveniencia`.
   - REQ-74 · ações locais (copiar link, CSV).
 - **Acessibilidade:**
