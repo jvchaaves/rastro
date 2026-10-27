@@ -21,7 +21,7 @@
 
 ## Decisão
 
-Opção 3, porque cumpre a tabela de módulos do brief sem contrariar a execução local em dois processos As fronteiras são estas:
+Opção 3, porque cumpre a tabela de módulos do brief sem contrariar a execução local em dois processos. As fronteiras são estas:
 
 | De → para | Contrato | Onde está |
 | :-- | :-- | :-- |
