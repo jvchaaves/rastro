@@ -1,0 +1,43 @@
+## S03 · Entrar com chave
+
+- **Superfície · ator:** Painel web · Pessoa de controle social (assinante em outro navegador ou dispositivo).
+- **Objetivo:** Recuperar assinaturas e alertas digitando a chave de assinante.
+- **Chega de / vai para:**
+  - Chega de: sino de alertas do cabeçalho sem chave no navegador; S01 e S02 (links em estados de erro ou vazio); S04 e S05 (sem chave ou chave recusada); "Sair" de S04.
+  - Vai para:
+    - S05 (chave aceita, padrão);
+    - S04 (se veio de "Minhas assinaturas");
+    - S01 ("Ainda não tenho chave: criar uma assinatura").
+- **Mostra:**
+  - Explicação: "Use a chave que você recebeu ao criar sua primeira assinatura."
+  - Nota: "A chave fica guardada só neste navegador. Em computador compartilhado, use 'Sair' depois."
+- **Coleta:**
+  - `chave_assinante` · texto, 32 caracteres hexadecimais (espaços e hífens são ignorados) · obrigatório.
+- **Ações:**
+  - "Entrar" → `GET /api/assinaturas` (`listar_assinaturas`) com `X-Chave-Assinante`.
+    - 200 → guarda a chave no `localStorage` → S05 (`listar_alertas`), ou S04 (`listar_assinaturas`) se veio de "Minhas assinaturas".
+    - 401 → erro no campo.
+  - "Mostrar chave" → alterna a máscara do campo → ação local · sem chamada à API (REQ-74).
+  - "Criar uma assinatura" → S01 (`listar_opcoes_filtro`).
+  - "Sair" (quando já há chave guardada) → remove a chave do navegador e permanece em S03 → ação local · sem chamada à API (REQ-74).
+- **Estados:**
+  - **carregando:** botão "Verificando…" desabilitado (REQ-44).
+  - **vazio:** campo vazio → botão desabilitado, com a dica do formato (REQ-89).
+  - **erro:**
+    - formato inválido (local) → "A chave tem 32 caracteres (0–9, a–f)";
+    - 401 → "Chave não reconhecida", sem dizer se ela existe ou não (REQ-32);
+    - 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** redireciona com o anúncio "Chave reconhecida" (REQ-32).
+  - **offline:** "Sem conexão"; botão desabilitado (REQ-47).
+  - **sem permissão:** é o próprio caso 401 acima (REQ-32).
+  - **limite de taxa:** muitas tentativas do mesmo navegador → 429 com `Retry-After`, reduzindo tentativas de adivinhar a chave. O limite vale no painel porque o IP do navegador chega à API pelo `X-Forwarded-For` (REQ-28, REQ-84).
+- **Regras:**
+  - A chave é enviada só no cabeçalho `X-Chave-Assinante`, nunca na URL nem em query string (ADR-0005).
+  - A mensagem de erro é a mesma para chave inexistente e para chave revogada (REQ-32).
+- **Requisitos · contrato:**
+  - REQ-32, REQ-28, REQ-84 · `GET /api/assinaturas` (`listar_assinaturas`).
+  - REQ-74 · ações locais (mostrar chave, sair).
+- **Acessibilidade:**
+  - Campo com `autocomplete="off"`, `spellcheck="false"` e `type="password"`, com o botão "Mostrar chave" (`aria-pressed`).
+  - Erro associado ao campo por `aria-describedby`, e foco devolvido ao campo.
+- **Anexo:** mockup de referência [anexos/S03.png](anexos/S03.png), exportado do canvas "Rastro — telas" (Claude Design).

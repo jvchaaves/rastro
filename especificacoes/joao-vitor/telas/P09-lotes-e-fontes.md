@@ -1,0 +1,61 @@
+## P09 · Lotes e fontes
+
+- **Superfície · ator:** Painel web · Cidadão (morador) e jornalista (conferir a origem); operador de dados (conferir a publicação).
+- **Objetivo:** Permitir conferir de que lote vem cada valor do painel: quais lotes foram importados, qual está ativo, quantas linhas foram aceitas ou rejeitadas e onde baixar o arquivo original.
+- **Chega de / vai para:**
+  - Chega de: faixa de proveniência do cabeçalho (todas as telas do painel), P01, P02, P03 ("Ver lote" no painel "Origem"), P04 (ponto da linha do tempo), P05, P06, P07, P08 (lote do cabeçalho), P10, P11 ("Lotes e fontes"), D01 ("Como o Rastro publica"), O01 e O02 (o lote aparece aqui), rodapé.
+  - Vai para: download oficial (`Fonte.url_download`), P08 (mudanças de um lote publicado), P11 ("Como traduzimos o estado").
+- **Mostra:**
+  - Por fonte (`Status.fontes[]`):
+    - `Fonte.nome`;
+    - `Fonte.habilitada` ("Siga Brasil: integração em validação" quando desabilitada);
+    - `Fonte.url_download`;
+    - lote ativo.
+  - Tabela de lotes (`listar_lotes.itens[]`, mais recentes primeiro):
+    - `LoteImportacao.id`;
+    - `estado` em texto, com destaque "ativo" quando `ativo = true`;
+    - `data_referencia`;
+    - `importado_em` e `publicado_em`;
+    - `arquivo_nome`;
+    - `hash_sha256` (abreviado, botão "copiar");
+    - `linhas_lidas`, `linhas_aceitas`, `linhas_rejeitadas` (com %);
+    - `motivo_falha` quando `falhou`/`recusado`.
+  - Detalhe de um lote (expansível ou `?lote_id=`, via `obter_lote`):
+    - `rejeicoes[]` (`RejeicaoLote.motivo`, `quantidade`), com explicação de cada motivo;
+    - `duracao_etl_ms` (leitura, validação, gravação, publicação).
+  - Texto fixo "Como o Rastro publica": em três frases, lote imutável, troca atômica e mais de 5% de rejeição bloqueia a publicação.
+  - Link "Como traduzimos o estado" para P11.
+  - `importado_em` aparece como "Extraído em dd/mm/aaaa, hh:mm" (data de extração, REQ-14).
+- **Coleta:**
+  - `fonte_id` · seleção (todas, `cgu`, `siga`) · opcional.
+  - `lote_id` · da URL, para abrir o detalhe · opcional.
+- **Ações:**
+  - Filtrar por fonte → (`listar_lotes`) com `fonte_id`.
+  - Abrir detalhe → (`obter_lote`).
+  - "Como traduzimos o estado" → P11 (`listar_traducoes`).
+  - "Copiar hash" → área de transferência → ação local · sem chamada à API (REQ-74).
+  - "Baixar o original na CGU" → `Fonte.url_download` em nova aba → ação local · sem chamada à API (REQ-74).
+  - "Ver o que mudou neste lote" (só lotes publicados) → P08 com `?lote_novo_id=` (`listar_mudancas`).
+- **Estados:**
+  - **carregando:** esqueleto da tabela (REQ-44).
+  - **vazio:** nenhum lote importado → "Nenhum lote importado ainda", com uma explicação do processo (REQ-45).
+  - **erro:** `lote_id` inexistente → aviso e tabela sem detalhe (REQ-55); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** fontes, tabela e detalhe (REQ-27).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** a tela funciona e mostra lotes `validado`/`falhou`/`recusado`, com "Nenhum lote publicado ainda" no topo (REQ-19, REQ-60).
+  - **fonte indisponível:** último lote `falhou` com `fonte_indisponivel` → "A última tentativa de atualização falhou em dd/mm; os dados exibidos continuam sendo os de dd/mm" (REQ-12).
+- **Regras:**
+  - Lotes `recusado` e `falhou` aparecem, por transparência, mas nunca como ativos (REQ-06, REQ-10).
+  - A data mostrada ao público é sempre `data_referencia` (dado da fonte); `importado_em` é secundária.
+  - O hash completo é recuperável (copiar) para quem quiser conferir o arquivo baixado.
+  - Lote `recusado` por `sem_linhas_no_recorte` aparece com a explicação "o arquivo não tinha emendas de 2025" (REQ-73).
+- **Requisitos · contrato:**
+  - REQ-27, REQ-12, REQ-06, REQ-10, REQ-73 · `GET /api/lotes` (`listar_lotes`).
+  - REQ-74 · ações locais (copiar hash, link externo).
+  - REQ-27, REQ-50, REQ-82, REQ-55 · `GET /api/lotes/{lote_id}` (`obter_lote`).
+  - REQ-13, REQ-14, REQ-48 · `GET /api/status` (`obter_status`).
+- **Acessibilidade:**
+  - O detalhe expansível usa `<details>` ou um botão com `aria-expanded`.
+  - Percentuais com casas decimais por extenso no rótulo acessível ("0,95 por cento").
+- **Anexo:** mockup de referência [anexos/P09.png](anexos/P09.png), exportado do canvas "Rastro — telas" (Claude Design).
