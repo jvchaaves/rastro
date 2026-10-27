@@ -1,0 +1,56 @@
+## P08 · O que mudou
+
+- **Superfície · ator:** Painel web · Jornalista e pessoa de controle social.
+- **Objetivo:** Mostrar o que mudou entre o lote anterior e o lote ativo, emenda por emenda, para quem acompanha a execução.
+- **Chega de / vai para:**
+  - Chega de: P01, P09 ("Ver o que mudou neste lote"), S05 (alerta), O02 (saída da publicação), cabeçalho "O que mudou".
+  - Vai para:
+    - P03 (emenda);
+    - P04 (linha do tempo);
+    - S01 ("Acompanhar este recorte");
+    - P09 (lotes comparados).
+- **Mostra:**
+  - Par de lotes comparados: `MudancasPagina.lote_anterior` e `MudancasPagina.lote_novo`, cada um com `id` e `data_referencia` ("Lote #13, dados de 13/10/2026 → Lote #14, dados de 20/10/2026").
+  - Contagem por tipo (`MudancasPagina.contagem_por_tipo`): novas emendas · valores alterados · mudanças de estado.
+  - Lista (`MudancasPagina.itens[]`), uma linha por `MudancaLote`:
+    - `codigo_emenda`, `autor_nome`, `uf_gasto`, `MudancaLote.municipio_nome`;
+    - `tipo` em texto;
+    - para `valor_alterado`: `etapa`, `valor_antes_centavos` → `valor_depois_centavos` e a diferença com sinal e texto ("aumentou R$ 120.000,00");
+    - para `estado_alterado`: o texto simples antes e depois (`MudancaLote.estado_antes_texto` → `MudancaLote.estado_depois_texto`, ex. "A entrega foi conferida; falta pagar → Parte do dinheiro já foi paga"), com os termos técnicos `estado_antes` → `estado_depois` abaixo e a versão `MudancaLote.traducao_versao`;
+    - para `nova_emenda` (uma linha por emenda, sem etapa): "apareceu neste lote".
+- **Coleta:**
+  - `tipo` · seleção (todas, `nova_emenda`, `valor_alterado`, `estado_alterado`) · opcional.
+  - `uf_gasto` · seleção · opcional.
+  - `municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0) · opcional.
+  - `autor_codigo` · combobox · opcional.
+  - `lote_novo_id` · seleção de lotes publicados (`listar_lotes`) · opcional, padrão o lote ativo.
+  - `pagina` · inteiro ≥ 1.
+- **Ações:**
+  - Alterar filtros ou lote → (`listar_mudancas`) com os parâmetros; atualiza a URL.
+  - Contagem por tipo (filtro rápido) → (`listar_mudancas`) com `tipo`.
+  - Linha → P03 (`obter_emenda`); "Linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Acompanhar este recorte" → S01 (`listar_opcoes_filtro`) com `filtro_uf_gasto` / `filtro_municipio_gasto` / `filtro_autor_codigo` preenchidos e `condicao = mudanca_estado`.
+  - Lote do cabeçalho → P09 com `?lote_id=` (`obter_lote`).
+  - "Limpar filtros" → (`listar_mudancas`) sem filtros.
+- **Estados:**
+  - **carregando:** esqueleto da lista (REQ-44).
+  - **vazio:**
+    - primeiro lote (sem anterior) → "Este é o primeiro lote publicado; as mudanças aparecem a partir do próximo" (REQ-75);
+    - sem mudanças nos filtros → "Nenhuma mudança neste recorte" e "Limpar filtros" (REQ-45).
+  - **erro:** `lote_novo_id` inexistente (404) → volta ao lote ativo com aviso (REQ-55); 422 `parametro_invalido` → filtros voltam ao padrão (REQ-72); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** cabeçalho, contagem e lista (REQ-24).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Só aparecem mudanças entre lotes publicados da mesma fonte (REQ-24, REQ-08).
+  - O verbo é neutro ("aumentou", "diminuiu", "passou de … para …"). Diminuição não é marcada em vermelho.
+  - Um recuo de estado (por exemplo, `paga` → `paga_em_parte`, quando um empenho novo aumenta o valor devido, ou `liquidada` → `empenhada`, quando um valor é cancelado) é mostrado como mudança, com a nota "o estado recuou entre os dois lotes; veja os valores por etapa", sem interpretar o motivo (ADR-0006, REQ-106).
+- **Requisitos · contrato:**
+  - REQ-24, REQ-61, REQ-08, REQ-75, REQ-106, REQ-14, REQ-55, REQ-69, REQ-72 · `GET /api/mudancas` (`listar_mudancas`).
+  - REQ-27 · `GET /api/lotes` (`listar_lotes`) para o seletor de lote.
+  - REQ-20, REQ-66 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`) para os filtros de UF, município e autor.
+- **Acessibilidade:**
+  - A lista tem o mesmo conteúdo no desktop e no celular.
+  - A contagem por tipo funciona como filtro rápido (botões com `aria-pressed`).
+- **Anexo:** mockup de referência [anexos/P08.png](anexos/P08.png), exportado do canvas "Rastro — telas" (Claude Design).

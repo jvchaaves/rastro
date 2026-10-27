@@ -1,0 +1,48 @@
+## P05 · Favorecidos da emenda
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Objetivo:** Mostrar quanto foi registrado como recebido por mês numa emenda, por pessoa jurídica ou ente público e, somado, por pessoas físicas, sem sugerir irregularidade nem aplicação final.
+- **Chega de / vai para:**
+  - Chega de: P03.
+  - Vai para: P03 ("Voltar à emenda"), P09 (proveniência), download oficial da CGU.
+- **Mostra:**
+  - Aviso fixo no topo, antes da tabela: "Recebimento registrado não comprova a aplicação final do recurso nem indica irregularidade." (`FavorecidosPagina.aviso`).
+  - Soma: `FavorecidosPagina.soma_valor_recebido_centavos`, com o rótulo "Soma dos recebimentos registrados", distinta do valor "pago" da emenda, que aparece ao lado só como referência e com rótulo próprio.
+  - Tabela (`FavorecidosPagina.itens[]`), agrupada por mês (`RegistroFavorecido.ano_mes`, mm/aaaa):
+    - favorecido identificado (pessoa jurídica ou ente público): `Favorecido.nome_publicavel`, `Favorecido.codigo_origem` (CNPJ ou código do ente), `Favorecido.tipo` em texto, `Favorecido.natureza_juridica` e `Favorecido.municipio` / `Favorecido.uf` na coluna "Local do favorecido";
+    - linha agregada de pessoas físicas do mês: "Pessoas físicas (N)", com N = `FavorecidosPagina.itens[].pessoas_fisicas.quantidade`, sem nome nem CPF;
+    - em todas as linhas, `RegistroFavorecido.valor_recebido_centavos`.
+  - Nota abaixo do cabeçalho de "Local do favorecido": "Local de quem recebeu; o local do gasto está na página da emenda."
+  - Proveniência da página (`FavorecidosPagina.proveniencia`).
+  - Nota sob a tabela: "Recebimentos de pessoas físicas aparecem somados, sem identificação. O detalhe está no download oficial da CGU."
+- **Coleta:**
+  - `pagina` · inteiro ≥ 1.
+  - `por_pagina` · seleção 20/50/100.
+- **Ações:**
+  - Paginação → (`listar_favorecidos`) com `pagina`.
+  - "Voltar à emenda" → P03 (`obter_emenda`).
+  - Faixa de proveniência → P09 (`listar_lotes`).
+  - "Conferir na CGU" → `Proveniencia.url_download` em nova aba → ação local · sem chamada à API (REQ-74).
+- **Estados:**
+  - **carregando:** esqueleto da tabela; o aviso aparece já no esqueleto (REQ-44).
+  - **vazio:** "Nenhum recebimento por favorecido registrado para esta emenda até dd/mm/aaaa." O aviso continua visível (REQ-45).
+  - **erro:** 404 / 422 / 5xx como em P03 (REQ-17, REQ-18, REQ-46).
+  - **sucesso:** aviso, soma e tabela (REQ-25, REQ-26).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Pessoa física nunca é identificada: só a linha agregada do mês, sem nome, CPF, link, filtro, ordenação ou busca (REQ-25, REQ-65, ADR-0007).
+  - O aviso é obrigatório em todos os estados com dados ou vazios (REQ-26).
+  - A soma dos recebimentos nunca é chamada de "pago" nem somada a outras etapas (REQ-15).
+  - A ordem é fixa, a do contrato: `ano_mes` decrescente e, no mesmo mês, `nome_publicavel`, com a linha de pessoas físicas por último. Não há ordenação por valor, para não criar um ranking de favorecidos.
+- **Requisitos · contrato:**
+  - REQ-25, REQ-26, REQ-65, REQ-15, REQ-14 · `GET /api/emendas/{codigo}/favorecidos` (`listar_favorecidos`).
+  - REQ-15 · `GET /api/emendas/{codigo}` (`obter_emenda`) para o cabeçalho e o valor "pago" de referência (etapa `pago`).
+  - REQ-17, REQ-18, REQ-19 · respostas 422 / 404 / 503 do mesmo contrato.
+  - REQ-74 · ação local (link externo).
+- **Acessibilidade:**
+  - O aviso é um `<p>` comum no fluxo (não um `role="alert"`), lido antes da tabela.
+  - A tabela tem `<caption>` "Recebimentos registrados por favorecido, emenda 2025…".
+  - A linha "Pessoas físicas (N)" tem rótulo acessível "N pessoas físicas, recebimentos somados em mm/aaaa".
+- **Anexo:** mockup de referência [anexos/P05.png](anexos/P05.png), exportado do canvas "Rastro — telas" (Claude Design).

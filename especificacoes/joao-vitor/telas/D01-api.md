@@ -1,0 +1,51 @@
+## D01 · API para jornalistas e pesquisadores
+
+- **Superfície · ator:** Painel web (documentação) + API pública (JSON) · Jornalista ou pesquisador.
+- **Objetivo:** Permitir que quem apura uma pauta reproduza no próprio código as mesmas consultas do painel, com a proveniência e os limites de uso explícitos.
+- **Chega de / vai para:**
+  - Chega de: cabeçalho "API" (todas as telas do painel).
+  - Vai para: `/openapi.json` (contrato), chamadas `GET /api/...`, P09 ("Como o Rastro publica"), P11 ("Tabela de tradução").
+- **Mostra:**
+  - Introdução em três frases: o que a API devolve, que valores são inteiros em centavos (`valor_centavos`) e que toda resposta com valores traz `proveniencia` (`fonte_nome`, `lote_id`, `data_referencia`, `importado_em`, `hash_sha256`, `url_download`).
+  - Limite de uso: 60 requisições/min por IP de cliente, com resposta 429 e `Retry-After` (REQ-28, REQ-84).
+  - Tabela de operações gerada do contrato (`obter_contrato`), uma linha por operação pública:
+    - método e caminho;
+    - `summary`;
+    - parâmetros;
+    - códigos de resposta.
+
+    Por exemplo: `GET /api/emendas/{codigo}` → 200 / 404 / 422 / 429 / 500 / 503.
+  - Exemplos prontos, para copiar, que reproduzem as telas P02, P03, P06, P08 e P10 (`curl` e Python `httpx`), inclusive "o que chegou a João Pessoa" (`obter_municipio`) e "empenhado e ainda não pago" (`listar_emendas?pendentes=true`).
+  - Formato de erro (`Problema`: `status`, `codigo`, `detail`, `request_id`) e lista de `codigo` possíveis.
+  - Glossário curto das etapas (`Etapa`) e de `estado_execucao`, com a explicação de `estado_texto` e `traducao_versao` e o link para a tabela de tradução (`listar_traducoes`).
+  - Nota "O que a API não oferece": identificação ou busca de favorecido pessoa física, que aparece só agregado (REQ-25, REQ-65, ADR-0007), com indicação do download oficial da CGU.
+- **Coleta:**
+  - `codigo` (campo "Experimentar") · texto de 12 dígitos · opcional. Executa `obter_emenda` e mostra o JSON.
+- **Ações:**
+  - "Baixar contrato (openapi.json)" → `GET /openapi.json` (`obter_contrato`).
+  - "Copiar exemplo" → área de transferência, com o anúncio "Exemplo copiado" → ação local · sem chamada à API (REQ-74).
+  - "Experimentar" → `GET /api/emendas/{codigo}` (`obter_emenda`) e exibe o status HTTP e o corpo formatado.
+  - Link de cada operação → âncora da operação na própria página → ação local · sem chamada à API (REQ-74).
+  - "Como o Rastro publica" → P09 (`listar_lotes`).
+  - "Tabela de tradução" → P11 (`listar_traducoes`).
+- **Estados:**
+  - **carregando:** esqueleto da tabela de operações enquanto `/openapi.json` carrega (REQ-44).
+  - **vazio:** "Experimentar" sem código → botão desabilitado, com a dica do formato (REQ-89).
+  - **erro:**
+    - contrato indisponível (5xx) → exemplos estáticos continuam visíveis, mensagem com `X-Request-Id` (REQ-46);
+    - no "Experimentar": 422 / 404 / 503 mostrados como resposta da API, não como erro da página (REQ-17, REQ-18, REQ-19).
+  - **sucesso:** documentação e resposta do "Experimentar" (REQ-30).
+  - **offline:** "Sem conexão"; documentação estática visível, "Experimentar" desabilitado (REQ-47).
+  - **sem permissão:** tela pública; 429 no "Experimentar" mostra `Retry-After` (REQ-28).
+- **Regras:**
+  - A tabela de operações vem de `/openapi.json`, nunca escrita à mão, para não divergir do contrato (REQ-30).
+  - Operações de assinatura aparecem documentadas, mas sem "Experimentar", para não expor chaves.
+- **Requisitos · contrato:**
+  - REQ-30 · `GET /openapi.json` (`obter_contrato`).
+  - REQ-16, REQ-17, REQ-18, REQ-19 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-28, REQ-84, REQ-14, REQ-69, REQ-72 · todas as operações públicas.
+  - REQ-74 · ações locais (copiar exemplo, âncora).
+- **Acessibilidade:**
+  - Blocos de código com `<pre><code>` e rótulo da linguagem; o botão "Copiar" tem nome acessível com a operação ("Copiar exemplo curl de obter_emenda").
+  - O resultado do "Experimentar" é anunciado (`aria-live`) com o status HTTP.
+- **Anexo:** mockup de referência [anexos/D01.png](anexos/D01.png), exportado do canvas "Rastro — telas" (Claude Design).

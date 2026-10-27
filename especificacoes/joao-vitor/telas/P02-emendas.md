@@ -1,0 +1,67 @@
+## P02 · Emendas: busca e filtros
+
+- **Superfície · ator:** Painel web · Cidadão (morador), jornalista e gestor municipal (recorte "empenhado e ainda não pago").
+- **Objetivo:** Encontrar emendas por recorte e comparar os valores por etapa numa lista que pode ser citada pela URL.
+- **Chega de / vai para:**
+  - Chega de: P01 (busca, UF), P03 ("Buscar emendas", no estado não encontrada), P06 (grupo escolhido), P07 ("Ver todas"), P10 ("Ver as N emendas" e "Ver as pendentes"), cabeçalho "Emendas".
+  - Vai para: P03 (linha da lista), P10 (município do gasto), S01 ("Acompanhar este filtro"), P09 (proveniência).
+- **Mostra:**
+  - Faixa de proveniência da página (`EmendaPagina.proveniencia`: `fonte_nome`, `lote_id`, `data_referencia`, `importado_em`).
+  - Contagem "N emendas" (`EmendaPagina.total`) e a descrição em texto dos filtros aplicados.
+  - Tabela, uma linha por emenda (`EmendaResumo`):
+    - `Emenda.codigo`;
+    - `Autor.nome`, com o selo "coletivo" quando `Autor.tipo ≠ parlamentar`;
+    - `Emenda.tipo`;
+    - `Emenda.uf_gasto` (`NM` aparece como "Nacional ou múltiplas UFs") e `Emenda.municipio_nome`, quando houver, com link para P10 pelo identificador `Emenda.municipio_gasto`;
+    - `Emenda.funcao_nome`;
+    - três colunas separadas: `empenhado`, `liquidado` e `pago` (`RegistroExecucao.valor_centavos` por `etapa`);
+    - o estado em linguagem simples (`EmendaResumo.estado_texto`, ex. "O dinheiro foi reservado") com o termo técnico abaixo (`estado_execucao`, "empenhada").
+  - No celular, cada linha vira um cartão com as três etapas empilhadas e rotuladas.
+  - Paginação (`pagina`, `por_pagina`).
+- **Coleta:**
+  - `q` · texto 2–80 · opcional.
+  - `ano` · seleção (2025) · opcional, padrão 2025.
+  - `autor_codigo` · combobox com busca sobre `listar_opcoes_filtro.autores` · opcional.
+  - `uf_gasto` · seleção (UFs + "Nacional ou múltiplas UFs" = `NM`) · opcional.
+  - `municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0) · opcional; desabilitado sem UF ou com `NM`.
+  - `pendentes` · caixa "Só empenhado e ainda não pago" · opcional, padrão desligada.
+  - `funcao_codigo` · seleção · opcional.
+  - `tipo` · seleção · opcional.
+  - `ordenar` · seleção (`-empenhado`, `-liquidado`, `-pago`, `codigo`) · padrão `-empenhado`.
+  - `pagina` · inteiro ≥ 1.
+- **Ações:**
+  - Alterar um filtro → (`listar_emendas`) com os novos parâmetros; a URL é atualizada; o foco vai para a contagem de resultados.
+  - "Limpar filtros" → (`listar_emendas`) sem filtros.
+  - Linha / "Ver emenda" → P03 (`obter_emenda`).
+  - Município do gasto na linha → P10 (`obter_municipio`).
+  - "Acompanhar este filtro" → S01 (`listar_opcoes_filtro`), com `filtro_autor_codigo`, `filtro_uf_gasto`, `filtro_municipio_gasto` e `filtro_funcao_codigo` pré-preenchidos.
+  - "Copiar link desta consulta" → copia a URL e anuncia "Link copiado" → ação local · sem chamada à API (REQ-74).
+  - "Baixar CSV desta página" → gera, no navegador, um CSV dos itens já carregados, com as colunas de proveniência → ação local · sem chamada à API (REQ-74).
+  - Faixa de proveniência → P09 (`listar_lotes`).
+- **Estados:**
+  - **carregando:** esqueleto da tabela; filtros desabilitados só durante a primeira carga (REQ-44).
+  - **vazio:** "Nenhuma emenda com estes filtros", com a lista de filtros e "Limpar filtros" (REQ-45).
+  - **erro:** 5xx → mensagem com `X-Request-Id` e "Tentar de novo" (REQ-46). 422 `parametro_invalido` (parâmetro manipulado na URL, ou município sem UF) → filtros voltam ao padrão, com aviso "Ajustamos um filtro inválido" (REQ-72).
+  - **sucesso:** tabela e paginação (REQ-20).
+  - **offline:** "Sem conexão"; a tabela anterior é removida, não congelada (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa → mensagem com tempo de espera (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - O filtro de UF usa `Emenda.uf_gasto`, nunca a UF do favorecido; a interface diz "UF do gasto" (REQ-21).
+  - A busca textual não procura favorecidos (REQ-65).
+  - "Acompanhar este filtro" leva só autor, UF, município e função, os filtros que uma assinatura aceita. Se houver `q`, `tipo`, `pendentes` ou ordenação, S01 avisa: "A busca por texto, o tipo e o recorte de pendentes não entram na assinatura".
+  - `por_pagina` máximo de 100 (REQ-20).
+  - Município só com UF de uma UF; sem ela, o seletor fica desabilitado e a URL manipulada recebe 422 (REQ-72).
+  - "Só empenhado e ainda não pago" mostra emendas em que o pago (com restos a pagar pagos) é menor que o empenhado menos os restos a pagar cancelados, inclusive as pagas em parte (REQ-68). O texto da caixa usa linguagem simples e não insinua atraso nem culpa.
+  - O texto do estado vem da API (`estado_texto`), nunca do código do painel (REQ-69).
+- **Requisitos · contrato:**
+  - REQ-20, REQ-21, REQ-65, REQ-15, REQ-66, REQ-68, REQ-69, REQ-72 · `GET /api/emendas` (`listar_emendas`).
+  - REQ-20, REQ-112 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), com `municipios[].quantidade_emendas_gasto`.
+  - REQ-14, REQ-48 · `EmendaPagina.proveniencia`.
+  - REQ-74 · ações locais (copiar link, CSV).
+- **Acessibilidade:**
+  - Tabela com `<caption>` que descreve os filtros e cabeçalhos `scope="col"`.
+  - A mudança de resultados é anunciada em `aria-live` ("128 emendas encontradas").
+  - Ordenação indicada por `aria-sort`.
+  - No celular, a folha de filtros prende o foco e fecha com Esc.
+- **Anexo:** mockup de referência [anexos/P02.png](anexos/P02.png), exportado do canvas "Rastro — telas" (Claude Design).
