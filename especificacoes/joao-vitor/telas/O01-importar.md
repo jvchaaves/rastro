@@ -42,10 +42,11 @@
   - Leitura em fluxo, Latin-1, `;` (REQ-01).
   - Código fora do padrão → `codigo_invalido` (REQ-02); ano da emenda ≠ 2025 → `ano_fora_do_recorte`, fora da taxa de 5% (REQ-59, REQ-06); pagamentos a favorecido com `ano_mes` até o mês da referência entram (REQ-54); linha com colunas faltando → `linha_malformada` (REQ-97); favorecido de emenda ausente do arquivo → `emenda_sem_cadastro` (REQ-98); pessoas físicas são agregadas por emenda e mês, sem nome nem CPF (REQ-25).
   - Valor inválido → `valor_malformado` (REQ-03).
-  - `uf_gasto` derivada de "Localidade do gasto" (REQ-21), com `NM` para nacional ou várias UFs (REQ-78); `municipio_gasto` e `municipio_nome` derivados da mesma coluna quando ela nomeia um município (REQ-66), e nulos quando ela é uma UF, uma região ou nacional (REQ-88).
+  - `uf_gasto` derivada das colunas de UF do local de aplicação (REQ-21), com `NM` quando a UF é "Sem informação" (REQ-78); município pelo Código Município IBGE (REQ-66), nulo para "Múltiplo" ou "Sem informação" (REQ-88).
+  - Linhas com código "Sem informação" → `codigo_ausente`, fora da taxa (REQ-102); valores negativos de Valor Recebido são estornos e entram com sinal (REQ-103); tipo do favorecido conforme REQ-104.
   - Importar nunca publica: o lote validado fica invisível até O02 (ADR-0001).
 - **Requisitos · contrato:**
-  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88, REQ-90, REQ-97, REQ-98 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
+  - REQ-01, REQ-02, REQ-03, REQ-04, REQ-05, REQ-06, REQ-10, REQ-21, REQ-50, REQ-52, REQ-53, REQ-54, REQ-56, REQ-59, REQ-66, REQ-73, REQ-78, REQ-82, REQ-88, REQ-90, REQ-97, REQ-98, REQ-102, REQ-103, REQ-104 · `rastro importar` (`cli:importar`, ver `../arquitetura/contratos/cli.md`).
   - REQ-11, REQ-12 · `rastro sincronizar` (`cli:sincronizar`).
 - **Acessibilidade:**
   - Números com separador de milhar pt-BR.

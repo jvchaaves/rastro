@@ -7,13 +7,13 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Termo | No modelo | Definição |
 | :-- | :-- | :-- |
 | Emenda parlamentar | `Emenda` | Proposta de deputados, senadores, bancadas ou comissões para destinar parte do orçamento federal. No Rastro, uma emenda federal de 2025 identificada por um código válido. |
-| Código da emenda | `Emenda.codigo` | Identificador de 12 dígitos publicado pela CGU (os 4 primeiros são o ano). Fora desse padrão, a linha é rejeitada (`codigo_invalido`). |
+| Código da emenda | `Emenda.codigo` | Identificador de 12 dígitos publicado pela CGU (os 4 primeiros são o ano). Linhas publicadas com "Sem informação" ficam fora do recorte (`codigo_ausente`); outro valor fora do padrão é rejeitado (`codigo_invalido`). |
 | Tipo de emenda | `Emenda.tipo` | Classificação da CGU: individual (transferência especial ou com finalidade definida), de bancada, de comissão ou de relator. |
 | Autor | `Autor` | Quem apresentou a emenda. É **autor parlamentar** quando `Autor.tipo = parlamentar`. Bancada, comissão e relator são **autores coletivos** e nunca são atribuídos a uma pessoa. |
 | Função | `Emenda.funcao_codigo`, `funcao_nome` | Área de governo da despesa (Saúde, Educação…), conforme a classificação orçamentária. |
-| Localidade do gasto | `Emenda.localidade_gasto` | Onde a despesa foi programada, segundo a CGU. **Não** é o endereço do favorecido. |
+| Localidade do gasto | `Emenda.localidade_gasto` | A "Localidade de aplicação do recurso" publicada pela CGU: um município ("JOÃO PESSOA - PB"), uma UF ("PARAÍBA (UF)"), vários municípios de uma UF ("MÚLTIPLO"), uma região ou "Nacional". **Não** é o endereço do favorecido. |
 | UF do gasto | `Emenda.uf_gasto` | UF derivada da localidade do gasto. Fica vazia quando a localidade é nacional ou abrange várias UFs; na API e nos filtros essas emendas aparecem com a sigla reservada `NM` ("Nacional ou múltiplas UFs") (REQ-78). |
-| Município do gasto | `Emenda.municipio_gasto` | Município derivado da localidade do gasto quando ela tem a forma "MUNICÍPIO - UF". Guarda o identificador (`joao-pessoa`) e o nome como publicado (`municipio_nome`). Fica vazio quando a localidade é uma UF, uma região ou nacional; essas emendas aparecem na UF, não num município (REQ-66, REQ-88). |
+| Município do gasto | `Emenda.municipio_ibge`, `municipio_gasto`, `municipio_nome` | Município da coluna "Código Município IBGE" do arquivo de emendas. Fica vazio quando o recurso vai para vários municípios ("Múltiplo"), para a UF inteira ou é nacional; essas emendas aparecem na UF, não num município (REQ-66, REQ-88). No arquivo de 26/10/2026, 759 das 6 310 emendas de 2025 têm um município. |
 | Etapa | `RegistroExecucao.etapa` | Fase da despesa com valor próprio. As etapas nunca são somadas entre si. |
 | Valor empenhado | `etapa = empenhado` | Valor reservado no orçamento para a despesa (compromisso). Não significa que o dinheiro saiu. |
 | Valor liquidado | `etapa = liquidado` | Valor reconhecido como devido depois de verificada a entrega do bem ou serviço. |
@@ -40,7 +40,7 @@ Vocabulário do Rastro (seção 12 do arc42). A primeira coluna é o termo usado
 | Lote ativo | `PublicacaoAtiva` | O lote que as consultas leem para uma fonte. Só muda numa publicação. |
 | Publicação atômica | — | Troca do lote ativo numa única transação: quem consulta vê o lote antigo inteiro ou o novo inteiro, nunca uma mistura. |
 | Proveniência | `Proveniencia` (contrato) | Fonte, lote, data de referência, data de extração, hash e link do download oficial que acompanham cada valor (REQ-14). |
-| Rejeição | `RejeicaoLote` | Linha descartada na validação, contada por motivo: `codigo_invalido`, `ano_fora_do_recorte`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro`. |
+| Rejeição | `RejeicaoLote` | Linha descartada na validação, contada por motivo: `codigo_invalido`, `codigo_ausente`, `ano_fora_do_recorte`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro`. Os dois de recorte (`codigo_ausente`, `ano_fora_do_recorte`) não contam na taxa de 5%. |
 | Mudança | `MudancaLote` | Diferença de uma emenda entre o lote anterior e o novo: `nova_emenda`, `valor_alterado` ou `estado_alterado`. |
 | Linha do tempo | — | Sequência dos valores de cada etapa de uma emenda ao longo dos lotes publicados. |
 | Sincronização | `rastro sincronizar` | Download concorrente das fontes seguido de importação e publicação em série. |

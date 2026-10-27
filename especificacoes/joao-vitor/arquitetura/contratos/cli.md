@@ -25,33 +25,55 @@ Regras comuns:
 ## `rastro importar` · `cli:importar` (tela O01)
 
 ```
-rastro importar --fonte cgu --arquivo data/raw/EmendasParlamentares_2026-10-20.zip [--json] [--sem-cor]
+rastro importar --fonte cgu --arquivo data/raw/emendas-parlamentares_2026-10-26.zip [--json] [--sem-cor]
 ```
 
-1. Calcula `hash_sha256`. Se já existir lote `validado`/`publicado`/`substituido` com esse hash → "lote já importado (Lote #n)" e código 0 (REQ-05). Se existir lote `recusado` → "lote já recusado" e código 2 (REQ-52). Lotes `falhou` não contam e o arquivo é importado de novo (REQ-53).
-2. Cria `LoteImportacao` (`estado = importando`) e lê os CSVs em fluxo (Latin-1, `;`). Valida cada linha (REQ-02, REQ-03, REQ-59, REQ-97, REQ-98), deriva UF e município do gasto (REQ-21, REQ-66, REQ-78, REQ-88), agrega os recebimentos de pessoas físicas por emenda e mês sem guardar nome nem CPF (REQ-25) e grava as aceitas em lotes de 5 000 linhas na tabela do lote.
-3. Ao terminar: `estado = validado`, ou `recusado` (REQ-06; ou REQ-73 quando nenhuma linha está no recorte), ou `falhou` (REQ-04). Grava `duracao_etl_ms` (REQ-82).
-4. Ao iniciar, qualquer lote em `importando` sem trava ativa vira `falhou` com `motivo_falha = interrompido` (REQ-10).
+### Pacote da CGU (conferido no arquivo de 26/10/2026)
+
+O download oficial (`https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO`) é um ZIP de cerca de 32 MB, sem data no nome, com três CSVs em Latin-1, separador `;` e todos os campos entre aspas. Ele traz **todos os anos** (2014 em diante), então o recorte de 2025 é feito na importação.
+
+| Arquivo no ZIP | Uso | Linhas (26/10/2026) |
+| :-- | :-- | --: |
+| `EmendasParlamentares.csv` | uma linha por emenda: cadastro, local de aplicação e as seis etapas | 94 747 (6 310 de 2025) |
+| `EmendasParlamentares_PorFavorecido.csv` | uma linha por emenda, favorecido e mês | 828 478 (88 162 de emendas de 2025) |
+| `EmendasParlamentares_Convenios.csv` | convênios ligados às emendas | não é importado no MVP |
+
+Colunas exigidas (contrato de importação, REQ-04):
+
+- `EmendasParlamentares.csv`: Código da Emenda; Ano da Emenda; Tipo de Emenda; Código do Autor da Emenda; Nome do Autor da Emenda; Número da emenda; Localidade de aplicação do recurso; Código Município IBGE; Município; Código UF IBGE; UF; Região; Código Função; Nome Função; Código Subfunção; Nome Subfunção; Código Programa; Nome Programa; Código Ação; Nome Ação; Código Plano Orçamentário; Nome Plano Orçamentário; Valor Empenhado; Valor Liquidado; Valor Pago; Valor Restos A Pagar Inscritos; Valor Restos A Pagar Cancelados; Valor Restos A Pagar Pagos.
+- `EmendasParlamentares_PorFavorecido.csv`: Código da Emenda; Código do Autor da Emenda; Nome do Autor da Emenda; Número da emenda; Tipo de Emenda; Ano/Mês; Código do Favorecido; Favorecido; Natureza Jurídica; Tipo Favorecido; UF Favorecido; Município Favorecido; Valor Recebido.
+
+Formatos observados: valores como `250000,00` (sem separador de milhar; negativos só em Valor Recebido, que são estornos); `Ano/Mês` como `AAAAMM`; CPF de pessoa física já mascarado pela fonte (`***.999.999-**`); `UF` por extenso ("PARAÍBA") ou "Sem informação"; `Município` com nome, "Múltiplo" ou "Sem informação"; `Código da Emenda` com 12 dígitos ou "Sem informação".
+
+### Passos
+
+1. Calcula `hash_sha256` sobre o conteúdo dos dois CSVs importados, descompactados e lidos em ordem de nome (não sobre o ZIP, que a CGU regera a cada atualização mesmo sem mudança de dados). Se já existir lote `validado`/`publicado`/`substituido` com esse hash → "lote já importado (Lote #n)" e código 0 (REQ-05). Se existir lote `recusado` → "lote já recusado" e código 2 (REQ-52). Lotes `falhou` não contam e o arquivo é importado de novo (REQ-53).
+2. Define `data_referencia` como a data de modificação das entradas do ZIP (a mesma nos três arquivos; 26/10/2026 no arquivo conferido).
+3. Cria `LoteImportacao` (`estado = importando`) e lê os CSVs em fluxo. Cada linha recebe um destino: aceita; `codigo_ausente` (REQ-102) ou `ano_fora_do_recorte` (REQ-59), fora da taxa; ou `codigo_invalido`, `valor_malformado`, `linha_malformada`, `emenda_sem_cadastro` (REQ-02, REQ-03, REQ-97, REQ-98), dentro da taxa. Deriva UF e município do local de aplicação (REQ-21, REQ-66, REQ-78, REQ-88), classifica o favorecido (REQ-104), agrega os recebimentos de pessoas físicas por emenda e mês sem guardar nome nem CPF (REQ-25) e grava as linhas aceitas em blocos de 5 000.
+4. Ao terminar: `estado = validado`, ou `recusado` (REQ-06; ou REQ-73 quando nenhuma linha está no recorte), ou `falhou` (REQ-04). Grava `duracao_etl_ms` (REQ-82).
+5. Ao iniciar, qualquer lote em `importando` sem trava ativa vira `falhou` com `motivo_falha = interrompido` (REQ-10).
 
 Saída humana (resumo):
 
 ```
 Rastro · importar · fonte CGU
-Arquivo   EmendasParlamentares_2026-10-20.zip
-Hash      9f2c…e41a (SHA-256)
-Referência 20/10/2026
+Arquivo    emendas-parlamentares_2026-10-26.zip
+Hash       9f2c…e41a (SHA-256 dos CSVs)
+Referência 26/10/2026
 
-Lendo …  148 312 linhas lidas
-OK     Aceitas      146 905
-AVISO  Rejeitadas     1 407
-         ano_fora_do_recorte   1 210  (fora da taxa)
-         codigo_invalido         162
-         valor_malformado         35
-       Taxa de rejeição 0,13% (197 de 147 102 linhas do recorte; limite 5%)
-Tempo  leitura 41,2 s · validação 12,8 s · gravação 33,0 s
+Lendo …  923 225 linhas lidas (94 747 emendas, 828 478 por favorecido)
+OK     Aceitas       94 472 (6 310 emendas de 2025, 88 162 registros por favorecido)
+AVISO  Descartadas  828 753 (fora do recorte, não entram na taxa)
+         ano_fora_do_recorte  743 896
+         codigo_ausente        84 857
+OK     Rejeitadas         0
+       Taxa de rejeição 0,00% (0 de 94 472 linhas do recorte; limite 5%)
+Tempo  leitura 6,1 s · validação 2,3 s · gravação 4,0 s
 
 Lote #14 VALIDADO. Para publicar: rastro publicar --lote 14
 ```
+
+Os números acima são os do arquivo real de 26/10/2026.
 
 Eventos `--json`: `{"evento":"lote_criado",...}`, `{"evento":"progresso","linhas_lidas":n}`, `{"evento":"lote_validado"|"lote_recusado"|"lote_falhou", "lote": <Lote>}`.
 

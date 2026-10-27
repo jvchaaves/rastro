@@ -817,7 +817,7 @@ components:
                 properties:
                   motivo:
                     type: string
-                    enum: [codigo_invalido, ano_fora_do_recorte, valor_malformado, linha_malformada, emenda_sem_cadastro]
+                    enum: [codigo_invalido, codigo_ausente, ano_fora_do_recorte, valor_malformado, linha_malformada, emenda_sem_cadastro]
                   quantidade: { type: integer, minimum: 1 }
             duracao_etl_ms:
               type: [object, 'null']

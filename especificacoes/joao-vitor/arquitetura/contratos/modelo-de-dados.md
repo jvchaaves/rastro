@@ -69,6 +69,7 @@ erDiagram
         TEXT autor_codigo FK
         TEXT localidade_gasto
         TEXT uf_gasto
+        TEXT municipio_ibge
         TEXT municipio_gasto
         TEXT municipio_nome
         TEXT funcao_codigo
@@ -180,8 +181,8 @@ Um arquivo de uma fonte, importado uma vez e identificado por hash.
 | `id` | INTEGER | PK autoincremento | Exibido como "Lote #id" |
 | `fonte_id` | TEXT | FK → Fonte | |
 | `arquivo_nome` | TEXT | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel` (REQ-12) | Nome do ZIP baixado |
-| `hash_sha256` | TEXT | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel`; índice único parcial (`fonte_id`, `hash_sha256`) `WHERE estado <> 'falhou'` | Base da idempotência (REQ-05, REQ-52, REQ-53) |
-| `data_referencia` | DATE | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel` | Data de atualização dos dados informada pela CGU: a data do nome do arquivo (`EmendasParlamentares_AAAA-MM-DD.zip`) |
+| `hash_sha256` | TEXT | SHA-256 do conteúdo dos CSVs importados (não do ZIP). NOT NULL, exceto em lote `falhou` por `fonte_indisponivel`; índice único parcial (`fonte_id`, `hash_sha256`) `WHERE estado <> 'falhou'` | Base da idempotência (REQ-05, REQ-52, REQ-53) |
+| `data_referencia` | DATE | NOT NULL, exceto em lote `falhou` por `fonte_indisponivel` | Data de atualização dos dados pela CGU: a data de modificação das entradas do ZIP (o nome do arquivo não traz data) |
 | `importado_em` | DATETIME | NOT NULL | Momento em que o Rastro baixou ou recebeu o arquivo e começou a importá-lo: a "data de extração" da proveniência (REQ-14) |
 | `publicado_em` | DATETIME | NULL até publicar | |
 | `estado` | TEXT | `importando` \| `validado` \| `publicado` \| `substituido` \| `recusado` \| `falhou` | Ciclo em `adr/0001` |
@@ -197,7 +198,7 @@ Contagem de linhas rejeitadas por motivo (REQ-02, REQ-03).
 | Campo | Tipo | Restrição | Nota |
 | :-- | :-- | :-- | :-- |
 | `lote_id` | INTEGER | PK, FK → LoteImportacao | |
-| `motivo` | TEXT | PK, `codigo_invalido` \| `ano_fora_do_recorte` \| `valor_malformado` \| `linha_malformada` \| `emenda_sem_cadastro` | |
+| `motivo` | TEXT | PK, `codigo_invalido` \| `codigo_ausente` \| `ano_fora_do_recorte` \| `valor_malformado` \| `linha_malformada` \| `emenda_sem_cadastro` | `codigo_ausente` e `ano_fora_do_recorte` ficam fora da taxa do REQ-06 |
 | `quantidade` | INTEGER | > 0 | |
 | `linha_exemplo` | TEXT | | Primeira linha rejeitada, para diagnóstico |
 
@@ -230,10 +231,11 @@ Cadastro da emenda **no lote** (PK composta), para que nenhum atributo mude sob 
 | `numero` | TEXT | | Número da emenda |
 | `tipo` | TEXT | NOT NULL | Tipo de Emenda |
 | `autor_codigo` | TEXT | FK → Autor | Código do Autor da Emenda |
-| `localidade_gasto` | TEXT | | Localidade do gasto (texto original) |
-| `uf_gasto` | TEXT | NULL = nacional/múltiplas | Derivado de `localidade_gasto` (REQ-21, REQ-78) |
-| `municipio_gasto` | TEXT | NULL quando a localidade é UF, região ou nacional (REQ-88) | Identificador derivado de `localidade_gasto` na forma "MUNICÍPIO - UF": minúsculo, sem acento, com hífens (`joao-pessoa`) (REQ-66) |
-| `municipio_nome` | TEXT | NULL junto com `municipio_gasto` | Nome do município como publicado ("João Pessoa") (REQ-66) |
+| `localidade_gasto` | TEXT | | Localidade de aplicação do recurso (texto original: "JOÃO PESSOA - PB", "PARAÍBA (UF)", "MÚLTIPLO", "Nacional"…) |
+| `uf_gasto` | TEXT | Sigla; NULL quando a UF é "Sem informação" (nacional, regional, exterior) | Derivado de Código UF IBGE / UF (REQ-21, REQ-78). Uma localidade "MÚLTIPLO" tem UF: são vários municípios da mesma UF |
+| `municipio_ibge` | TEXT | 7 dígitos; NULL quando Município é "Múltiplo" ou "Sem informação" (REQ-88) | Código Município IBGE (REQ-66) |
+| `municipio_gasto` | TEXT | NULL junto com `municipio_ibge` | Identificador derivado do nome: minúsculo, sem acento, com hífens (`joao-pessoa`) (REQ-66) |
+| `municipio_nome` | TEXT | NULL junto com `municipio_ibge` | Coluna Município, como publicada ("JOÃO PESSOA") (REQ-66) |
 | `funcao_codigo` / `funcao_nome` | TEXT | | Código Função / Nome Função |
 | `subfuncao_nome` | TEXT | | Nome Subfunção |
 | `programa_nome` | TEXT | | Nome Programa |
@@ -241,7 +243,7 @@ Cadastro da emenda **no lote** (PK composta), para que nenhum atributo mude sob 
 | `estado_execucao` | — | derivado (view `v_emenda_estado`), não armazenado | ADR-0006 |
 | `estado_texto` / `traducao_versao` | — | derivados na API (junção com a versão vigente de `TabelaTraducao`) | REQ-69 |
 
-Índices: (`lote_id`, `autor_codigo`), (`lote_id`, `uf_gasto`, `municipio_gasto`), (`lote_id`, `funcao_codigo`), (`lote_id`, `tipo`).
+Índices: (`lote_id`, `autor_codigo`), (`lote_id`, `uf_gasto`, `municipio_gasto`), (`lote_id`, `municipio_ibge`), (`lote_id`, `funcao_codigo`), (`lote_id`, `tipo`).
 
 ### RegistroExecucao
 Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes forma a linha do tempo (REQ-23).
@@ -251,7 +253,7 @@ Valor acumulado de uma etapa de uma emenda num lote. A sequência entre lotes fo
 | `lote_id` | INTEGER | PK, FK | — |
 | `codigo_emenda` | TEXT | PK | Código da Emenda |
 | `etapa` | TEXT | PK, `empenhado` \| `liquidado` \| `pago` \| `rap_inscrito` \| `rap_cancelado` \| `rap_pago` | Valor Empenhado · Valor Liquidado · Valor Pago · Valor Restos a Pagar Inscritos · Cancelados · Pagos |
-| `valor_centavos` | INTEGER | ≥ 0 | Convertido de `1.234,56` (REQ-03) |
+| `valor_centavos` | INTEGER | ≥ 0 | Convertido de `250000,00` (REQ-03) |
 | `data_referencia` | DATE | = `LoteImportacao.data_referencia` | |
 
 **Estado de execução** (derivado, ADR-0006): `estado_execucao` é calculado na view `v_emenda_estado` a partir da etapa mais avançada com valor > 0. A ordem é `sem_execucao` < `empenhada` < `liquidada` < `paga` (`pago` + `rap_pago` > 0).
@@ -263,7 +265,7 @@ Dimensão em que só se insere, **só com pessoas jurídicas, entes públicos e 
 | :-- | :-- | :-- | :-- |
 | `id` | INTEGER | PK | — |
 | `codigo_origem` | TEXT | NOT NULL | Código do Favorecido (CNPJ ou código do ente) |
-| `tipo` | TEXT | `pessoa_juridica` \| `ente_publico` \| `outro` | Tipo Favorecido; linhas de pessoa física vão para o agregado |
+| `tipo` | TEXT | `pessoa_juridica` \| `ente_publico` \| `outro` | Derivado de Tipo Favorecido e Natureza Jurídica (REQ-104); "Pessoa Fisica" vai para o agregado |
 | `nome_publicavel` | TEXT | NOT NULL | Favorecido, como publicado |
 | `natureza_juridica` | TEXT | | Natureza Jurídica |
 | `uf` / `municipio` | TEXT | | UF Favorecido / Município Favorecido. **Não** é o local do gasto (REQ-21) |
@@ -277,8 +279,8 @@ Valor recebido por um favorecido num mês, num lote; ou, com `favorecido_id` nul
 | `lote_id` | INTEGER | FK | — |
 | `codigo_emenda` | TEXT | FK (`lote_id`, `codigo_emenda`) → Emenda | Código da Emenda |
 | `favorecido_id` | INTEGER | FK → Favorecido; NULL na linha agregada de pessoas físicas | — |
-| `ano_mes` | TEXT | `AAAA-MM` | Ano/Mês |
-| `valor_recebido_centavos` | INTEGER | ≥ 0 | Valor Recebido (soma, na linha agregada) |
+| `ano_mes` | TEXT | `AAAA-MM` | Ano/Mês, publicado como `AAAAMM` (REQ-54) |
+| `valor_recebido_centavos` | INTEGER | Pode ser negativo: estorno publicado pela CGU (REQ-103) | Valor Recebido (soma com sinal, na linha agregada) |
 | `quantidade_pessoas_fisicas` | INTEGER | > 0 na linha agregada; NULL nas demais (CHECK) | Pessoas físicas distintas no mês, contadas na importação pelo código mascarado + nome, que depois são descartados |
 
 Índice único parcial (`lote_id`, `codigo_emenda`, `ano_mes`) `WHERE favorecido_id IS NULL`: uma linha agregada por emenda e mês.

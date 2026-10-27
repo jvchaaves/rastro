@@ -25,7 +25,7 @@
   - Destaque para o gestor: "N emendas com valor empenhado ainda não pago" (`MunicipioDetalhe.quantidade_pendentes`, o recorte do REQ-68, inclusive as pagas em parte), com o botão "Ver as pendentes".
   - Lista das emendas do município (`listar_emendas?uf_gasto=&municipio_gasto=&ordenar=codigo&por_pagina=10`): `Emenda.codigo`, `Autor.nome`, `Emenda.funcao_nome`, o estado (`EmendaResumo.estado_texto` e `estado_execucao`) e os valores por etapa.
   - Marca "Tradução v`MunicipioDetalhe.traducao_versao`" com link para P11.
-  - Nota fixa: "Localidade do gasto segundo a CGU. Emendas de toda a UF ou nacionais não aparecem aqui; veja a UF em Emendas." e "Pagamento registrado não comprova a aplicação final."
+  - Nota fixa: "Local de aplicação do recurso, segundo a CGU. Emendas para vários municípios, para a UF inteira ou nacionais não aparecem aqui; veja a UF em Emendas." e "Pagamento registrado não comprova a aplicação final."
 - **Coleta:**
   - `uf_gasto` · da rota · obrigatório.
   - `municipio_gasto` · da rota (`OpcoesFiltro.municipios[].municipio_gasto`) · obrigatório.
