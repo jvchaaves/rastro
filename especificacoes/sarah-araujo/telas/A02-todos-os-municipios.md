@@ -1,0 +1,28 @@
+## A02 · Todos os municípios
+
+- **Superfície · ator:** web pública · morador
+- **Objetivo:** Deixar o cidadão encontrar a cidade sem precisar digitar, percorrendo a lista.
+- **Chega de / vai para:** A01 (link "ver todos" ou estado vazio da busca) → A03 (município tocado) · Voltar → A01
+- **Mostra:**
+  - Título: "Municípios da Paraíba" e o total (223).
+  - Índice de letras A–Z (só as letras que têm município), com âncoras.
+  - Grupos por letra inicial; em cada grupo, `municipio.nome` em ordem alfabética, cada um como link.
+- **Coleta:** nenhuma.
+- **Ações:**
+  - Tocar numa letra → rola até o grupo (âncora, sem requisição)
+  - Tocar num município → A03 (`/municipios/{codigo_ibge}`) · `obter_municipio`
+- **Estados:**
+  - *Carregando:* página inteira renderizada no servidor; sem estado intermediário (REQ-41).
+  - *Vazio:* não ocorre (a tabela `municipio` é carregada antes do primeiro deploy); se ocorrer, é tratado como erro (REQ-46).
+  - *Erro:* A12 com código de referência (REQ-46).
+  - *Sucesso:* 223 municípios agrupados (REQ-06).
+  - *Offline:* página já carregada continua navegável pelas âncoras; tocar num município sem rede fica a cargo do navegador (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:**
+  - Ordenação alfabética que respeita acentos do pt-BR ("Água Branca" fica no grupo A).
+  - A lista não mostra valores nem contagens: a intenção da tela é só achar a cidade, e números aqui convidariam a comparar cidades.
+- **Requisitos · contrato:** REQ-06 · `listar_municipios` (`GET /api/v1/municipios?limite=223`); rota `GET /municipios`
+- **Acessibilidade:**
+  - Índice de letras dentro de `<nav aria-label="Índice alfabético">`; cada grupo com `h2` da letra.
+  - Links com alvo de 48 px de altura (lista longa no celular).
+- **Anexo:** —

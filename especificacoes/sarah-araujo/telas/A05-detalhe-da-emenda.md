@@ -1,0 +1,63 @@
+## A05 · Detalhe da emenda
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Responder "o dinheiro desta emenda já chegou?" e mostrar o porquê: quem indicou, para quê, quanto e para quem foi pago.
+- **Chega de / vai para:** A04, A08, A14, link compartilhado/citação → A06 (termos) · A13 (citar) · A03 (município) · A09 (autor) · Portal da Transparência (externo) · Voltar → origem
+- **Mostra:**
+  - `h1`: "Emenda [`codigo_emenda`] · [`ano`]". Sem código: "Emenda de [`ano`] (código não informado na fonte)" (REQ-57).
+  - **Frase-resposta** (`resposta`, REQ-64/REQ-70), primeiro conteúdo da tela, em destaque. Exemplos reais de João Pessoa:
+    - "R$ 1,07 milhão desta emenda já foram pagos ao Fundo Municipal de Saúde, entre mai/2026 e jun/2026. Faltam R$ 1,75 milhão."
+    - "R$ 437 mil desta emenda já foram pagos à Caixa Econômica Federal, banco que repassa o dinheiro, em jul/2025. Faltam R$ 9,86 milhões. O destino final não aparece nos dados."
+    - "R$ 500 mil estão reservados para esta emenda, mas nada foi pago até out/2026."
+  - Botão **Compartilhar** ao lado da frase (REQ-68).
+  - **Para onde:** `municipio.nome` (link A03), "Paraíba (estado todo)" ou "Várias localidades", conforme `abrangencia`; `localidade_gasto` original em texto menor.
+  - **Quem indicou:** `autor.nome` e `autor.tipo` (link para A09 quando o autor é identificado).
+  - **Para quê:** `funcao`, `subfuncao`, `acao_orcamentaria`; `tipo_emenda`.
+  - **Fase atual:** `fase.traducao` em destaque + marcador neutro + "O que isso quer dizer?".
+  - **Valores**, cada um com a tradução e o link do termo:
+    - `valor_empenhado` ("Reservado")
+    - `rp_cancelado` ("Cancelado", só se > 0, REQ-19)
+    - `valor_final` ("Reservado, descontado o cancelado")
+    - `valor_pago` ("Pago no ano da emenda")
+    - `rp_pago` ("Pago nos anos seguintes", só se > 0, REQ-19)
+    - `valor_pago_total` ("Total pago")
+  - **Para que era o dinheiro** (`convenios`, REQ-71 a REQ-73), logo após a frase-resposta: para cada convênio, o `objeto` em destaque com o rótulo "Descrição informada no convênio", e abaixo `convenente`, número, data de publicação e valor. Exemplo real (emenda 202171160010, Bancada da Paraíba, 2021): "Obras de infraestrutura viária e urbana com implantação de binários, abertura viária e requalificação de vias com sistemas de drenagem, pavimentação, paisagismo, sinalização, iluminação, ciclovias e ciclofaixas" · Município de João Pessoa · convênio 914929 · 15/10/2021 · R$ 15.687.677,00. Sem convênio: texto de REQ-73.
+  - **Primeiro pagamento** (`primeiro_pagamento`, REQ-74), na linha do tempo e em uma linha curta: "Primeiro pagamento em fev/2022, 1 ano depois do ano da emenda."
+  - Rótulo "Reservada em {ano}, ainda sem pagamento" quando couber (REQ-76).
+  - **Linha do tempo** (`linha_do_tempo`, REQ-67), vertical: "2026: emenda indicada e R$ 2,82 milhões reservados" → "mai/2026: R$ 379 mil pagos ao Fundo Municipal de Saúde" → "jun/2026: R$ 690 mil pagos…". → "Falta pagar R$ 1,75 milhão". Cancelamento sem data aparece como marco sem data; sem pagamento, termina em "Aguardando pagamento".
+  - **Para quem foi pago** (REQ-59): lista de `favorecidos` com `nome` (ou "Pessoa física", REQ-53), categoria em texto ("Prefeitura ou fundo municipal", "Entidade privada", "Banco intermediário"…), município/UF, `valor_recebido` e período (`ano_mes_inicio`–`ano_mes_fim`). Sem favorecidos: "A fonte ainda não registra pagamentos a favorecidos para esta emenda."
+  - **Avisos** (`avisos`), sempre o de REQ-18 e, quando couber, o de transferência especial (REQ-61) e o de intermediário financeiro (REQ-60).
+  - Link "Ver na fonte" (`url_fonte`, REQ-23).
+- **Coleta:** nenhuma.
+- **Ações:**
+  - "O que isso quer dizer?" (fase ou valor) → painel A06 abaixo do item (fragmento) ou página A06 sem JS · `obter_termo`
+  - "Citar esta emenda" → A13 · `obter_citacao_emenda`
+  - "Ver na fonte" → nova aba com `url_fonte` (externo)
+  - Município de destino ou de um favorecido → A03 · `obter_municipio`
+  - Autor (com flag) → A09 · `obter_autor`
+  - "Compartilhar" → abre opções: "WhatsApp" (link `compartilhar.url_whatsapp`, sem JS) e "Copiar link" (URL permanente `/emendas/{id_emenda}`) (REQ-68, REQ-25)
+- **Estados:**
+  - *Carregando:* página renderizada no servidor; o painel de termo mostra "carregando…" (REQ-17).
+  - *Vazio:* a lista de favorecidos vazia tem texto próprio (REQ-59); emenda inexistente vai para Erro.
+  - *Erro:* `id_emenda` fora da versão ativa → A12 "Essa emenda não está na versão atual dos dados" (REQ-22); erro interno → A12 (REQ-46).
+  - *Sucesso:* frase-resposta (REQ-64), linha do tempo (REQ-67) e os campos de REQ-21 e REQ-59.
+  - *Offline:* falha ao abrir o painel do termo → mensagem + "Tentar de novo" (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - A frase-resposta vem antes de qualquer número solto e usa os mesmos valores exibidos abaixo (REQ-64).
+  - A linha do tempo não inventa datas: o empenho só tem ano (REQ-67).
+  - O aviso de REQ-18 aparece sempre.
+  - Pessoa física nunca é identificada (REQ-53).
+  - Com autor `S/I`, o nome é texto simples (REQ-30).
+  - O objeto do convênio aparece como está na fonte, só com ajuste de maiúsculas (REQ-72).
+  - Nenhum texto sobre a obra ou o serviço além do aviso (REQ-15); nunca "candidato" (REQ-27); nenhuma nota do autor (REQ-28).
+- **Requisitos · contrato:** REQ-13, REQ-14, REQ-17, REQ-18, REQ-19, REQ-21, REQ-22, REQ-23, REQ-25, REQ-27, REQ-28, REQ-30, REQ-53, REQ-57, REQ-58, REQ-59, REQ-60, REQ-61, REQ-64, REQ-67, REQ-68, REQ-70, REQ-71, REQ-72, REQ-73, REQ-74, REQ-76 · `obter_emenda` (`GET /api/v1/emendas/{id_emenda}`), `obter_termo`; rota `GET /emendas/{id_emenda}`
+- **Acessibilidade:**
+  - Painel do termo no padrão *disclosure* (`aria-expanded`, `aria-controls`); o foco vai ao título do painel e volta ao botão ao fechar.
+  - Os valores ficam em `<dl>`; a lista de favorecidos é uma tabela com `<caption>` no desktop e cartões no celular.
+  - Link externo com "(abre em nova aba, site do governo)".
+  - A frase-resposta é o primeiro parágrafo depois do `h1`, sem abreviação para o leitor de tela (REQ-44).
+  - A linha do tempo é um `<ol>`; cada marco tem data em `<time>` quando existir.
+  - O link do WhatsApp diz "Compartilhar no WhatsApp (abre o aplicativo)".
+- **Anexo:** —

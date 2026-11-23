@@ -1,0 +1,56 @@
+## A03 · Município · Resumo
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Mostrar, numa olhada, o dinheiro de emendas que foi para a cidade e quanto dele já foi pago.
+- **Chega de / vai para:** A01, A02, A05 (link do município), A09, link compartilhado → A04 (emendas destinadas) · A14 (recebido de outras emendas) · A08 (aviso) · A06 (termos) · Voltar → origem
+- **Mostra:**
+  - `h1`: `municipio.nome` + "PB".
+  - **Manchete** (`manchete`, REQ-65), em destaque, logo abaixo do `h1`: "Desde 2014, 260 emendas tiveram João Pessoa como destino: R$ 193 milhões reservados, R$ 138,6 milhões já pagos."
+  - Seletor de ano com `anos_disponiveis` (padrão "Todos os anos").
+  - **Cartão 1 · "Emendas destinadas a [nome]"** (REQ-08), detalhando a manchete:
+    - `destinadas.quantidade` emendas
+    - `destinadas.valor_final`: "Dinheiro reservado" + "O que isso quer dizer?"
+    - `destinadas.valor_pago_total`: "Dinheiro pago" + "O que isso quer dizer?"
+    - botão "Ver as [n] emendas" → A04
+  - **"Para quais áreas"** (`areas`, REQ-78), logo após o cartão 1: barras horizontais com o valor reservado por área (5 maiores + "Outras áreas"), cada uma com valor e quantidade em texto e link para A04 filtrado. Em João Pessoa: Saúde R$ 96,0 mi (193), Urbanismo R$ 57,6 mi (6), Educação R$ 14,7 mi (14), Assistência social R$ 12,2 mi (12), Cultura R$ 3,5 mi (10).
+  - **"Quando o dinheiro chegou"** (`quando_chegou`, REQ-75): "129 emendas tiveram o primeiro pagamento no mesmo ano · 67 no ano seguinte · 33 depois disso · 18 ainda sem pagamento", com a frase "Contamos a partir do ano da emenda; a fonte não informa o mês da reserva."
+  - **"Ainda sem pagamento"** (`reservas_antigas_sem_pagamento`, REQ-76), só quando > 0: "8 emendas reservadas até 2024 ainda não tiveram nenhum pagamento." + link para A04 filtrado.
+  - **"Quem mais recebeu"** (`principais_favorecidos`, REQ-79): os 5 maiores favorecidos das emendas destinadas, com categoria em texto; banco intermediário com o aviso de REQ-60.
+  - **Cartão 2, menor · "Recebido de outras emendas"** (REQ-54), com a frase "pagamentos de emendas sem destino nesta cidade que chegaram à prefeitura ou a fundos municipais de [nome]":
+    - `recebido_de_outras.valor_recebido` e `recebido_de_outras.quantidade_emendas`
+    - aviso: "Aqui só sabemos quanto foi pago, não a fase."
+    - botão "Ver os pagamentos" → A14
+    - dentro do cartão 2, o texto fixo "Este valor não se soma ao de cima: vem de outro registro." (REQ-55)
+    - e o aviso (REQ-09): "Há ainda [`sem_municipio_unico.quantidade`] emendas da Paraíba registradas para o estado todo ou para várias cidades." + link para A08
+- **Coleta:**
+  - `ano` · inteiro de `anos_disponiveis` ou vazio (todos) · opcional
+- **Ações:**
+  - Trocar o ano → atualiza os dois blocos e a URL (`?ano=`) · `obter_municipio`
+  - "Ver as emendas" → A04 com o mesmo `ano` · `listar_emendas_municipio`
+  - "Ver os pagamentos" → A14 com o mesmo `ano` · `listar_recebidos_municipio`
+  - "O que isso quer dizer?" → A06 em painel · `obter_termo`
+  - Link do aviso → A08 · `listar_emendas_sem_municipio`
+  - Barra de uma área → A04 com `funcao` · `listar_emendas_municipio`
+  - "Ver essas emendas" (ainda sem pagamento) → A04 com `sem_pagamento_antigo=true` · `listar_emendas_municipio`
+- **Estados:**
+  - *Carregando:* ao trocar o ano, os números ficam esmaecidos com "atualizando…" (REQ-12).
+  - *Vazio:* sem emendas destinadas, a manchete vira "Nenhuma emenda federal registrada com [nome] como destino [em ano]"; um cartão sem registro mostra "Nenhuma emenda federal registrada para [nome] [em ano]" ou "Nenhum pagamento de outras emendas…", sem botão; o outro bloco e o aviso continuam (REQ-10).
+  - *Erro:* código inválido ou de fora da PB → A12 (REQ-07); erro interno → A12 (REQ-46).
+  - *Sucesso:* os dois blocos da versão ativa (REQ-08, REQ-54, REQ-34).
+  - *Offline:* falha ao trocar o ano → mensagem + "Tentar de novo"; os números anteriores ficam (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - Bloco 1: só `abrangencia = 'municipal'` deste `codigo_ibge` (REQ-08).
+  - Bloco 2: só `categoria_favorecido = 'prefeitura_ou_fundo_municipal'` deste município, de emendas com outra localidade (REQ-54).
+  - Nunca um total geral somando os blocos (REQ-55).
+  - As barras de área são HTML/CSS do servidor, sem biblioteca de gráficos; a cor não carrega informação além do texto (REQ-78).
+  - "Ainda sem pagamento" usa só esse vocabulário; nunca "parada" ou "atrasada" (REQ-77).
+  - Nenhuma comparação com outras cidades, média ou "posição" (diretriz 4); nenhum percentual "executado".
+- **Requisitos · contrato:** REQ-07, REQ-08, REQ-09, REQ-10, REQ-14, REQ-25, REQ-54, REQ-55, REQ-65, REQ-75, REQ-76, REQ-77, REQ-78, REQ-79 · `obter_municipio` (`GET /api/v1/municipios/{codigo_ibge}?ano=`); rota `GET /municipios/{codigo_ibge}`
+- **Acessibilidade:**
+  - A manchete é um parágrafo logo após o `h1` (lida primeiro); cada cartão é uma `<section>` com `h2` próprio; os valores ficam em `<dl>` (rótulo traduzido + valor completo).
+  - A frase "os dois valores não se somam" vem depois do bloco 2 na ordem de leitura, não só como nota visual.
+  - Mudança de ano anunciada em `aria-live="polite"`.
+  - As barras de área são uma lista (`<ul>`) em que cada item tem o texto "Saúde: R$ 95.957.125,00 em 193 emendas"; a barra é decorativa (`aria-hidden`).
+- **Anexo:** —

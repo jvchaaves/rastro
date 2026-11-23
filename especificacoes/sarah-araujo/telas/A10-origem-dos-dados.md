@@ -1,0 +1,35 @@
+## A10 · Origem dos dados
+
+- **Superfície · ator:** web pública · jornalista, morador (leitores) · **rotina de carga** (ator não humano cujo trabalho esta tela torna visível)
+- **Objetivo:** Mostrar de onde vêm os dados, quando a fonte publicou e quando o Rastro verificou.
+- **Chega de / vai para:** rodapé de qualquer tela, A11 → Portal da Transparência (externo) · A11 · Voltar → origem
+- **Mostra:**
+  - `h1`: "De onde vêm os dados".
+  - **Fonte:** "Portal da Transparência (CGU), arquivo de dados abertos de Emendas Parlamentares", com link para a página de download; `fonte_url`.
+  - **Versão em uso:** `fonte_last_modified` ("publicado pela fonte em…"), `concluida_em`, `total_emendas` com `total_por_abrangencia` (destinadas a municípios / estado todo / várias cidades), `total_pagamentos`, `total_convenios`, `total_sem_codigo` ("emendas que a fonte publica sem código").
+  - **Últimas 10 verificações** (`listar_verificacoes`): `verificada_em` e o `resultado` em texto:
+    - `nova_versao`: "dados novos carregados"
+    - `sem_mudanca`: "a fonte não mudou"
+    - `falhou`: "não concluída: os dados anteriores continuaram no ar", com `motivo` em linguagem simples (ex.: "o arquivo da fonte mudou de formato")
+    - `recusada_em_andamento`: "já havia uma atualização em andamento"
+  - Aviso de verificação atrasada, quando `verificacao_atrasada = true` (REQ-38).
+  - **Como funciona**, em 4 frases: o Rastro confere a fonte todo dia; só baixa quando o arquivo mudou; quem lê durante a atualização vê a versão anterior inteira; se algo falha, nada muda na tela.
+  - **O que fica de fora** (REQ-32): "[`total_descartados`] linhas da fonte são de outros estados, nacionais ou do exterior."
+- **Coleta:** nenhuma.
+- **Ações:**
+  - Link da fonte → Portal (externo)
+  - "Sobre o Rastro" → A11
+- **Estados:**
+  - *Carregando:* página renderizada no servidor (REQ-41).
+  - *Vazio:* sem versão ativa → "Os dados ainda não foram carregados", e o histórico de verificações aparece se existir (REQ-39).
+  - *Erro:* A12 (REQ-46).
+  - *Sucesso:* versão ativa + verificações (REQ-40).
+  - *Em andamento:* não aparece como linha; os números da versão em uso não mudam (REQ-34).
+  - *Falhou:* linha "não concluída" com o motivo; `mensagem_erro` técnica nunca é exibida (REQ-35, REQ-48, REQ-50, REQ-62).
+  - *Atrasado:* "Não conseguimos verificar a fonte desde [data]. Os dados podem estar desatualizados." (REQ-38)
+  - *Offline:* a página carregada continua legível (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:** datas no fuso America/Recife; `motivo` traduzido por uma tabela fixa de textos; nada de jargão técnico (ETag, HTTP).
+- **Requisitos · contrato:** REQ-03, REQ-31, REQ-32, REQ-33, REQ-34, REQ-35, REQ-36, REQ-37, REQ-38, REQ-39, REQ-40, REQ-48, REQ-49, REQ-50, REQ-52, REQ-62, REQ-82 (o alerta de REQ-51 não tem tela) · `obter_versao_ativa` (`GET /api/v1/dados/versao-ativa`), `listar_verificacoes` (`GET /api/v1/dados/verificacoes?limite=10`); escrita: `verificar_e_carregar`, `ativar_versao` (`contratos/carga.md`); rota `GET /sobre/dados`
+- **Acessibilidade:** o histórico é uma tabela com `<caption>` no desktop e uma lista no celular; o resultado é texto, não ícone colorido.
+- **Anexo:** —

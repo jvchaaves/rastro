@@ -1,0 +1,44 @@
+## A14 · Recebido de outras emendas
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Mostrar os pagamentos que a prefeitura e os fundos municipais da cidade receberam de emendas sem destino declarado nela.
+- **Chega de / vai para:** A03 ("ver os pagamentos"), link compartilhado → A05 (emenda da PB) · Portal da Transparência (emenda de fora da PB, externo) · A06 (termo `favorecido`) · Voltar → A03
+- **Mostra:**
+  - `h1`: "Recebido de outras emendas · [`municipio.nome`]".
+  - Explicação: "Estas emendas foram registradas para o estado todo, para várias cidades ou para outro lugar, mas pagaram a prefeitura ou fundos municipais de [nome]. Aqui aparece quanto foi recebido; a fase da emenda está no detalhe de cada uma."
+  - Filtro `ano`.
+  - **Seção "Prefeitura e fundos municipais"** (`prefeitura_ou_fundo_municipal`), agrupada por emenda. Cada item traz:
+    - `emenda.ano`, `emenda.autor_nome`, `emenda.codigo_emenda` (ou "sem código na fonte")
+    - `favorecido_nome` (ex.: "Fundo Municipal de Saúde")
+    - `valor_recebido`
+    - `ano_mes_fim` ("último pagamento em out/2026")
+  - **Seção "Entidades com endereço em [nome]"** (`outras_entidades`: entidades privadas, órgãos estaduais com sede na cidade), com a frase: "Estas entidades ficam na cidade, mas o dinheiro pode ter sido usado em outro lugar. Por isso não entram no valor da página da cidade." (REQ-56)
+  - Paginação.
+- **Coleta:**
+  - `ano` · inteiro · opcional (ano da emenda)
+  - `pagina` · inteiro ≥ 1 · opcional
+  - `versao` · inteiro · opcional, oculto
+- **Ações:**
+  - Trocar ano ou página → substitui as listas e a URL · `listar_recebidos_municipio`
+  - Tocar num item com `emenda.id_emenda` → A05 · `obter_emenda`
+  - Tocar num item sem `id_emenda` (emenda de fora da PB) → `emenda.url_fonte` no Portal (externo)
+  - "O que é favorecido?" → A06 (`favorecido`) · `obter_termo`
+- **Estados:**
+  - *Carregando:* listas com `aria-busy` (REQ-12).
+  - *Vazio:* "Nenhum pagamento de outras emendas à prefeitura ou a fundos municipais de [nome] [em ano]." (REQ-10).
+  - *Erro:* município inválido → A12 (REQ-07); erro interno → A12 (REQ-46).
+  - *Sucesso:* as duas seções (REQ-54, REQ-56).
+  - *Dados atualizados durante a navegação:* REQ-63.
+  - *Offline:* mensagem + "Tentar de novo" (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - Exclui emendas cuja localidade declarada já é esta cidade (estão em A04) (REQ-54).
+  - Só a primeira seção entra no valor exibido em A03; a segunda nunca é somada (REQ-55, REQ-56).
+  - Pagamentos a bancos intermediários nunca aparecem aqui, porque não têm município atribuído (REQ-60).
+  - Pessoa física não é listada pelo nome (REQ-53).
+- **Requisitos · contrato:** REQ-07, REQ-10, REQ-12, REQ-53, REQ-54, REQ-55, REQ-56, REQ-60, REQ-63 · `listar_recebidos_municipio` (`GET /api/v1/municipios/{codigo_ibge}/recebidos?ano=&pagina=&versao=`); rotas `GET /municipios/{codigo_ibge}/recebidos`, `GET /fragmentos/municipios/{codigo_ibge}/recebidos`
+- **Acessibilidade:**
+  - Duas `<section>` com `h2`; a explicação da segunda vem antes da lista, para o leitor de tela.
+  - O link externo avisa "(abre o Portal da Transparência em nova aba)".
+- **Anexo:** —

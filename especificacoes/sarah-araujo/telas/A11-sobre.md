@@ -1,0 +1,27 @@
+## A11 · Sobre o Rastro
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Dizer com clareza o que o Rastro mostra e o que ele não mostra.
+- **Chega de / vai para:** cabeçalho e rodapé de qualquer tela → A10 · A07 · A08 · A01
+- **Mostra:**
+  - `h1`: "Sobre o Rastro".
+  - **O que mostra:** emendas parlamentares federais destinadas a municípios da Paraíba e ao estado, com a fase do dinheiro em linguagem simples.
+  - **O que não mostra** (FI §5): se a obra ou o serviço foi feito; emendas estaduais ou municipais; outros estados; nenhuma nota ou ranking de parlamentares.
+  - **Limites dos dados** (REQ-47): quando o pagamento vai a um banco público intermediário, o destino final não aparece; algumas emendas antigas e de relator vêm sem código ou sem autor; pagamentos a pessoas físicas aparecem só como "Pessoa física"; numa transferência especial, o uso depois do pagamento não está nos dados federais.
+  - **Como a cidade é contada:** "destinadas à cidade" e "recebido de outras emendas" são dois registros diferentes e não se somam (link para A08).
+  - **Como ler a fase:** os passos reservado → autorizado → pago, mais "cancelada", com link para A07.
+  - **Privacidade:** "Não pedimos cadastro e não usamos cookies nem rastreadores." (REQ-01, REQ-02)
+  - Link para a API e para o contrato (`/openapi.json`), para quem quer reutilizar os dados.
+- **Coleta:** nenhuma.
+- **Ações:** links → A10, A07, A08, A01; `/openapi.json` (contrato)
+- **Estados:**
+  - *Carregando:* não se aplica; página estática (REQ-41).
+  - *Vazio:* não se aplica; conteúdo fixo (REQ-47).
+  - *Erro:* A12 (REQ-46).
+  - *Sucesso:* conteúdo fixo (REQ-47).
+  - *Offline:* a página carregada continua legível (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:** o texto passa pelas mesmas verificações de vocabulário (REQ-15, REQ-27).
+- **Requisitos · contrato:** REQ-01, REQ-02, REQ-15, REQ-27, REQ-43, REQ-47, REQ-53, REQ-55, REQ-60, REQ-61 · sem operação de dados; rota `GET /sobre`; referência a `GET /openapi.json`
+- **Acessibilidade:** títulos `h2` por seção ("O que mostra", "O que não mostra", …) para navegação por títulos.
+- **Anexo:** —

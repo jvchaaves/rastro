@@ -1,0 +1,34 @@
+## A09 · Perfil do autor da emenda
+
+- **Superfície · ator:** web pública · morador, jornalista (no MVP desde 27/10/2026, ADR-0004)
+- **Objetivo:** Mostrar o que um autor indicou para a Paraíba e o que já foi pago, em números agregados e sem julgamento.
+- **Chega de / vai para:** A05 (nome do autor), A15 (lista de autores), link compartilhado → A03 (município tocado) · A04 (emendas do autor naquele município) · outro perfil de mesmo nome (REQ-81) · Voltar → origem
+- **Mostra:**
+  - `h1`: `nome`; `tipo` e período ("emendas de 2024 a 2026"). Sem foto, partido, UF, cargo pretendido ou qualquer elemento de campanha.
+  - Nota fixa: "Estes números mostram emendas indicadas e o que aconteceu com o dinheiro. Não são uma avaliação do parlamentar."
+  - Frase de abertura (diretriz 1): "{nome} indicou {n} emendas para a Paraíba de {ano_inicial} a {ano_final}: R$ {valor_final} reservados, R$ {valor_pago_total} já pagos." Exemplo real: "Mersinho Lucena indicou 35 emendas para a Paraíba de 2024 a 2026: R$ 107,3 milhões reservados, R$ 97,0 milhões já pagos."
+  - `por_municipio`: lista em **ordem alfabética do município**, com `municipio.nome`, quantidade, `valor_final` e `valor_pago_total`.
+  - `sem_municipio_unico`: os mesmos totais para emendas do estado todo ou de várias cidades.
+  - Quando > 0: "{n} emendas reservadas até {ano − 2} ainda sem pagamento" (REQ-76).
+  - Quando houver: "Este nome também aparece como autor com outro código (2015–2023)" + link (REQ-81).
+- **Coleta:** nenhuma.
+- **Ações:**
+  - Tocar num município → A03 (`/municipios/{codigo_ibge}`) · `obter_municipio`
+  - "O que isso quer dizer?" → A06 · `obter_termo`
+  - Outro código de mesmo nome → A09 desse código · `obter_autor`
+- **Estados:**
+  - *Carregando:* página renderizada no servidor (REQ-41).
+  - *Vazio:* "Nenhuma emenda deste autor para a Paraíba na versão atual dos dados." (REQ-10).
+  - *Erro:* autor inexistente ou `S/I` → A12 / HTTP 404 (REQ-30); erro interno → A12 (REQ-46).
+  - *Sucesso:* agregados por município (REQ-29).
+  - *Offline:* painel de termo com "Tentar de novo" (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - Nenhuma ordenação por valor, posição, comparação com outros autores ou média (REQ-28).
+  - Um perfil por código de autor; perfis de mesmo nome são ligados, nunca juntados (REQ-81).
+  - Autores coletivos (ex.: "Bancada da Paraíba", comissões) aparecem com o tipo; a fonte não lista os apoiadores.
+  - Nunca "candidato" (REQ-27); nunca "parada", "atrasada" (REQ-77).
+- **Requisitos · contrato:** REQ-10, REQ-27, REQ-28, REQ-29, REQ-30, REQ-76, REQ-77, REQ-81 · `obter_autor` (`GET /api/v1/autores/{autor_id}`); rota `GET /autores/{autor_id}`
+- **Acessibilidade:** a lista por município tem os valores completos para leitor de tela (REQ-44); a nota "não é uma avaliação" vem antes dos números na ordem de leitura.
+- **Anexo:** —

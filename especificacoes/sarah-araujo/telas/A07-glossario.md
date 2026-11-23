@@ -1,0 +1,23 @@
+## A07 · Glossário
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Reunir todos os termos traduzidos num só lugar para consulta.
+- **Chega de / vai para:** rodapé (todas as telas), A06, A11 → A06 (termo) · Voltar → origem
+- **Mostra:**
+  - `h1`: "Glossário: o que cada termo quer dizer".
+  - Uma frase dizendo que cada explicação traz a fonte oficial.
+  - Lista em ordem alfabética de `termo_oficial`; para cada termo: `termo_oficial`, `traducao` e o link para A06.
+- **Coleta:** nenhuma.
+- **Ações:**
+  - Tocar num termo → A06 (`/termos/{slug}`) · `obter_termo`
+- **Estados:**
+  - *Carregando:* página renderizada no servidor (REQ-41).
+  - *Vazio:* não deve ocorrer em produção; se a tabela estiver vazia: "Glossário em preparação" (REQ-20).
+  - *Erro:* A12 (REQ-46).
+  - *Sucesso:* todos os termos (REQ-20).
+  - *Offline:* a página carregada continua legível (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:** só exibe termos com fonte (REQ-16); ordem alfabética (REQ-20).
+- **Requisitos · contrato:** REQ-16, REQ-20 · `listar_termos` (`GET /api/v1/termos`); rota `GET /termos`
+- **Acessibilidade:** lista de definição (`<dl>`); cada link com o nome do termo.
+- **Anexo:** —

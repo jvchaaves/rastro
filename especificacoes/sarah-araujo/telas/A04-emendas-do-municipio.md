@@ -1,0 +1,50 @@
+## A04 · Emendas destinadas ao município
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Listar as emendas que têm a cidade como destino, com a fase de cada uma em linguagem simples.
+- **Chega de / vai para:** A03 ("ver as emendas"), link compartilhado → A05 (emenda tocada) · A06 (termo) · A08 (aviso) · Voltar → A03
+- **Mostra:**
+  - `h1`: "Emendas destinadas a [`municipio.nome`]"; resumo do filtro ativo e `total`.
+  - Filtros, nesta ordem: **Área** (`funcao`, com as áreas presentes e a contagem, ex.: "Saúde (193)", "Educação (14)", REQ-66), `ano` e `fase` (as cinco `fase_simples`, rotuladas com a `traducao`).
+  - Lista de cartões (20 por página). Cada cartão traz:
+    - `ano` · `funcao`
+    - `autor.nome` (com `autor.tipo` quando não for individual; "Autor não informado na fonte" quando `nao_informado`)
+    - `valor_final` como valor principal e `valor_pago_total` ("pago: R$ …")
+    - fase: `fase.traducao` + marcador neutro de progresso (reservado → autorizado → pago; "cancelada" fora da sequência)
+    - selo em texto "Transferência especial" quando `tipo_emenda = individual_transferencia_especial` (REQ-61)
+    - quando `rp_pago > 0`: "Parte foi paga em anos seguintes" (REQ-19)
+    - quando `reserva_antiga_sem_pagamento`: "Reservada em {ano}, ainda sem pagamento" (REQ-76)
+  - Aviso curto de REQ-09 no topo, com link para A08.
+  - Paginação: "Anteriores" / "Próximas" e "página x de y".
+- **Coleta:**
+  - `funcao` · texto de `funcoes_disponiveis` · opcional
+  - `sem_pagamento_antigo` · booleano · opcional (chip "Ainda sem pagamento", REQ-76)
+  - `ano` · inteiro · opcional
+  - `fase` · enum `fase_simples` · opcional
+  - `pagina` · inteiro ≥ 1 · opcional (padrão 1)
+  - `versao` · inteiro · opcional, oculto (vem nos links de página)
+- **Ações:**
+  - Mudar filtro → substitui a lista e atualiza a URL (`hx-push-url`); sem JS, botão "Aplicar" envia GET · `listar_emendas_municipio`
+  - "Próximas"/"Anteriores" → página seguinte com a mesma `versao` (fragmento + URL) · `listar_emendas_municipio`
+  - Tocar no cartão → A05 (`/emendas/{id_emenda}`) · `obter_emenda`
+  - Tocar na fase → A06 do `fase.termo_slug` · `obter_termo`
+  - "Limpar filtros" → lista sem filtros
+- **Estados:**
+  - *Carregando:* lista esmaecida com `aria-busy="true"` (REQ-12).
+  - *Vazio:* "Nenhuma emenda [de Área] [na fase X] [em ano] destinada a [nome]." + "Limpar filtros" (REQ-10).
+  - *Erro:* filtro inválido → lista sem filtro + "Filtro ignorado"; município inválido → A12 (REQ-07); erro interno → A12 (REQ-46).
+  - *Sucesso:* até 20 emendas na ordem de REQ-11.
+  - *Dados atualizados durante a navegação:* a `versao` da URL não existe mais → volta à página 1 com "Os dados foram atualizados; a lista recomeçou" (REQ-63).
+  - *Offline:* falha ao filtrar ou paginar → mensagem + "Tentar de novo"; a lista anterior fica (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - Fase pela regra de REQ-13, exibida só pelo texto da tabela (REQ-14).
+  - Ordenação fixa (REQ-11); não há ordenar ou agrupar por autor (REQ-28).
+  - A URL com filtros e `versao` reproduz exatamente a mesma lista (REQ-12, REQ-25).
+- **Requisitos · contrato:** REQ-09, REQ-10, REQ-11, REQ-12, REQ-13, REQ-14, REQ-19, REQ-41, REQ-42, REQ-61, REQ-63, REQ-66, REQ-76 · `listar_emendas_municipio` (`GET /api/v1/municipios/{codigo_ibge}/emendas?funcao=&ano=&fase=&pagina=&versao=`); rotas `GET /municipios/{codigo_ibge}/emendas`, `GET /fragmentos/municipios/{codigo_ibge}/emendas`
+- **Acessibilidade:**
+  - Lista `<ul>`; cada cartão é um único link cujo nome acessível é "Emenda de [ano], [função], [autor], [valor por extenso], [fase]".
+  - O marcador de progresso tem texto ("passo 3 de 3: dinheiro pago"); a cor não carrega significado.
+  - Após filtrar, anuncia "[n] emendas encontradas" em `aria-live`.
+- **Anexo:** —

@@ -1,0 +1,31 @@
+## A13 · Citar esta emenda
+
+- **Superfície · ator:** web pública · jornalista
+- **Objetivo:** Dar ao jornalista um texto de citação pronto e os links para conferir.
+- **Chega de / vai para:** A05 ("Citar esta emenda") → Portal da Transparência (conferir, externo) · Voltar → A05
+- **Mostra:**
+  - `h1`: "Citar a emenda [`codigo_emenda`]" (sem código: "Citar a emenda de [ano] sem código na fonte").
+  - A frase-resposta da emenda (REQ-64), como resumo.
+  - Caixa com o `texto` da citação. Exemplo: *"Emenda 202512345678 (2025), de [autor.nome], para [município]: R$ 500.000,00 reservados (descontados cancelamentos) e R$ 300.000,00 pagos até agora, segundo dados do Portal da Transparência publicados em 27/10/2026, consultados via Rastro. [url_permanente]"*
+  - `url_permanente` (Rastro) e `url_fonte` (Portal), cada uma em linha própria.
+  - `dados_de`: "Dados publicados pela fonte em [data]".
+  - Lembrete: "Confira na fonte antes de publicar. 'Pago' não quer dizer obra concluída." (REQ-18)
+- **Coleta:** nenhuma.
+- **Ações:**
+  - "Copiar citação" → copia o `texto` para a área de transferência (sem JS: o texto fica selecionável) · `obter_citacao_emenda`
+  - "Conferir no Portal" → abre `url_fonte` (externo)
+  - "Voltar à emenda" → A05
+- **Estados:**
+  - *Carregando:* página renderizada no servidor (REQ-41).
+  - *Vazio:* não se aplica.
+  - *Erro:* emenda inexistente → A12 (REQ-22); erro interno → A12 (REQ-46).
+  - *Sucesso:* citação completa (REQ-24); ao copiar, "Citação copiada" anunciado.
+  - *Offline:* a página carregada continua utilizável e o texto pode ser copiado (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:**
+  - A citação sempre traz a data da versão e as duas URLs (REQ-24).
+  - A URL permanente usa só `id_emenda` (REQ-25); para emendas sem código, a citação avisa que o id `SI-…` é do Rastro, não da fonte (REQ-57).
+  - Os valores aparecem completos, sem abreviação (REQ-44).
+- **Requisitos · contrato:** REQ-18, REQ-22, REQ-23, REQ-24, REQ-25, REQ-44, REQ-57, REQ-64 · `obter_citacao_emenda` (`GET /api/v1/emendas/{id_emenda}/citacao`); rota `GET /emendas/{id_emenda}/citar`
+- **Acessibilidade:** a citação fica num `<blockquote>` selecionável; a confirmação de cópia vai em `aria-live="polite"`; o botão de copiar tem rótulo explícito.
+- **Anexo:** —

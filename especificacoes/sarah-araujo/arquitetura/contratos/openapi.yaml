@@ -1,0 +1,675 @@
+openapi: 3.1.0
+info:
+  title: Rastro — API pública
+  version: 0.4.0
+  description: |
+    Emendas parlamentares federais destinadas a municípios da Paraíba, com a fase
+    de execução traduzida para linguagem simples. Acesso público, sem autenticação (REQ-01).
+    Toda leitura usa exclusivamente a versão ativa dos dados (REQ-34).
+    As telas HTML (ver rotas-html.md) chamam as mesmas operações de serviço.
+servers:
+  - url: /api/v1
+tags:
+  - name: municipios
+  - name: emendas
+  - name: termos
+  - name: autores
+  - name: dados
+paths:
+  /municipios:
+    get:
+      operationId: listar_municipios
+      tags: [municipios]
+      summary: Busca (sugestões) ou lista completa de municípios da PB
+      description: Com `q`, aplica REQ-04 (até `limite`); sem `q`, devolve os 223 em ordem alfabética (REQ-06).
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 60 } }
+        - { name: limite, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 223, default: 8 } }
+      responses:
+        "200":
+          description: Lista (pode ser vazia — REQ-05)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens]
+                properties:
+                  itens: { type: array, items: { $ref: "#/components/schemas/MunicipioResumo" } }
+        "422": { $ref: "#/components/responses/Invalido" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /municipios/{codigo_ibge}:
+    get:
+      operationId: obter_municipio
+      tags: [municipios]
+      summary: Resumo do município em dois blocos não somados (REQ-08, REQ-09, REQ-54, REQ-55)
+      parameters:
+        - $ref: "#/components/parameters/CodigoIbge"
+        - $ref: "#/components/parameters/Ano"
+      responses:
+        "200":
+          description: Resumo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Municipio" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /municipios/{codigo_ibge}/emendas:
+    get:
+      operationId: listar_emendas_municipio
+      tags: [emendas]
+      summary: Emendas do município (REQ-11, REQ-12, REQ-13, REQ-76)
+      parameters:
+        - $ref: "#/components/parameters/CodigoIbge"
+        - { name: sem_pagamento_antigo, in: query, required: false, schema: { type: boolean }, description: "Só reservas antigas sem pagamento (REQ-76)" }
+        - $ref: "#/components/parameters/Funcao"
+        - $ref: "#/components/parameters/Ano"
+        - $ref: "#/components/parameters/Fase"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/Versao"
+      responses:
+        "200":
+          description: Página de emendas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginaEmendas" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "422": { $ref: "#/components/responses/Invalido" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /municipios/{codigo_ibge}/recebidos:
+    get:
+      operationId: listar_recebidos_municipio
+      tags: [municipios]
+      summary: Pagamentos de outras emendas a entidades do município (REQ-54, REQ-56, REQ-60)
+      parameters:
+        - $ref: "#/components/parameters/CodigoIbge"
+        - $ref: "#/components/parameters/Ano"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/Versao"
+      responses:
+        "200":
+          description: Pagamentos agrupados por emenda
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginaRecebidos" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /emendas-sem-municipio:
+    get:
+      operationId: listar_emendas_sem_municipio
+      tags: [emendas]
+      summary: Emendas da PB sem município único — estadual ou múltiplo (REQ-26)
+      parameters:
+        - { name: abrangencia, in: query, required: false, schema: { type: string, enum: [estadual, multiplo] } }
+        - $ref: "#/components/parameters/Funcao"
+        - $ref: "#/components/parameters/Ano"
+        - $ref: "#/components/parameters/Fase"
+        - $ref: "#/components/parameters/Pagina"
+        - $ref: "#/components/parameters/Versao"
+      responses:
+        "200":
+          description: Página de emendas com abrangencia estadual ou multiplo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginaEmendas" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /emendas:
+    get:
+      operationId: buscar_emendas_por_codigo
+      tags: [emendas]
+      summary: Busca de emenda pelo código de 12 dígitos (REQ-69)
+      parameters:
+        - { name: codigo, in: query, required: true, schema: { type: string, pattern: "^[0-9]{12}$" } }
+      responses:
+        "200":
+          description: Emendas com o código (0, 1 ou mais — REQ-58)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens]
+                properties:
+                  itens: { type: array, items: { $ref: "#/components/schemas/EmendaResumo" } }
+        "422": { $ref: "#/components/responses/Invalido" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /emendas/{id_emenda}:
+    get:
+      operationId: obter_emenda
+      tags: [emendas]
+      summary: Detalhe da emenda com favorecidos (REQ-21, REQ-22, REQ-23, REQ-57 a REQ-61)
+      parameters:
+        - $ref: "#/components/parameters/IdEmenda"
+      responses:
+        "200":
+          description: Emenda
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmendaDetalhe" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /emendas/{id_emenda}/citacao:
+    get:
+      operationId: obter_citacao_emenda
+      tags: [emendas]
+      summary: Texto de citação (REQ-24, REQ-25)
+      parameters:
+        - $ref: "#/components/parameters/IdEmenda"
+      responses:
+        "200":
+          description: Citação
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Citacao" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /termos:
+    get:
+      operationId: listar_termos
+      tags: [termos]
+      summary: Glossário (REQ-20)
+      responses:
+        "200":
+          description: Termos em ordem alfabética de termo_oficial
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens]
+                properties:
+                  itens: { type: array, items: { $ref: "#/components/schemas/TermoTraduzido" } }
+
+  /termos/{slug}:
+    get:
+      operationId: obter_termo
+      tags: [termos]
+      summary: Um termo traduzido com sua fonte (REQ-17)
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string, pattern: "^[a-z0-9-]+$" } }
+      responses:
+        "200":
+          description: Termo
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TermoTraduzido" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+
+  /autores:
+    get:
+      operationId: listar_autores
+      tags: [autores]
+      summary: Autores com emendas gravadas, em ordem alfabética, sem valores (REQ-80)
+      responses:
+        "200":
+          description: Lista alfabética
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens]
+                properties:
+                  itens:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/AutorResumo"
+                        - type: object
+                          required: [ano_inicial, ano_final]
+                          properties:
+                            ano_inicial: { type: integer }
+                            ano_final: { type: integer }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /autores/{autor_id}:
+    get:
+      operationId: obter_autor
+      tags: [autores]
+      summary: Perfil do autor, sem ranking (REQ-29, REQ-30, REQ-81)
+      parameters:
+        - { name: autor_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Perfil agregado, sem ranking (REQ-28)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AutorPerfil" }
+        "404": { $ref: "#/components/responses/NaoEncontrado" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /dados/versao-ativa:
+    get:
+      operationId: obter_versao_ativa
+      tags: [dados]
+      summary: Versão ativa e última verificação da fonte (REQ-03, REQ-38)
+      responses:
+        "200":
+          description: Versão ativa
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VersaoCarga" }
+        "503": { $ref: "#/components/responses/SemDados" }
+
+  /dados/verificacoes:
+    get:
+      operationId: listar_verificacoes
+      tags: [dados]
+      summary: Últimas verificações da fonte e cargas (REQ-40)
+      parameters:
+        - { name: limite, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 10 } }
+      responses:
+        "200":
+          description: Cargas, da mais recente para a mais antiga
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [itens]
+                properties:
+                  itens: { type: array, items: { $ref: "#/components/schemas/Verificacao" } }
+
+  /saude:
+    get:
+      operationId: verificar_saude
+      tags: [dados]
+      summary: Verificação de vida para o orquestrador
+      responses:
+        "200":
+          description: Aplicação e banco respondendo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+
+components:
+  parameters:
+    CodigoIbge:
+      name: codigo_ibge
+      in: path
+      required: true
+      schema: { type: string, pattern: "^25[0-9]{5}$" }
+      description: Código IBGE de 7 dígitos; municípios da PB começam por 25.
+    IdEmenda:
+      name: id_emenda
+      in: path
+      required: true
+      schema: { type: string, pattern: "^([0-9]{12}(-[0-9]+)?|SI-[0-9]{4}-[0-9a-f]{8})$" }
+      description: "codigo_emenda; codigo-n se repetido (REQ-58); SI-AAAA-hash se sem código na fonte (REQ-57)"
+    Versao:
+      name: versao
+      in: query
+      required: false
+      schema: { type: integer }
+      description: "Fixa a versão dos dados durante a paginação (REQ-12). Versão indisponível → 303 sem o parâmetro (REQ-63)."
+    Ano:
+      name: ano
+      in: query
+      required: false
+      schema: { type: integer, minimum: 2000, maximum: 2100 }
+      description: Omitido = todos os anos.
+    Funcao:
+      name: funcao
+      in: query
+      required: false
+      schema: { type: string }
+      description: "Área (função orçamentária), exatamente como em funcoes_disponiveis (REQ-66)"
+    Fase:
+      name: fase
+      in: query
+      required: false
+      schema: { $ref: "#/components/schemas/FaseSimples" }
+    Pagina:
+      name: pagina
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+
+  responses:
+    NaoEncontrado:
+      description: Recurso inexistente na versão ativa (REQ-07, REQ-22)
+      content:
+        application/json: { schema: { $ref: "#/components/schemas/Erro" } }
+    Invalido:
+      description: Parâmetro inválido
+      content:
+        application/json: { schema: { $ref: "#/components/schemas/Erro" } }
+    SemDados:
+      description: Nenhuma versão ativa ainda (REQ-39)
+      content:
+        application/json: { schema: { $ref: "#/components/schemas/Erro" } }
+
+  schemas:
+    Dinheiro:
+      type: string
+      pattern: "^[0-9]+\\.[0-9]{2}$"
+      description: Valor em reais como string decimal (evita erro de ponto flutuante). Ex. "150000.00".
+    FaseSimples:
+      type: string
+      enum: [empenhada, liquidada, paga_parcial, paga, cancelada]
+      description: Regra de REQ-13
+    Fase:
+      type: object
+      required: [codigo, traducao, termo_slug]
+      properties:
+        codigo: { $ref: "#/components/schemas/FaseSimples" }
+        traducao: { type: string }
+        termo_slug: { type: string }
+    MunicipioResumo:
+      type: object
+      required: [codigo_ibge, nome, uf]
+      properties:
+        codigo_ibge: { type: string }
+        nome: { type: string }
+        uf: { type: string, const: PB }
+    Totais:
+      type: object
+      required: [quantidade, valor_final, valor_pago_total]
+      properties:
+        quantidade: { type: integer }
+        valor_final: { $ref: "#/components/schemas/Dinheiro" }
+        valor_pago_total: { $ref: "#/components/schemas/Dinheiro" }
+    Municipio:
+      allOf:
+        - $ref: "#/components/schemas/MunicipioResumo"
+        - type: object
+          required: [destinadas, recebido_de_outras, anos_disponiveis, sem_municipio_unico, versao]
+          properties:
+            ano: { type: [integer, "null"] }
+            versao: { type: integer }
+            destinadas:
+              description: "Bloco 'Emendas destinadas à cidade' (REQ-08)"
+              $ref: "#/components/schemas/Totais"
+            recebido_de_outras:
+              description: "Bloco 'Recebido de outras emendas' — prefeitura e fundos municipais (REQ-54). Nunca somado a destinadas (REQ-55)."
+              type: object
+              required: [quantidade_emendas, valor_recebido]
+              properties:
+                quantidade_emendas: { type: integer }
+                valor_recebido: { $ref: "#/components/schemas/Dinheiro" }
+            anos_disponiveis: { type: array, items: { type: integer } }
+            manchete: { type: string, description: "Frase de REQ-65" }
+            areas:
+              description: "Barras de REQ-78: 5 maiores áreas por valor_final + 'Outras áreas'"
+              type: array
+              items:
+                type: object
+                required: [funcao, quantidade, valor_final]
+                properties:
+                  funcao: { type: string }
+                  quantidade: { type: integer }
+                  valor_final: { $ref: "#/components/schemas/Dinheiro" }
+            quando_chegou:
+              description: "REQ-75: emendas destinadas por anos até o primeiro pagamento"
+              type: object
+              required: [mesmo_ano, um_ano, dois_anos, tres_ou_mais, sem_pagamento, sem_data_na_fonte]
+              properties:
+                mesmo_ano: { type: integer }
+                um_ano: { type: integer }
+                dois_anos: { type: integer }
+                tres_ou_mais: { type: integer }
+                sem_pagamento: { type: integer }
+                sem_data_na_fonte: { type: integer }
+            reservas_antigas_sem_pagamento: { type: integer, description: "REQ-76" }
+            principais_favorecidos:
+              description: "REQ-79: 5 maiores favorecidos dos pagamentos das emendas destinadas"
+              type: array
+              maxItems: 5
+              items: { $ref: "#/components/schemas/Favorecido" }
+            funcoes_disponiveis:
+              description: "Áreas do bloco destinadas, por quantidade decrescente (REQ-66)"
+              type: array
+              items:
+                type: object
+                required: [funcao, quantidade]
+                properties:
+                  funcao: { type: string }
+                  quantidade: { type: integer }
+            sem_municipio_unico:
+              description: Aviso de REQ-09
+              type: object
+              required: [quantidade]
+              properties:
+                quantidade: { type: integer }
+    AutorResumo:
+      type: object
+      required: [id, nome, tipo]
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        tipo: { type: string, enum: [individual, bancada, comissao, relator, nao_informado] }
+    TipoEmenda:
+      type: string
+      enum: [individual_finalidade_definida, individual_transferencia_especial, bancada, comissao, relator]
+    EmendaResumo:
+      type: object
+      required: [id_emenda, codigo_emenda, ano, tipo_emenda, autor, funcao, abrangencia, valor_final, valor_pago_total, rp_pago, fase]
+      properties:
+        id_emenda: { type: string }
+        codigo_emenda: { type: [string, "null"] }
+        ano: { type: integer }
+        tipo_emenda: { $ref: "#/components/schemas/TipoEmenda" }
+        autor: { $ref: "#/components/schemas/AutorResumo" }
+        funcao: { type: string }
+        abrangencia: { type: string, enum: [municipal, estadual, multiplo] }
+        valor_final: { $ref: "#/components/schemas/Dinheiro" }
+        valor_pago_total: { $ref: "#/components/schemas/Dinheiro" }
+        rp_pago: { $ref: "#/components/schemas/Dinheiro" }
+        fase: { $ref: "#/components/schemas/Fase" }
+        reserva_antiga_sem_pagamento: { type: boolean, description: "REQ-76" }
+        municipios_favorecidos:
+          description: "Só para estadual/multiplo: nº de municípios da PB entre os favorecidos (REQ-26)"
+          type: [integer, "null"]
+    PaginaEmendas:
+      type: object
+      required: [itens, pagina, por_pagina, total, versao]
+      properties:
+        itens: { type: array, items: { $ref: "#/components/schemas/EmendaResumo" } }
+        pagina: { type: integer }
+        por_pagina: { type: integer, const: 20 }
+        total: { type: integer }
+        versao: { type: integer }
+    CategoriaFavorecido:
+      type: string
+      enum: [prefeitura_ou_fundo_municipal, estado, entidade_privada, intermediario_financeiro, pessoa_fisica, outro]
+    Favorecido:
+      type: object
+      required: [nome, categoria, uf, valor_recebido, ano_mes_inicio, ano_mes_fim]
+      properties:
+        nome: { type: string, description: "'Pessoa física' quando categoria = pessoa_fisica (REQ-53)" }
+        categoria: { $ref: "#/components/schemas/CategoriaFavorecido" }
+        uf: { type: [string, "null"] }
+        municipio: { oneOf: [ { $ref: "#/components/schemas/MunicipioResumo" }, { type: "null" } ] }
+        valor_recebido: { $ref: "#/components/schemas/Dinheiro" }
+        ano_mes_inicio: { type: string, pattern: "^[0-9]{6}$" }
+        ano_mes_fim: { type: string, pattern: "^[0-9]{6}$" }
+    EmendaDetalhe:
+      allOf:
+        - $ref: "#/components/schemas/EmendaResumo"
+        - type: object
+          required: [numero_emenda, subfuncao, acao_orcamentaria, codigo_acao, localidade_gasto, valor_empenhado, valor_liquidado, valor_pago, rp_cancelado, favorecidos, url_fonte, resposta, linha_do_tempo, compartilhar, avisos]
+          properties:
+            numero_emenda: { type: [string, "null"] }
+            subfuncao: { type: string }
+            acao_orcamentaria: { type: string }
+            codigo_acao: { type: string }
+            localidade_gasto: { type: string }
+            municipio: { oneOf: [ { $ref: "#/components/schemas/MunicipioResumo" }, { type: "null" } ] }
+            valor_empenhado: { $ref: "#/components/schemas/Dinheiro" }
+            valor_liquidado: { $ref: "#/components/schemas/Dinheiro" }
+            valor_pago: { $ref: "#/components/schemas/Dinheiro" }
+            rp_cancelado: { $ref: "#/components/schemas/Dinheiro" }
+            favorecidos:
+              description: "'Para quem foi pago' (REQ-59)"
+              type: array
+              items: { $ref: "#/components/schemas/Favorecido" }
+            url_fonte: { type: string, format: uri, description: "REQ-23" }
+            resposta: { type: string, description: "Frase-resposta de REQ-64/REQ-70; também og:description (REQ-68)" }
+            convenios:
+              description: "REQ-71 a REQ-73; lista vazia quando a fonte não registra convênio"
+              type: array
+              items: { $ref: "#/components/schemas/Convenio" }
+            primeiro_pagamento:
+              description: "REQ-74; nulo sem pagamentos a favorecidos"
+              oneOf:
+                - type: "null"
+                - type: object
+                  required: [ano_mes, anos_apos_ano_da_emenda, texto]
+                  properties:
+                    ano_mes: { type: string, pattern: "^[0-9]{6}$" }
+                    anos_apos_ano_da_emenda: { type: integer, minimum: 0 }
+                    texto: { type: string }
+            linha_do_tempo:
+              description: "Marcos de REQ-67; ano_mes nulo quando a fonte só informa o ano ou nenhuma data"
+              type: array
+              items:
+                type: object
+                required: [tipo, texto]
+                properties:
+                  tipo: { type: string, enum: [indicada, pagamento, cancelamento, aguardando] }
+                  ano: { type: [integer, "null"] }
+                  ano_mes: { type: [string, "null"], pattern: "^[0-9]{6}$" }
+                  valor: { oneOf: [ { $ref: "#/components/schemas/Dinheiro" }, { type: "null" } ] }
+                  texto: { type: string }
+            compartilhar:
+              type: object
+              required: [url_permanente, url_whatsapp]
+              properties:
+                url_permanente: { type: string, format: uri }
+                url_whatsapp: { type: string, format: uri, description: "REQ-68" }
+            avisos:
+              description: "Textos fixos aplicáveis: pagamento (REQ-18), transferência especial (REQ-61), intermediário (REQ-60)"
+              type: array
+              items: { type: string }
+    Convenio:
+      type: object
+      required: [numero_convenio, data_publicacao, convenente, objeto, valor_convenio, localidade_gasto]
+      properties:
+        numero_convenio: { type: string }
+        data_publicacao: { type: string, format: date }
+        convenente: { type: string }
+        objeto: { type: string, description: "Texto da fonte, sem reescrita (REQ-72)" }
+        valor_convenio: { $ref: "#/components/schemas/Dinheiro" }
+        localidade_gasto: { type: string }
+        municipio: { oneOf: [ { $ref: "#/components/schemas/MunicipioResumo" }, { type: "null" } ] }
+    Recebido:
+      type: object
+      required: [emenda, categoria, favorecido_nome, valor_recebido, ano_mes_fim]
+      properties:
+        emenda: { $ref: "#/components/schemas/EmendaRef" }
+        categoria: { $ref: "#/components/schemas/CategoriaFavorecido" }
+        favorecido_nome: { type: string }
+        valor_recebido: { $ref: "#/components/schemas/Dinheiro" }
+        ano_mes_fim: { type: string }
+    EmendaRef:
+      description: "Emenda que pagou; id_emenda nulo quando a emenda é de fora da PB e não está gravada"
+      type: object
+      required: [codigo_emenda, ano, autor_nome]
+      properties:
+        id_emenda: { type: [string, "null"] }
+        codigo_emenda: { type: [string, "null"] }
+        ano: { type: [integer, "null"] }
+        autor_nome: { type: string }
+        url_fonte: { type: string, format: uri }
+    PaginaRecebidos:
+      type: object
+      required: [prefeitura_ou_fundo_municipal, outras_entidades, pagina, total, versao]
+      properties:
+        prefeitura_ou_fundo_municipal: { type: array, items: { $ref: "#/components/schemas/Recebido" } }
+        outras_entidades:
+          description: "'Entidades com endereço em [cidade]' — não somadas no resumo (REQ-56)"
+          type: array
+          items: { $ref: "#/components/schemas/Recebido" }
+        pagina: { type: integer }
+        total: { type: integer }
+        versao: { type: integer }
+    Citacao:
+      type: object
+      required: [texto, url_permanente, url_fonte, dados_de]
+      properties:
+        texto: { type: string }
+        url_permanente: { type: string, format: uri }
+        url_fonte: { type: string, format: uri }
+        dados_de: { type: string, format: date-time, description: "fonte_last_modified da versão ativa" }
+    TermoTraduzido:
+      type: object
+      required: [slug, termo_oficial, traducao, explicacao, fonte_titulo, fonte_url]
+      properties:
+        slug: { type: string }
+        termo_oficial: { type: string }
+        traducao: { type: string }
+        explicacao: { type: string }
+        fonte_titulo: { type: string, minLength: 1 }
+        fonte_url: { type: string, format: uri }
+        fase: { oneOf: [ { $ref: "#/components/schemas/FaseSimples" }, { type: "null" } ] }
+    AutorPerfil:
+      allOf:
+        - $ref: "#/components/schemas/AutorResumo"
+        - type: object
+          required: [totais, por_municipio, sem_municipio_unico, ano_inicial, ano_final, outros_codigos_mesmo_nome]
+          properties:
+            ano_inicial: { type: integer }
+            ano_final: { type: integer }
+            reservas_antigas_sem_pagamento: { type: integer, description: "REQ-76" }
+            outros_codigos_mesmo_nome:
+              description: "REQ-81"
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  ano_inicial: { type: integer }
+                  ano_final: { type: integer }
+            totais: { $ref: "#/components/schemas/Totais" }
+            por_municipio:
+              description: Ordem alfabética do município — nunca por valor (REQ-28)
+              type: array
+              items:
+                allOf:
+                  - $ref: "#/components/schemas/MunicipioResumo"
+                  - $ref: "#/components/schemas/Totais"
+            sem_municipio_unico: { $ref: "#/components/schemas/Totais" }
+    VersaoCarga:
+      type: object
+      required: [id, status, ativa, fonte_url, fonte_last_modified]
+      properties:
+        id: { type: integer }
+        iniciada_em: { type: string, format: date-time }
+        concluida_em: { type: [string, "null"], format: date-time }
+        status: { type: string, enum: [em_andamento, concluida, falhou] }
+        ativa: { type: boolean }
+        fonte_url: { type: string, format: uri }
+        fonte_last_modified: { type: string, format: date-time }
+        total_emendas: { type: [integer, "null"] }
+        total_por_abrangencia:
+          type: object
+          properties:
+            municipal: { type: integer }
+            estadual: { type: integer }
+            multiplo: { type: integer }
+        total_pagamentos: { type: [integer, "null"] }
+        total_descartados: { type: [integer, "null"] }
+        total_sem_codigo: { type: [integer, "null"] }
+        ultima_verificacao_ok: { type: string, format: date-time, description: "REQ-03, REQ-38" }
+        verificacao_atrasada: { type: boolean, description: "true se ultima_verificacao_ok há mais de 48 h (REQ-38)" }
+    Verificacao:
+      type: object
+      required: [verificada_em, resultado]
+      properties:
+        verificada_em: { type: string, format: date-time }
+        resultado: { type: string, enum: [nova_versao, sem_mudanca, falhou, recusada_em_andamento] }
+        motivo: { type: [string, "null"], enum: [formato_inesperado, queda_de_volume, municipios_nao_resolvidos, erro_rede, erro_interno, null] }
+        versao: { oneOf: [ { $ref: "#/components/schemas/VersaoCarga" }, { type: "null" } ] }
+    Erro:
+      type: object
+      required: [codigo, mensagem]
+      properties:
+        codigo: { type: string, examples: [nao_encontrado, parametro_invalido, sem_dados, erro_interno] }
+        mensagem: { type: string }
+        referencia: { type: string, description: "Código de referência para erro interno (REQ-46)" }

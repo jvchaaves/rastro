@@ -1,0 +1,39 @@
+## A01 · Início · Busca do município
+
+- **Superfície · ator:** web pública (celular primeiro) · morador, jornalista
+- **Objetivo:** Levar o cidadão à página da sua cidade digitando o nome (ou, para quem já tem o código, direto à emenda).
+- **Chega de / vai para:** entrada direta, link compartilhado, A12, marca "Rastro" do cabeçalho → A03 (sugestão escolhida ou resultado único) · A05 (código de emenda encontrado) · A02 (ver todos os municípios) · A11 (Sobre)
+- **Mostra:**
+  - Título: "Para onde foi o dinheiro das emendas na sua cidade?"
+  - Uma frase explicando o Rastro (emendas federais, municípios da Paraíba, linguagem simples).
+  - Campo de busca ("Nome da sua cidade ou código da emenda") e, abaixo dele, a lista de sugestões: `municipio.nome` (máx. 8) ou, para 12 dígitos, a emenda (`ano`, `autor.nome`, destino).
+  - Link "Ver todos os municípios da Paraíba".
+  - Link secundário "Ver os autores das emendas" (→ A15).
+  - Rodapé comum com `versao_carga.concluida_em`.
+- **Coleta:**
+  - `q` · texto (2 a 60 caracteres) · obrigatório para buscar
+- **Ações:**
+  - Digitar (≥ 2 caracteres, pausa de 300 ms) → busca sugestões → lista atualizada abaixo do campo (fragmento) · `listar_municipios`
+  - Digitar ou colar 12 dígitos → sugere a emenda · `buscar_emendas_por_codigo`; tocar → A05
+  - Tocar numa sugestão → A03 do `codigo_ibge` escolhido
+  - Botão "Buscar" (ou Enter, ou sem JS) → `GET /buscar?q=` → se houver exatamente 1 município, A03; se houver vários, a mesma A01 com a lista de resultados; se nenhum, estado vazio · `listar_municipios`; com 12 dígitos e uma emenda → A05 · `buscar_emendas_por_codigo`
+  - "Ver todos os municípios" → A02
+  - "Ver os autores das emendas" → A15 · `listar_autores`
+- **Estados:**
+  - *Carregando:* indicador discreto dentro do campo ("buscando…"); a lista anterior continua visível (REQ-04).
+  - *Vazio:* "Não encontramos município da Paraíba com esse nome." + link para A02 (REQ-05). Para código: "Não encontramos essa emenda entre as destinadas à Paraíba" + link para a consulta do Portal (REQ-69).
+  - *Erro:* falha do servidor no fragmento → "Não foi possível buscar agora. Tente de novo." (REQ-46).
+  - *Sucesso:* até 8 sugestões, primeiro as que começam pelo texto digitado (REQ-04).
+  - *Offline:* "Sem conexão. Tente de novo." no lugar das sugestões, com botão de repetir (REQ-42).
+  - *Sem permissão:* não se aplica, acesso público (REQ-01).
+  - *Sem dados ainda:* a busca funciona (municípios vêm do IBGE); o rodapé mostra "dados ainda não carregados" (REQ-39).
+- **Regras:**
+  - A busca ignora acentos e maiúsculas: "joao pessoa" encontra "João Pessoa" (REQ-04).
+  - Menos de 2 caracteres: não busca e não mostra erro.
+  - Só municípios da PB. Um nome de outro estado leva ao estado vazio.
+- **Requisitos · contrato:** REQ-04, REQ-05, REQ-41, REQ-42, REQ-69, REQ-80 · `listar_municipios` (`GET /api/v1/municipios?q=&limite=8`), `buscar_emendas_por_codigo` (`GET /api/v1/emendas?codigo=`); rotas `GET /`, `GET /fragmentos/sugestoes`, `GET /buscar`
+- **Acessibilidade:**
+  - Campo com `<label>` visível ("Nome da sua cidade"); padrão *combobox* (ARIA 1.2) com `aria-expanded` e `aria-activedescendant`; setas navegam nas sugestões.
+  - Número de sugestões anunciado em `aria-live="polite"` ("5 municípios encontrados").
+  - Teclado do celular com `inputmode="search"` e `autocomplete="off"`.
+- **Anexo:** —

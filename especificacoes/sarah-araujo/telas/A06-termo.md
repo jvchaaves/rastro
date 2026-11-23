@@ -1,0 +1,32 @@
+## A06 · O que isso quer dizer? (termo)
+
+- **Superfície · ator:** web pública · morador
+- **Objetivo:** Explicar um termo oficial em linguagem simples e mostrar de onde vem a definição.
+- **Chega de / vai para:** A03, A04, A05 (como painel), A07, link direto `/termos/{slug}` → fonte oficial (externa) · A07 (ver todos os termos) · Voltar/fechar → origem
+- **Mostra:**
+  - `h1` (página) ou `h2` (painel): `termo_oficial` (ex.: "Liquidação").
+  - `traducao` em destaque (ex.: "Pagamento autorizado, ainda não feito").
+  - `explicacao`: até 3 frases.
+  - "De onde vem esta explicação:" `fonte_titulo` com link para `fonte_url`.
+  - Link "Ver todos os termos" (A07).
+- **Coleta:** nenhuma.
+- **Ações:**
+  - "Fechar" (painel) → recolhe o painel e devolve o foco ao botão de origem
+  - Fonte → abre `fonte_url` em nova aba (externo)
+  - "Ver todos os termos" → A07 · `listar_termos`
+- **Estados:**
+  - *Carregando:* "carregando explicação…" no lugar do painel (REQ-17).
+  - *Vazio:* não se aplica; um termo sem fonte não existe no banco (REQ-16).
+  - *Erro:* `slug` inexistente → A12 (página) ou "Explicação indisponível" (painel) (REQ-46).
+  - *Sucesso:* os quatro campos + fonte (REQ-17).
+  - *Offline:* painel com "Sem conexão. Tente de novo." (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:**
+  - Todo termo exibido tem `fonte_titulo` e `fonte_url` (REQ-16).
+  - O texto fala do dinheiro, nunca da obra (REQ-15).
+  - A mesma explicação fica acessível em URL própria e permanente (REQ-17, REQ-25).
+- **Requisitos · contrato:** REQ-15, REQ-16, REQ-17, REQ-25 · `obter_termo` (`GET /api/v1/termos/{slug}`); rotas `GET /termos/{slug}`, `GET /fragmentos/termos/{slug}`
+- **Acessibilidade:**
+  - Painel inline, sem modal (evita a armadilha de foco no celular).
+  - O link da fonte tem um nome que faz sentido fora de contexto ("Glossário do Portal da Transparência: Liquidação").
+- **Anexo:** —

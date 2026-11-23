@@ -1,0 +1,28 @@
+## A15 · Autores das emendas
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Deixar quem chega pelo nome de um parlamentar encontrar o perfil dele, sem transformar a lista num placar.
+- **Chega de / vai para:** A01 ("Ver os autores das emendas"), A11 → A09 (perfil) · Voltar → A01
+- **Mostra:**
+  - `h1`: "Autores das emendas para a Paraíba".
+  - Frase: "Parlamentares, bancadas e comissões que indicaram emendas federais para a Paraíba desde 2014, em ordem alfabética."
+  - Lista alfabética: `nome`, `tipo` e período (`ano_inicial`–`ano_final`). Sem valores nem quantidades (REQ-80).
+  - Nomes com mais de um código aparecem uma vez por código, com o período de cada um (ex.: "Efraim Filho · 2015–2023" e "Efraim Filho · 2024–2026") (REQ-81).
+  - Campo "Filtrar por nome" (filtra a lista já carregada; sem JS, formulário GET).
+- **Coleta:**
+  - `q` · texto · opcional (filtro por nome)
+- **Ações:**
+  - Tocar num autor → A09 (`/autores/{autor_id}`) · `obter_autor`
+  - Filtrar → mesma lista filtrada · `listar_autores`
+- **Estados:**
+  - *Carregando:* página renderizada no servidor (REQ-41).
+  - *Vazio:* "Nenhum autor com esse nome entre os que indicaram emendas para a Paraíba." (REQ-10).
+  - *Erro:* A12 (REQ-46).
+  - *Sucesso:* lista alfabética (REQ-80).
+  - *Offline:* a lista carregada continua navegável (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:** ordem alfabética fixa; nenhum número na lista; autor `S/I` não aparece (REQ-28, REQ-30, REQ-80).
+- **Requisitos · contrato:** REQ-10, REQ-28, REQ-30, REQ-80, REQ-81 · `listar_autores` (`GET /api/v1/autores`); rota `GET /autores`
+- **Acessibilidade:** cada item é um único link com nome acessível "{nome}, {tipo}, emendas de {ano_inicial} a {ano_final}".
+- **Anexo:** —

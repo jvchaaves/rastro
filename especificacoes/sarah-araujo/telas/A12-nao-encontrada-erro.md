@@ -1,0 +1,27 @@
+## A12 · Página não encontrada / erro
+
+- **Superfície · ator:** web pública · morador, jornalista (infraestrutura)
+- **Objetivo:** Dizer o que deu errado e oferecer o caminho de volta.
+- **Chega de / vai para:** qualquer rota inválida, município ou emenda inexistente, erro interno → A01 (buscar a cidade) · A02 · Voltar
+- **Mostra:**
+  - **404, rota ou município:** "Não encontramos esta página." + "Busque sua cidade" (campo de A01 embutido).
+  - **404, emenda:** "Essa emenda não está na versão atual dos dados." + "A fonte pode ter corrigido ou reorganizado essa emenda." + link para A10 (REQ-22).
+  - **500:** "Algo deu errado do nosso lado. Tente de novo em alguns minutos." + "Código de referência: [`referencia`]" (REQ-46).
+- **Coleta:** `q` (busca embutida) · texto · opcional, com a mesma regra de A01.
+- **Ações:**
+  - Busca embutida → A01/A03 · `listar_municipios`
+  - "Ver todos os municípios" → A02
+  - "Tentar de novo" (500) → recarrega a URL original
+- **Estados:**
+  - *Erro 404* (REQ-07, REQ-22) · *Erro 500* (REQ-46) são os próprios conteúdos da tela.
+  - *Carregando:* não se aplica; resposta direta do servidor (REQ-46).
+  - *Vazio:* não se aplica.
+  - *Sucesso:* não se aplica; a própria tela é o estado de erro de outras telas (REQ-07, REQ-22).
+  - *Offline:* o navegador mostra o erro de rede próprio; A12 não é servida offline (REQ-41).
+  - *Sem permissão:* não se aplica (REQ-01).
+- **Regras:**
+  - Status HTTP correto (404/500), para que buscadores não indexem a página de erro.
+  - Nenhum detalhe técnico (stack trace, SQL) na tela (REQ-46).
+- **Requisitos · contrato:** REQ-07, REQ-22, REQ-46 · respostas `NaoEncontrado` e `Erro` de `openapi.yaml`; `listar_municipios`
+- **Acessibilidade:** `<title>` começa por "Página não encontrada · Rastro"; o código de referência pode ser selecionado e copiado.
+- **Anexo:** —

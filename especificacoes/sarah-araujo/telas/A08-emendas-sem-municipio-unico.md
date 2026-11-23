@@ -1,0 +1,37 @@
+## A08 · Emendas sem município único
+
+- **Superfície · ator:** web pública · morador, jornalista
+- **Objetivo:** Mostrar as emendas da Paraíba registradas para o estado todo ou para várias cidades, que não entram no bloco "destinadas" de nenhuma cidade.
+- **Chega de / vai para:** aviso de A03/A04, A11 → A05 (emenda) · A06 (termo) · Voltar → origem
+- **Mostra:**
+  - `h1`: "Emendas para o estado todo ou para várias cidades".
+  - Explicação: "Estas emendas foram registradas sem um município único: para a Paraíba inteira ou para 'múltiplas' localidades. Por isso não aparecem como 'destinadas' a nenhuma cidade. Quando o dinheiro foi pago a uma prefeitura ou a um fundo municipal, esse pagamento aparece na página da cidade, em 'Recebido de outras emendas'."
+  - Filtros, nesta ordem: Área (`funcao`, REQ-66), `abrangencia` ("Estado todo" / "Várias cidades"), `ano` e `fase`.
+  - Cartões como os de A04 (`ano`, `funcao`, `autor.nome`, `valor_final`, `valor_pago_total`, `fase.traducao`), mais o rótulo da abrangência e "Pago a [n] municípios da PB" (`municipios_favorecidos`, REQ-26).
+  - Aviso fixo (REQ-60): "Parte destes pagamentos foi feita a bancos públicos que repassam o dinheiro; nesses casos, o destino final não aparece nos dados."
+- **Coleta:**
+  - `funcao` · texto · opcional
+  - `ano` · inteiro · opcional
+  - `fase` · enum `fase_simples` · opcional
+  - `abrangencia` · `estadual` | `multiplo` · opcional
+  - `pagina` · inteiro ≥ 1 · opcional
+  - `versao` · inteiro · opcional, oculto
+- **Ações:**
+  - Filtrar ou paginar → substitui a lista e a URL · `listar_emendas_sem_municipio`
+  - Tocar no cartão → A05 · `obter_emenda`
+  - Tocar na fase → A06 · `obter_termo`
+- **Estados:**
+  - *Carregando:* lista com `aria-busy` (REQ-12).
+  - *Vazio:* "Nenhuma emenda sem município único [com esses filtros]." (REQ-10).
+  - *Erro:* filtro inválido é ignorado com aviso; erro interno → A12 (REQ-46).
+  - *Sucesso:* emendas com `abrangencia` `estadual` ou `multiplo` (REQ-26).
+  - *Dados atualizados durante a navegação:* REQ-63.
+  - *Offline:* mensagem + "Tentar de novo" (REQ-42).
+  - *Sem permissão:* não se aplica (REQ-01).
+  - *Sem dados ainda:* REQ-39.
+- **Regras:**
+  - Mesma ordem e paginação de A04 (REQ-11, REQ-26).
+  - Nada sugere que esse dinheiro "deveria" ter ido para alguma cidade.
+- **Requisitos · contrato:** REQ-09, REQ-10, REQ-11, REQ-12, REQ-14, REQ-26, REQ-60, REQ-63, REQ-66 · `listar_emendas_sem_municipio` (`GET /api/v1/emendas-sem-municipio?funcao=&abrangencia=&ano=&fase=&pagina=&versao=`); rotas `GET /sem-municipio`, `GET /fragmentos/sem-municipio`
+- **Acessibilidade:** os mesmos padrões de lista de A04; o rótulo de abrangência é texto, não ícone.
+- **Anexo:** —
