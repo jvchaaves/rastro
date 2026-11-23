@@ -1,0 +1,43 @@
+[
+  {
+    "data_referencia": "2026-10-26",
+    "coletado_em": "2026-10-27",
+    "url": "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO",
+    "url_final": null,
+    "cabecalhos_http": null,
+    "zip_sha256": "cee4e775534c6338ad294e8d4aae7851ee32072e7d7edf5b1f36a5a41738aebc",
+    "zip_membros": [
+      "EmendasParlamentares.csv",
+      "EmendasParlamentares_Convenios.csv",
+      "EmendasParlamentares_PorFavorecido.csv"
+    ],
+    "arquivo_bruto": "bruto/2026-10-26_EmendasParlamentares.csv.gz",
+    "csv_sha256": "f9ce7534a3cef83c5426604e2cf2bfb41773a118af5a41451c632811972bb37a",
+    "csv_bytes": 47447391,
+    "nota": "Baixado de URL_CGU em 27/10/2026 durante a conferência do Trabalho 1; cabeçalhos HTTP não foram guardados"
+  },
+  {
+    "data_referencia": "2026-11-19",
+    "coletado_em": "2026-11-23",
+    "url": "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO",
+    "url_final": "https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/emendas-parlamentares/EmendasParlamentares.zip",
+    "cabecalhos_http": {
+      "Last-Modified": "Thu, 19 Nov 2026 22:36:28 GMT",
+      "ETag": "\"2bdb459be7478f908395e357bff86e30-6\"",
+      "Content-Length": "47221100"
+    },
+    "zip_sha256": "221c0a3eb2f561d8e7041188d66914314f2be033fd835ebbd7c83e963796faf0",
+    "zip_membros": [
+      "EmendasParlamentares.csv",
+      "EmendasParlamentares_Convenios.csv",
+      "EmendasParlamentares_Parcerias.csv",
+      "EmendasParlamentares_PlanodeTrabalhoParcerias.csv",
+      "EmendasParlamentares_PlanodeTrabalhoTransferenciasEspeciais.csv",
+      "EmendasParlamentares_PorFavorecido.csv"
+    ],
+    "arquivo_bruto": "bruto/2026-11-19_EmendasParlamentares.csv.gz",
+    "csv_sha256": "af20246f08a7f9bf59259898d95ca5c6e11607928467e809ca1882a37f8c384f",
+    "csv_bytes": 49013089,
+    "nota": null
+  }
+]
