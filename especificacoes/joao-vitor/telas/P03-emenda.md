@@ -1,0 +1,69 @@
+## P03 · Emenda
+
+- **Superfície · ator:** Painel web · Cidadão (morador) e jornalista; também o gestor municipal.
+- **Objetivo:** Mostrar uma emenda com o valor de cada etapa e a origem de cada valor, sem confundir destinação, pagamento e aplicação final.
+- **Chega de / vai para:**
+  - Chega de: P01 (código), P02, P04, P05, P07, P08, P10, S04, S05, link externo.
+  - Vai para:
+    - P04 ("Linha do tempo");
+    - P05 ("Favorecidos");
+    - P07 (nome do autor);
+    - P10 (município do gasto);
+    - P09 (origem de um valor);
+    - S01 ("Acompanhar esta emenda");
+    - P02 ("Buscar emendas", no estado não encontrada);
+    - P11 (marca "tradução v`traducao_versao`");
+    - download oficial da CGU (`Proveniencia.url_download`).
+- **Mostra:**
+  - Cabeçalho:
+    - `Emenda.codigo`, com botão "copiar";
+    - `Emenda.ano` e `Emenda.numero`;
+    - `Emenda.tipo`;
+    - `Autor.nome` (link para P07, selo "coletivo" se `Autor.tipo ≠ parlamentar`);
+    - o estado em linguagem simples, em destaque (`EmendaDetalhe.estado_texto`, ex. "A entrega foi conferida; falta pagar"), com o termo técnico ao lado (`estado_execucao`, "liquidada") e a marca "tradução v`traducao_versao`" que leva a P11.
+  - Onde: `Emenda.localidade_gasto` (texto original), `Emenda.municipio_nome` (link para P10 pelo identificador `Emenda.municipio_gasto`) e `Emenda.uf_gasto`, com a nota "Local de aplicação do recurso, segundo a CGU; não é o endereço de quem recebeu". Quando a localidade é "MÚLTIPLO", aparece "Vários municípios da UF".
+  - Para quê: `Emenda.funcao_nome`, `subfuncao_nome`, `programa_nome`, `acao_nome`.
+  - Bloco "Execução", um cartão por etapa em ordem fixa: empenhado → liquidado → pago → restos a pagar (`rap_inscrito`, `rap_cancelado`, `rap_pago`).
+    - Cada cartão traz `ValorComProveniencia.valor_centavos` e uma definição de uma linha.
+    - Cada cartão tem o botão "Origem" com `Proveniencia.fonte_nome`, `lote_id`, `data_referencia`, `importado_em` (data de extração), `hash_sha256` (abreviado) e o link `url_download`.
+  - Bloco separado "Recebido por favorecidos": `EmendaDetalhe.soma_valor_recebido_centavos`, com o rótulo "Soma dos pagamentos registrados por favorecido" e o link para P05.
+  - Quando a fonte Siga estiver habilitada: bloco "Siga Brasil (Senado)" com os valores da fonte `siga` em cartões próprios, sem somar com a CGU.
+- **Coleta:** nenhum campo; o `codigo` vem da rota.
+- **Ações:**
+  - "Copiar código" → área de transferência; anuncia "Código copiado" → ação local · sem chamada à API (REQ-74).
+  - "Origem" (em cada valor) → abre um painel com a proveniência já recebida → ação local · sem chamada à API (REQ-74); "Ver lote" → P09 com `?lote_id=` (`obter_lote`).
+  - "Ver linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Ver favorecidos" → P05 (`listar_favorecidos`).
+  - Nome do autor → P07 (`obter_autor`).
+  - Município do gasto → P10 (`obter_municipio`).
+  - "tradução v`traducao_versao`" → P11 (`listar_traducoes`).
+  - "Buscar emendas" (estado 404) → P02 (`listar_emendas`).
+  - "Acompanhar esta emenda" → S01 (`listar_opcoes_filtro`) com `filtro_codigo_emenda` preenchido.
+  - "Abrir na CGU" → `Proveniencia.url_download` em nova aba, com aviso de link externo → ação local · sem chamada à API (REQ-74).
+- **Estados:**
+  - **carregando:** esqueleto do cabeçalho e dos cartões (REQ-44).
+  - **vazio:** a emenda existe mas tem todas as etapas = 0 → "Nenhum valor executado registrado até dd/mm/aaaa", com o estado "Ainda sem dinheiro reservado" (REQ-45, REQ-69).
+  - **erro:**
+    - 404 → "Não encontramos a emenda 2025… no lote de dd/mm/aaaa", com o link "Buscar emendas" (P02) (REQ-18);
+    - 422 → "O código precisa ter 12 dígitos" (REQ-17);
+    - 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
+  - **sucesso:** todos os blocos (REQ-16).
+  - **offline:** "Sem conexão"; nada de valores anteriores (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** 503 → "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - As etapas aparecem em cartões separados e na ordem do ciclo (REQ-15).
+  - Todo valor tem um botão "Origem" (REQ-14).
+  - O texto fixo "Pagamento registrado não comprova a aplicação final" acompanha o bloco de execução (FI-01 §5: o sistema não declara o gasto final).
+  - Valores de fontes diferentes nunca são somados (REQ-13).
+  - O texto simples vem primeiro e o termo técnico depois; os dois vêm da API (REQ-69, ADR-0008).
+- **Requisitos · contrato:**
+  - REQ-14, REQ-15, REQ-16, REQ-17, REQ-18, REQ-19, REQ-21, REQ-13, REQ-66, REQ-69, REQ-77 · `GET /api/emendas/{codigo}` (`obter_emenda`).
+  - REQ-74 · ações locais (copiar, origem, link externo).
+  - REQ-48 · `GET /api/status` (`obter_status`).
+- **Acessibilidade:**
+  - Cartões de etapa numa lista ordenada (`<ol>`), porque a ordem do ciclo é informação.
+  - O painel "Origem" é um `<details>` ou um diálogo com foco gerenciado e retorno do foco ao botão.
+  - O hash abreviado tem o valor completo no rótulo acessível.
+  - O link externo anuncia "abre em nova aba".
+- **Anexo:** mockup de referência [anexos/P03.png](anexos/P03.png) e [anexos/P03m.png](anexos/P03m.png) (celular), exportado do canvas "Rastro — telas" (Claude Design).

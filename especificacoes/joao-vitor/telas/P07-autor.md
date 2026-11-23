@@ -1,0 +1,47 @@
+## P07 · Autor
+
+- **Superfície · ator:** Painel web · Cidadão e jornalista.
+- **Objetivo:** Reunir as emendas de um autor no lote ativo, com as somas por etapa separadas.
+- **Chega de / vai para:**
+  - Chega de: P03 (nome do autor), P06 (grupo), link externo.
+  - Vai para:
+    - P03 (emenda da lista);
+    - P02 (lista completa com `autor_codigo`);
+    - S01 ("Acompanhar emendas deste autor");
+    - P06 ("Comparar autores", no estado de erro);
+    - P09.
+- **Mostra:**
+  - `Autor.nome` e `Autor.tipo` em texto ("Parlamentar"; ou "Bancada (autor coletivo)").
+  - `AutorDetalhe.quantidade_emendas`.
+  - Somas por etapa (`AutorDetalhe.valores[]`): `empenhado`, `liquidado`, `pago`, `rap_pago` em cartões separados.
+  - Lista paginada das emendas (`AutorDetalhe.emendas.itens[]`): `Emenda.codigo`, `Emenda.tipo`, `Emenda.uf_gasto`, `Emenda.municipio_nome`, `Emenda.funcao_nome`, valores por etapa e o estado (`EmendaResumo.estado_texto` e `estado_execucao`).
+  - Proveniência (`AutorDetalhe.emendas.proveniencia`).
+  - Nota fixa: "Valores registrados para emendas deste autor. Autoria da emenda não significa execução pelo parlamentar."
+- **Coleta:** `pagina` · inteiro ≥ 1 · `por_pagina` · 20/50/100.
+- **Ações:**
+  - Emenda da lista → P03 (`obter_emenda`).
+  - "Ver todas em Emendas" → P02 com `?autor_codigo=` (`listar_emendas`).
+  - "Acompanhar emendas deste autor" → S01 (`listar_opcoes_filtro`) com `filtro_autor_codigo` preenchido.
+  - Paginação → (`obter_autor`) com `pagina`.
+  - "Comparar autores" (no estado 404) → P06 (`obter_agregacoes`).
+  - Faixa de proveniência → P09 (`listar_lotes`).
+- **Estados:**
+  - **carregando:** esqueleto (REQ-44).
+  - **vazio:** autor sem emendas no lote ativo (por exemplo, só emendas fora do recorte) → "Nenhuma emenda deste autor no lote de dd/mm/aaaa" (REQ-45).
+  - **erro:** 404 → "Autor não encontrado" e "Comparar autores" (P06) (REQ-55); 422 (`pagina` ou `por_pagina` fora do intervalo na URL) → volta à primeira página com aviso (REQ-72); 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** somas e lista (REQ-29).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** "Dados ainda não publicados" (REQ-19, REQ-60).
+- **Regras:**
+  - Autor coletivo nunca é exibido como pessoa: aparece o rótulo do coletivo, sem foto ou cargo (REQ-79).
+  - Não há foto, partido nem outros dados do parlamentar além dos publicados pela fonte.
+  - Não há posição do autor em relação a outros ("3º que mais…") (REQ-71).
+  - O estado de cada emenda aparece em linguagem simples, com o termo técnico abaixo (REQ-69).
+- **Requisitos · contrato:**
+  - REQ-29, REQ-22, REQ-15, REQ-14, REQ-69, REQ-71, REQ-79 · `GET /api/autores/{codigo}` (`obter_autor`).
+  - REQ-55, REQ-72, REQ-19 · respostas 404 / 422 / 503 do mesmo contrato.
+- **Acessibilidade:**
+  - O título `<h1>` é o nome do autor; o tipo vem logo abaixo em texto, não só num selo colorido.
+  - A lista de emendas reutiliza a tabela de P02, com `<caption>` própria.
+- **Anexo:** mockup de referência [anexos/P07.png](anexos/P07.png), exportado do canvas "Rastro — telas" (Claude Design).

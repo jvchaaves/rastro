@@ -1,0 +1,49 @@
+## O02 · Publicar lote
+
+- **Superfície · ator:** CLI (terminal) · Operador de dados; também o agendador, via `rastro sincronizar`.
+- **Objetivo:** Tornar um lote validado o lote ativo de forma atômica, mostrando antes e depois o que vai mudar e quantos alertas foram gerados.
+- **Chega de / vai para:**
+  - Chega de: O01 (comando sugerido).
+  - Vai para: P09 (o lote passa a ser o ativo), P08 (mudanças do lote), S05 (assinantes recebem alertas).
+- **Mostra:** saída no terminal.
+  - Lote a publicar: `LoteImportacao.id`, `Fonte.nome`, `data_referencia`.
+  - Lote ativo atual: `PublicacaoAtiva.lote_id` e a `data_referencia` dele (ou "nenhum").
+  - Mudanças calculadas (`MudancaLote`), contadas por `tipo` (`nova_emenda`, `valor_alterado`, `estado_alterado`).
+  - Resultado da publicação: `LoteImportacao.publicado_em` e a confirmação "troca atômica".
+  - Resultado do fan-out (evento `alertas.gerados`): `assinaturas_avaliadas`, `alertas_criados`, `alertas_ja_existentes`, `duracao_ms`.
+- **Coleta:** argumentos da linha de comando.
+  - `--lote` · inteiro, id de um lote `validado` (ou `publicado`, com `--reprocessar-alertas`) · obrigatório.
+  - `--simular` · booleano · opcional (calcula e mostra as mudanças sem publicar).
+  - `--reprocessar-alertas` · booleano · opcional (só refaz o fan-out de um lote já publicado).
+  - `--json`, `--sem-cor` · opcionais.
+- **Ações:**
+  - `rastro publicar --lote n` → uma única transação que calcula as mudanças, publica o lote e troca o lote ativo; depois emite `lote.publicado` e o despachante grava os alertas (`cli:publicar`).
+  - `--simular` → mostra as mudanças e termina sem commit, código 0 (`cli:publicar`).
+  - `--reprocessar-alertas` → refaz o fan-out a partir de `lote.publicado`; idempotente (`cli:publicar`).
+  - Ver o resultado no painel → P09 (`listar_lotes`) e P08 (`listar_mudancas`).
+- **Estados:**
+  - **carregando:** "Calculando mudanças…" e depois "Avaliando N assinaturas…", com o tempo decorrido (REQ-90); com `--json`, um evento JSON por marco (REQ-100).
+  - **vazio:**
+    - 0 mudanças em relação ao ativo → `AVISO` "Nenhuma mudança; o lote será publicado só para atualizar a data de referência" (REQ-08);
+    - primeiro lote da fonte → `AVISO` "Primeiro lote publicado; as mudanças começam no próximo" (REQ-75).
+  - **erro:**
+    - lote não está `validado` (por exemplo, `recusado`) → `ERRO`, código 6, nada muda (REQ-57);
+    - lote com `data_referencia` igual ou anterior à do lote ativo → `ERRO`, código 6, nada muda (REQ-95);
+    - falha durante a transação → rollback e `ERRO` "nada foi publicado; lote ativo continua #m" (REQ-07).
+  - **sucesso:** `OK` "Lote #n publicado" e o resumo de alertas (REQ-07, REQ-35).
+  - **reprocessamento:** `alertas_criados = 0` e `alertas_ja_existentes = N` quando já processado, sem duplicar (REQ-36).
+  - **offline:** `publicar` não usa rede; em `rastro sincronizar`, falta de rede vira lote `falhou` com `fonte_indisponivel` (REQ-12).
+  - **sem permissão:** outro escritor ativo → código 5 (REQ-56).
+- **Regras:**
+  - O lote ativo só muda dentro de uma transação, e leitores nunca veem mistura (REQ-07, REQ-09).
+  - As mudanças são calculadas na mesma transação (REQ-08).
+  - Os alertas consideram só assinaturas `ativa` criadas antes da publicação do lote (`Assinatura.criada_em` < `LoteImportacao.publicado_em`) (REQ-37, REQ-38).
+  - Há no máximo um alerta por (assinatura, mudança) (REQ-36).
+- **Requisitos · contrato:**
+  - REQ-07, REQ-08, REQ-09, REQ-12, REQ-35, REQ-36, REQ-37, REQ-38, REQ-50, REQ-56, REQ-57, REQ-63, REQ-64, REQ-75, REQ-82, REQ-90, REQ-93, REQ-94, REQ-95 · `rastro publicar` (`cli:publicar`, ver `../arquitetura/contratos/cli.md`).
+  - REQ-35, REQ-36 · eventos `lote.publicado` e `alertas.gerados` (`../arquitetura/contratos/eventos.asyncapi.yaml`).
+- **Acessibilidade:**
+  - Resumo final em linhas curtas com rótulo antes do número.
+  - `--json` com o mesmo conteúdo.
+  - Nenhuma confirmação interativa obrigatória (`--simular` substitui o "tem certeza?"), para funcionar com leitores de tela e no agendador.
+- **Anexo:** mockup de referência [anexos/O02.png](anexos/O02.png), exportado do canvas "Rastro — telas" (Claude Design); exemplo de saída em `../arquitetura/contratos/cli.md`.

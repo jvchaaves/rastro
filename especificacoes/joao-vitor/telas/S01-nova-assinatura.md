@@ -1,0 +1,70 @@
+## S01 · Nova assinatura
+
+- **Superfície · ator:** Painel web · Pessoa de controle social, cidadão (morador) ou gestor municipal (assinante, com ou sem chave).
+- **Objetivo:** Criar, em um formulário curto, uma assinatura com filtro e condição verificáveis, sem pedir nenhum dado pessoal.
+- **Chega de / vai para:**
+  - Chega de:
+    - P02 ("Acompanhar este filtro");
+    - P03 / P04 ("Acompanhar esta emenda");
+    - P07 ("Acompanhar emendas deste autor");
+    - P08 ("Acompanhar este recorte");
+    - P10 ("Acompanhar este município");
+    - S03 ("Criar uma assinatura");
+    - S04 ("Nova assinatura");
+    - botão "Acompanhar" do cabeçalho (todas as telas do painel).
+  - Vai para: S02 (primeira assinatura, sem chave), S04 (já tem chave), S03 ("Entrar com outra chave", no estado 401), tela de origem ("Cancelar").
+- **Mostra:**
+  - Resumo legível do que será acompanhado, montado a partir dos campos. Exemplos: "Avisar quando o valor **pago** de emendas de **Saúde** com gasto na **PB** passar de **R$ 1.000.000,00**." e "Avisar quando o estado de uma emenda com gasto em **João Pessoa (PB)** mudar."
+  - Lote base: "Vale a partir do lote #n (dados de dd/mm/aaaa)" (`obter_status`).
+  - Nota de privacidade: "Não pedimos nome nem e-mail. Na primeira assinatura você recebe uma chave; guarde-a."
+  - Contagem "Você tem N de 20 assinaturas" quando já houver chave (`listar_assinaturas`).
+- **Coleta:**
+  - `Assinatura.nome` · texto 1–80 · obrigatório (sugestão automática a partir do filtro).
+  - `Assinatura.filtro_codigo_emenda` · texto de 12 dígitos · opcional.
+  - `Assinatura.filtro_autor_codigo` · combobox (`listar_opcoes_filtro.autores`) · opcional.
+  - `Assinatura.filtro_uf_gasto` · seleção (UFs + `NM`) · opcional.
+  - `Assinatura.filtro_municipio_gasto` · seleção dependente da UF (`listar_opcoes_filtro.municipios`, só os itens com `quantidade_emendas_gasto` > 0, porque a assinatura olha o local do gasto; ADR-0010) · opcional; exige uma UF (REQ-87).
+  - `Assinatura.filtro_funcao_codigo` · seleção · opcional.
+
+    Pelo menos um dos cinco filtros é obrigatório.
+  - `Assinatura.condicao` · opção única: "O valor de uma etapa passar de um limiar" (`limiar_valor`) ou "O estado de execução mudar" (`mudanca_estado`) · obrigatório.
+  - `Assinatura.etapa` · seleção (`empenhado`, `liquidado`, `pago`, `rap_pago`) · obrigatório se `limiar_valor`.
+  - `Assinatura.limiar_centavos` · moeda em R$ (convertida para centavos) · obrigatório se `limiar_valor`, > 0.
+- **Ações:**
+  - "Criar assinatura" → `POST /api/assinaturas` (`criar_assinatura`), com `X-Chave-Assinante` se houver chave no navegador.
+    - 201 sem chave anterior → guarda `chave_assinante` no `localStorage` → S02 (ação local: a tela só exibe a resposta recebida).
+    - 201 com chave → S04 (`listar_assinaturas`), com o anúncio "Assinatura criada".
+  - Escolher UF → filtra o seletor de município com os dados já carregados → ação local · sem chamada à API (REQ-74).
+  - "Cancelar" → volta à tela de origem sem gravar → ação local · sem chamada à API (REQ-74).
+  - "Entrar com outra chave" (estado 401) → S03 → ação local · sem chamada à API (REQ-74).
+  - "Criar sem chave (nova chave)" (estado 401) → (`criar_assinatura`) sem `X-Chave-Assinante`, o que cria um novo assinante (REQ-80) → S02 (ação local: a tela só exibe a resposta recebida).
+  - "Minhas assinaturas" (estado `limite_assinaturas`) → S04 (`listar_assinaturas`).
+- **Estados:**
+  - **carregando:** botão "Criando…" desabilitado; opções de filtro com esqueleto enquanto `listar_opcoes_filtro` carrega (REQ-44).
+  - **vazio:** formulário sem filtro → resumo "Escolha pelo menos um filtro" e botão desabilitado (REQ-89).
+  - **erro:**
+    - 422 `assinatura_invalida` → erros junto aos campos (`Problema.campos[]`) e resumo no topo (REQ-34, REQ-62);
+    - 422 `assinatura_invalida` com município sem UF (pré-preenchimento manipulado) → erro no campo de município (REQ-87);
+    - 422 `limite_assinaturas` → "Você chegou a 20 assinaturas. Exclua uma em Minhas assinaturas." com link para S04 (REQ-42);
+    - 5xx → `X-Request-Id` (REQ-46).
+  - **sucesso:** redireciona (S02 ou S04) (REQ-33).
+  - **offline:** "Sem conexão"; os dados digitados são mantidos e o botão fica desabilitado (REQ-47).
+  - **sem permissão:** chave guardada que ficou inválida (401) → "Sua chave não foi reconhecida", com "Entrar com outra chave" (S03) ou "Criar sem chave (nova chave)" (REQ-32).
+  - **sem lote publicado:** 503 → "Ainda não há dados publicados para acompanhar" (REQ-19, REQ-60).
+- **Regras:**
+  - Não existe campo de nome de pessoa, e-mail ou telefone (REQ-41).
+  - O limiar dispara só quando o valor cruza de baixo para cima (`antes < limiar ≤ depois`), e isso é dito no texto de ajuda (REQ-63). Uma emenda nova que já entra acima do limiar também conta (valor anterior = 0).
+  - Vindo de P02, só autor, UF, município e função são pré-preenchidos; se havia busca por texto ou tipo, a tela avisa que eles não entram na assinatura.
+  - Alertas só valem para lotes publicados depois da criação (REQ-37); o texto do lote base explica isso.
+  - O canal é sempre o painel (`Assinatura.canal = painel`), e a interface não oferece outro.
+- **Requisitos · contrato:**
+  - REQ-31, REQ-33, REQ-34, REQ-62, REQ-63, REQ-64, REQ-41, REQ-42, REQ-32, REQ-80, REQ-87 · `POST /api/assinaturas` (`criar_assinatura`).
+  - REQ-20, REQ-66, REQ-112 · `GET /api/filtros/opcoes` (`listar_opcoes_filtro`), inclusive `municipios`.
+  - REQ-74 · ações locais (cancelar, filtrar municípios).
+  - REQ-37 · `GET /api/status` (`obter_status`) para o lote base.
+  - REQ-42 · `GET /api/assinaturas` (`listar_assinaturas`) para a contagem, quando há chave.
+- **Acessibilidade:**
+  - `<fieldset>`/`<legend>` para "O que acompanhar" e "Quando avisar"; os campos condicionais aparecem logo após a opção escolhida, na ordem de foco.
+  - Campo de moeda com `inputmode="decimal"` e exemplo de formato.
+  - Resumo de erros com links para os campos; o foco vai para o resumo ao enviar com erro.
+- **Anexo:** mockup de referência [anexos/S01.png](anexos/S01.png), exportado do canvas "Rastro — telas" (Claude Design).
