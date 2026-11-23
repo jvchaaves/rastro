@@ -1,0 +1,40 @@
+## P11 · Como traduzimos o estado
+
+- **Superfície · ator:** Painel web · Cidadão (morador) e jornalista; também o operador de dados, para conferir a versão publicada.
+- **Objetivo:** Permitir conferir qual texto simples o Rastro usa para cada estado de execução, desde quando e em que versão da tabela de tradução.
+- **Chega de / vai para:**
+  - Chega de: marca "tradução v`traducao_versao`" em P03 e P10, link "Tabela de tradução" de D01, link "Como traduzimos o estado" de P09.
+  - Vai para: P09 ("Lotes e fontes"), P10 (exemplo de cidade).
+- **Mostra:**
+  - Versão vigente (`Traducoes.vigente`) e o `vigente_desde` dela.
+  - Tabela da versão vigente, uma linha para cada um dos cinco estados (`Traducoes.versoes[].itens[]`, REQ-86, REQ-105): termo técnico (`estado_execucao`), `texto_simples` e `explicacao`.
+  - Versões anteriores recolhidas, cada uma com `versao`, `vigente_desde` e `nota`, e a mesma tabela.
+  - Frase fixa: "A tradução é uma tabela pública e versionada. Toda resposta da API diz qual versão usou, e versões antigas nunca são editadas."
+  - Como uma versão nova entra: só pelo comando `rastro traducao publicar`, com nota de motivo.
+- **Coleta:**
+  - `versao` · da URL (`?versao=n`) · opcional; abre aquela versão.
+- **Ações:**
+  - Abrir a tela → (`listar_traducoes`) sem parâmetro (todas as versões).
+  - Abrir uma versão antiga → (`listar_traducoes`) com `versao`; atualiza a URL.
+  - "Copiar link desta versão" → ação local · sem chamada à API (REQ-74).
+  - "Lotes e fontes" → P09 (`listar_lotes`).
+  - "Ver na prática" → P10 de uma cidade de exemplo (`obter_municipio`).
+- **Estados:**
+  - **carregando:** esqueleto da tabela (REQ-44).
+  - **vazio:** não se aplica: a versão 1 é carregada na migração inicial, então sempre há uma versão vigente (REQ-70, ADR-0008).
+  - **erro:** `versao` inexistente → 404 `nao_encontrado`, aviso "Versão n não existe" e a versão vigente (REQ-55); `versao` fora do formato → 422 `parametro_invalido` (REQ-72); 5xx → `X-Request-Id` e "Tentar de novo" (REQ-46).
+  - **sucesso:** versão vigente e versões anteriores (REQ-69, REQ-70).
+  - **offline:** "Sem conexão" (REQ-47).
+  - **sem permissão:** tela pública; limite de taxa (REQ-28).
+  - **sem lote publicado:** a tela funciona normalmente, porque a tradução não depende de lote (REQ-19).
+- **Regras:**
+  - Não há botão de editar: uma versão publicada nunca muda (REQ-70, ADR-0008).
+  - A tabela mostra o termo técnico ao lado do texto simples, para que o leitor confira a correspondência.
+- **Requisitos · contrato:**
+  - REQ-69, REQ-70, REQ-55, REQ-72 · `GET /api/traducoes` (`listar_traducoes`).
+  - REQ-86 · `rastro traducao publicar` (`cli:traducao`), citado no texto sobre versões novas.
+  - REQ-74 · ação local (copiar link).
+- **Acessibilidade:**
+  - A tabela tem `<caption>` com o número da versão.
+  - Cada versão anterior é uma região recolhível com o número e a data no rótulo.
+- **Anexo:** mockup de referência [anexos/P11.png](anexos/P11.png), exportado do canvas "Rastro — telas" (Claude Design).

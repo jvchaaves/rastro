@@ -1,0 +1,57 @@
+## S05 · Alertas
+
+- **Superfície · ator:** Painel web · Pessoa de controle social, cidadão (morador) ou gestor municipal (assinante com chave).
+- **Objetivo:** Mostrar quais mudanças de lotes publicados satisfizeram as assinaturas e deixar claro o que cada uma significa.
+- **Chega de / vai para:**
+  - Chega de: sino de alertas do cabeçalho, S03, S04 ("Ver alertas"), O02 (os alertas gerados na publicação aparecem aqui).
+  - Vai para:
+    - P03 (emenda do alerta);
+    - P04 (linha do tempo);
+    - P08 (todas as mudanças do lote);
+    - S04 ("Gerenciar assinaturas");
+    - S03 (sem chave ou chave recusada).
+- **Mostra:**
+  - Contador `AlertasPagina.nao_lidos` e abas "Não lidos" / "Todos".
+  - Filtro por assinatura (`Assinatura.nome`).
+  - Lista (`AlertasPagina.itens[]`), mais recentes primeiro, um item por `Alerta`:
+    - `assinatura_nome`;
+    - `criado_em`;
+    - lote de origem: `lote_novo.id` e `lote_novo.data_referencia`;
+    - a mudança (`MudancaLote`): `codigo_emenda`, `autor_nome`, `uf_gasto` e o texto conforme `tipo`. Para limiar (`Alerta.assinatura_condicao = limiar_valor`): "O valor **pago** passou de R$ 900.000,00 para R$ 1.150.000,00 (limiar R$ 1.000.000,00)", com o limiar de `Alerta.assinatura_limiar_centavos` e o valor novo de `Alerta.valor_etapa_lote_novo_centavos`; se a mudança for `nova_emenda`: "Emenda nova, já com R$ 1.150.000,00 de **pago** (limiar R$ 1.000.000,00)". Para estado: o texto simples do estado novo (`MudancaLote.estado_depois_texto`, "Agora: **A entrega foi conferida; falta pagar**") e o termo técnico ("passou de empenhada para liquidada");
+    - marcação de lido (`lido_em`).
+- **Coleta:**
+  - `lido` · abas (não lidos / todos) · padrão "não lidos".
+  - `assinatura_id` · seleção · opcional.
+  - `pagina` · inteiro ≥ 1.
+- **Ações:**
+  - Abrir um alerta (emenda) → P03 (`obter_emenda`); marca como lido via `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`, `lido: true`).
+  - "Marcar como lido" (sem sair) → (`atualizar_alerta`); o item sai da aba "Não lidos" e é anunciado.
+  - "Ver linha do tempo" → P04 (`obter_linha_do_tempo`).
+  - "Ver todas as mudanças deste lote" → P08 com `?lote_novo_id=` (`listar_mudancas`).
+  - Trocar aba ou assinatura → (`listar_alertas`) com `lido` / `assinatura_id`.
+  - "Gerenciar assinaturas" → S04 (`listar_assinaturas`).
+  - Sem chave ou chave recusada (401) → S03 → ação local · sem chamada à API (REQ-74).
+- **Estados:**
+  - **carregando:** esqueleto da lista (REQ-44).
+  - **vazio:**
+    - sem alertas → "Nenhum alerta ainda. Os alertas aparecem quando um novo lote publicado muda algo que você acompanha." com a data do lote ativo;
+    - sem não lidos → "Tudo lido" (REQ-45).
+  - **erro:** 5xx → `X-Request-Id` (REQ-46); falha ao marcar como lido → o item volta a "não lido", com aviso.
+  - **sucesso:** lista (REQ-35).
+  - **offline:** "Sem conexão"; não exibe a lista anterior como atual (REQ-47).
+  - **sem permissão:** sem chave ou 401 → S03 (REQ-32).
+- **Regras:**
+  - Cada alerta corresponde a uma única mudança de uma única assinatura, sem repetição (REQ-36).
+  - Alertas só de lotes publicados após o lote base da assinatura (REQ-37).
+  - Marcar como lido grava `lido_em` (REQ-39); reabrir não muda o valor (REQ-81).
+  - O texto do alerta descreve o registro, nunca o interpreta ("passou de … para …").
+- **Requisitos · contrato:**
+  - REQ-35, REQ-36, REQ-37, REQ-63, REQ-64, REQ-32, REQ-14 · `GET /api/alertas` (`listar_alertas`).
+  - REQ-39, REQ-81, REQ-55 · `PATCH /api/alertas/{alerta_id}` (`atualizar_alerta`).
+  - REQ-69 · `MudancaLote.estado_depois_texto` no texto do alerta.
+  - REQ-32 · `GET /api/assinaturas` (`listar_assinaturas`) para o filtro por assinatura.
+  - REQ-35 · evento interno `alertas.gerados` (origem dos alertas, ver O02).
+- **Acessibilidade:**
+  - Abas com `role="tablist"` e navegação por setas.
+  - O contador do cabeçalho tem nome acessível "Alertas, 3 não lidos".
+- **Anexo:** mockup de referência [anexos/S05.png](anexos/S05.png), exportado do canvas "Rastro — telas" (Claude Design).

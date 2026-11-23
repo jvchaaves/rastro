@@ -1,0 +1,72 @@
+asyncapi: 3.0.0
+info:
+  title: Rastro — eventos internos de publicação e alertas
+  version: 0.1.0
+  description: |
+    Eventos dentro do processo da CLI de dados (não há broker no MVP; ADR-0004).
+    `rastro publicar` emite `lote.publicado` depois do commit que troca o lote ativo.
+    O despachante de alertas consome o evento, avalia as assinaturas ativas num pool de
+    threads (`concurrent.futures`) e grava os alertas com `INSERT ... ON CONFLICT DO NOTHING`
+    sobre UNIQUE(assinatura_id, mudanca_id) (REQ-35, REQ-36). Reprocessar o mesmo evento
+    não gera duplicatas. Depois disso o despachante emite `alertas.gerados`, que a CLI imprime
+    na tela O02.
+defaultContentType: application/json
+
+channels:
+  lotePublicado:
+    address: lote.publicado
+    description: Um lote acabou de se tornar o lote ativo da fonte.
+    messages:
+      LotePublicado:
+        $ref: '#/components/messages/LotePublicado'
+  alertasGerados:
+    address: alertas.gerados
+    description: Resultado do fan-out de alertas de um lote.
+    messages:
+      AlertasGerados:
+        $ref: '#/components/messages/AlertasGerados'
+
+operations:
+  emitirLotePublicado:
+    action: send
+    summary: Emitido por `rastro publicar` (e `rastro sincronizar`) após o commit da publicação (REQ-07, REQ-08).
+    channel:
+      $ref: '#/channels/lotePublicado'
+  avaliarAssinaturas:
+    action: receive
+    summary: O despachante de alertas avalia as assinaturas ativas contra as MudancaLote do lote (REQ-35, REQ-37, REQ-38).
+    channel:
+      $ref: '#/channels/lotePublicado'
+  emitirAlertasGerados:
+    action: send
+    summary: Resumo do fan-out, exibido na tela O02.
+    channel:
+      $ref: '#/channels/alertasGerados'
+
+components:
+  messages:
+    LotePublicado:
+      name: LotePublicado
+      payload:
+        type: object
+        required: [fonte_id, lote_novo_id, lote_anterior_id, quantidade_mudancas, publicado_em]
+        properties:
+          fonte_id: { type: string, enum: [cgu, siga] }
+          lote_novo_id: { type: integer }
+          lote_anterior_id: { type: [integer, 'null'] }
+          quantidade_mudancas: { type: integer, minimum: 0 }
+          publicado_em: { type: string, format: date-time }
+    AlertasGerados:
+      name: AlertasGerados
+      payload:
+        type: object
+        required: [lote_novo_id, assinaturas_avaliadas, alertas_criados, alertas_ja_existentes, duracao_ms]
+        properties:
+          lote_novo_id: { type: integer }
+          assinaturas_avaliadas: { type: integer, minimum: 0 }
+          alertas_criados: { type: integer, minimum: 0 }
+          alertas_ja_existentes:
+            type: integer
+            minimum: 0
+            description: Conflitos na restrição UNIQUE. Ao reprocessar o mesmo lote, é igual ao total e `alertas_criados` = 0.
+          duracao_ms: { type: integer, minimum: 0 }
